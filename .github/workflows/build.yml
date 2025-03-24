@@ -1,0 +1,41 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+        
+env: 
+  SOLUTION: 'NCalVer.sln'
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+          
+      - name: Version Sweeper
+        id: dotnet-version-sweeper
+        uses: dotnet/versionsweeper@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          owner: ${{ github.repository_owner }}
+          name: ${{ github.repository }}
+          branch: ${{ github.ref }}
+        
+      - name: Setup
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8'
+          
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION }}
+      
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION }} --no-restore

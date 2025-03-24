@@ -10,6 +10,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5944D9F3-662
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NCalVerTool", "src\NCalVerTool\NCalVerTool.csproj", "{567EB858-0044-44EA-9EB3-3A5FD7B2C437}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{80320635-4603-4EA4-8718-D2249CE3B7AE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{22FAC276-020D-4869-A02A-D8D352B41891}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build.yml = .github\workflows\build.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +27,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{567EB858-0044-44EA-9EB3-3A5FD7B2C437} = {5944D9F3-6620-4AF5-A057-D6DD8CD0E1FB}
+		{22FAC276-020D-4869-A02A-D8D352B41891} = {80320635-4603-4EA4-8718-D2249CE3B7AE}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{567EB858-0044-44EA-9EB3-3A5FD7B2C437}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
