@@ -1,0 +1,46 @@
+name: CodeQL Analysis
+
+on:
+  workflow_dispatch:
+    inputs:      
+      codeql-analysis: 
+        description: 'Run CodeQL Analysis'
+        required: true
+        default: 'true'
+        
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+    analyze:
+        name: Analyze
+        runs-on: ubuntu-latest
+        
+        strategy: 
+            fail-fast: false
+            matrix:
+              language: [ 'csharp' ]
+        
+        steps:
+            - name: Checkout Repository
+              id: checkout_code
+              uses: actions/checkout@v4
+
+            - name: Initialize CodeQL
+              id: init_codeql
+              uses: github/codeql-action/init@v3
+              with:
+                  languages: ${{ matrix.language }}
+                  queries: security-and-quality
+
+            - name: Autobuild
+              id: autobuild_codeql
+              uses: github/codeql-action/autobuild@v3
+
+            - name: Perform CodeQL Analysis
+              id: analyze_codeql
+              uses: github/codeql-action/analyze@v3
+              with:
+                category: '/language:csharp/type:console'
