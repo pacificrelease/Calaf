@@ -1,0 +1,38 @@
+name: Local Build Workflow
+
+on: 
+  push:
+    tags:
+      - '*'
+  
+env: 
+  SOLUTION: 'NCalVer.sln'
+  CONFIGURATION: 'Release'
+  OUTPUT: '../.nupkg'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8'
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION }}
+
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION }} --no-restore
+        
+      - name: Pack
+        run: dotnet pack ${{ env.SOLUTION }} --configuration ${{ env.CONFIGURATION }} --no-build --include-symbols --include-source --output ${{ env.OUTPUT }}
+        
+      - name: Upload Package
+        uses: actions/upload-artifact@v4
+        with: 
+          name: nuget-packages
+          path: ${{ env.OUTPUT }}
