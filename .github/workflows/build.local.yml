@@ -1,14 +1,12 @@
 name: Local Build Workflow
 
 on: 
-  push:
-    tags:
-      - '*'
+  workflow_dispatch: 
   
 env: 
   SOLUTION: 'NCalVer.sln'
   CONFIGURATION: 'Release'
-  OUTPUT: '../.nupkg'
+  OUTPUT: 'D:/LocalNuGetFeed'
 
 jobs:
   build:
@@ -31,8 +29,8 @@ jobs:
       - name: Pack
         run: dotnet pack ${{ env.SOLUTION }} --configuration ${{ env.CONFIGURATION }} --no-build --include-symbols --include-source --output ${{ env.OUTPUT }}
         
-      - name: Upload Package
-        uses: actions/upload-artifact@v4
-        with: 
-          name: nuget-packages
-          path: ${{ env.OUTPUT }}
+#      - name: Upload Package
+#        uses: actions/upload-artifact@v4
+#        with: 
+#          name: nuget-packages
+#          path: ${{ env.OUTPUT }}
