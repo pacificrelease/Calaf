@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Ignore configuration files with sensitive information
+config/*.json
+
 # User-specific files
 *.suo
 *.user

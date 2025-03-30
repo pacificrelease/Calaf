@@ -24,6 +24,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{612D
 		scripts\build.ps1 = scripts\build.ps1
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config", "config", "{D3CF48B3-A80D-456A-BCD8-9D9C06F33BC2}"
+	ProjectSection(SolutionItems) = preProject
+		config\local-build-settings.json = config\local-build-settings.json
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
