@@ -8,21 +8,20 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5944D9F3-662
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NCalVerTool", "src\NCalVerTool\NCalVerTool.csproj", "{567EB858-0044-44EA-9EB3-3A5FD7B2C437}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{80320635-4603-4EA4-8718-D2249CE3B7AE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{22FAC276-020D-4869-A02A-D8D352B41891}"
 	ProjectSection(SolutionItems) = preProject
 		.github\workflows\build.yml = .github\workflows\build.yml
 		.github\workflows\codeql-analysis.yml = .github\workflows\codeql-analysis.yml
-		.github\workflows\build.local.yml = .github\workflows\build.local.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{612D13F6-F6D3-4F92-9B76-A11E2B0F7AAB}"
 	ProjectSection(SolutionItems) = preProject
 		scripts\build.ps1 = scripts\build.ps1
 	EndProjectSection
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NCalVerTool", "src\NCalVerTool\NCalVerTool.fsproj", "{C23E829F-EB46-4B45-9756-275CECCEF309}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,13 +32,13 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{567EB858-0044-44EA-9EB3-3A5FD7B2C437} = {5944D9F3-6620-4AF5-A057-D6DD8CD0E1FB}
 		{22FAC276-020D-4869-A02A-D8D352B41891} = {80320635-4603-4EA4-8718-D2249CE3B7AE}
+		{C23E829F-EB46-4B45-9756-275CECCEF309} = {5944D9F3-6620-4AF5-A057-D6DD8CD0E1FB}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{567EB858-0044-44EA-9EB3-3A5FD7B2C437}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{567EB858-0044-44EA-9EB3-3A5FD7B2C437}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{567EB858-0044-44EA-9EB3-3A5FD7B2C437}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{567EB858-0044-44EA-9EB3-3A5FD7B2C437}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C23E829F-EB46-4B45-9756-275CECCEF309}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C23E829F-EB46-4B45-9756-275CECCEF309}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C23E829F-EB46-4B45-9756-275CECCEF309}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C23E829F-EB46-4B45-9756-275CECCEF309}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
