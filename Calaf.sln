@@ -21,7 +21,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{612D
 		scripts\build.ps1 = scripts\build.ps1
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "NCalVerTool", "src\NCalVerTool\NCalVerTool.fsproj", "{C23E829F-EB46-4B45-9756-275CECCEF309}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Calaf", "src\Calaf\Calaf.fsproj", "{C23E829F-EB46-4B45-9756-275CECCEF309}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config", "config", "{08CCEE5C-42F2-464A-B45E-6346BC676E1A}"
+	ProjectSection(SolutionItems) = preProject
+		config\local-build-settings.json = config\local-build-settings.json
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

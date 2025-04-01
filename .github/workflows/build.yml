@@ -9,7 +9,7 @@ on:
       - main
         
 env: 
-  SOLUTION: 'NCalVer.sln'
+  SOLUTION: 'Calaf.sln'
   
 jobs:
   build:

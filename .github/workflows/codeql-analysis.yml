@@ -21,7 +21,7 @@ jobs:
         strategy: 
             fail-fast: false
             matrix:
-              language: [ 'csharp' ]
+              language: [ 'fsharp' ]
         
         steps:
             - name: Checkout Repository
@@ -43,4 +43,4 @@ jobs:
               id: analyze_codeql
               uses: github/codeql-action/analyze@v3
               with:
-                category: '/language:csharp/type:console'
+                category: '/language:fsharp/type:console'

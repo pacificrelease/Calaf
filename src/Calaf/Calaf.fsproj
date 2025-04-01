@@ -5,13 +5,17 @@
         <TargetFramework>net8.0</TargetFramework>
 
         <PackAsTool>true</PackAsTool>
-        <ToolCommandName>make-calver</ToolCommandName>
+        <ToolCommandName>calendarize</ToolCommandName>
         <Version>0.1.0</Version>
-        <Title>NCalVer</Title>
+        <Title>Calaf</Title>
     </PropertyGroup>
 
     <ItemGroup>
         <Compile Include="Program.fs"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="LibGit2Sharp" Version="0.31.0" />
     </ItemGroup>
 
 </Project>
