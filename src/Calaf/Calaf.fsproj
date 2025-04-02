@@ -4,6 +4,7 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>net8.0</TargetFramework>
 
+        <PackageId>calaf-tool</PackageId>
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>calendarize</ToolCommandName>
         <Version>0.1.0</Version>
