@@ -2,7 +2,9 @@
 
 open Calaf.FileSystem
 
-let projects = ListProjects(Some "../../..")
+let rootPath = Some "D:/"
+
+let projects = ListProjects(None)
 let count = projects.Length
 
 printfn "Calendar Version has called. 🚀. \n"

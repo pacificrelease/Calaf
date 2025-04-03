@@ -7,7 +7,7 @@
         <PackageId>calaf-tool</PackageId>
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>calendarize</ToolCommandName>
-        <Version>2025.4.2</Version>
+        <Version>2025.4.2_1</Version>
         <Title>Calaf</Title>
     </PropertyGroup>
 
