@@ -2,10 +2,11 @@
 
 open Calaf.FileSystem
 
-let rootPath = Some "D:/"
+//let rootPath = Some "D:/"
+let rootPath = Some "../../../../.."
+let workspace = InitWorkspace rootPath
 
-let projects = ListProjects(None)
-let count = projects.Length
+let count = workspace.Projects.Length
 
 printfn "Calendar Version has called. 🚀. \n"
 printfn $"{count} projects found 🚀. \n"
