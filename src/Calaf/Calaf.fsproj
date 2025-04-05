@@ -7,17 +7,18 @@
         <PackageId>calaf-tool</PackageId>
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>calendarize</ToolCommandName>
-        <Version>2025.04.03.1</Version>
+        <Version>2025.4.1</Version>
         <Title>Calaf</Title>
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Domain.fs" />
+        <Compile Include="DomainTypes.fs" />
         <Compile Include="FileSystem.fs" />
         <Compile Include="Program.fs"/>
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="FsToolkit.ErrorHandling" Version="4.18.0" />
       <PackageReference Include="LibGit2Sharp" Version="0.31.0" />
     </ItemGroup>
 
