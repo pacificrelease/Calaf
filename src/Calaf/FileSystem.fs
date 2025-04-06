@@ -45,12 +45,26 @@ module private FileSystem =
         |> Array.choose mapProject
 
 module private Xml =
-    let private readVersion (projectMetadata : ProjectMetadata) =
-        let xml = System.Xml.Linq.XElement.Load(projectMetadata.AbsolutePath)
-        let version = xml.Element("PropertyGroup").Element("Version")
-        match version with
-        | null -> None
-        | _    -> Some version.Value
+    let private readXml (absolutePath: string) =
+        let xml = System.Xml.Linq.XElement.Load(absolutePath)
+        xml
+        
+    let private readVersionElements absolutePath =
+        option {
+            let xml = readXml(absolutePath)
+            let versionElements = xml.Elements("PropertyGroup") |> Seq.map _.Elements("Version")
+            let version = versionElements |> Seq.tryHead
+            return! version
+        }              
+        
+    let private readVersion absolutePath =
+        option {
+            let! versionElements = readVersionElements absolutePath
+            return! match versionElements with
+                    | seq when Seq.isEmpty seq -> None
+                    | seq when Seq.length seq > 1 -> None
+                    | seq -> Some (seq |> Seq.head).Value
+        }        
     
     let private parseYear (year: string) =
         option {
@@ -101,14 +115,19 @@ module private Xml =
                 | _ ->
                     return LooksLikeSemVer(version)
             | [| year; month |] ->
-                let! year = parseYear year
-                let! month = parseMonth month
-                return CalVer({ Year = year; Month = month; Patch = None })
-            | _ -> return Unsupported
+                let year = parseYear year
+                let month = parseMonth month
+                match year, month with
+                | Some year, Some month ->
+                    return CalVer({ Year = year; Month = month; Patch = None })
+                | _ ->
+                    return Unsupported
+            | _ ->
+                return Unsupported
         }
         
     let getVersion (projectMetadata: ProjectMetadata) =
         option {
-            let! version = readVersion projectMetadata
+            let! version = readVersion projectMetadata.AbsolutePath
             return! mapVersion version
         }
