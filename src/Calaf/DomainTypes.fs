@@ -1,5 +1,6 @@
 ﻿namespace Calaf
 
+type SuitableString = string
 type Year  = uint16
 type Month = uint8
 type Patch = uint32
