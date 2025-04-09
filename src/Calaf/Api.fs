@@ -165,6 +165,17 @@ module WorkingDir =
 module FileSystem =    
     let readFilesMatching (pattern: string) (workingDir: DirectoryInfo) : FileInfo[] =
         workingDir.GetFiles(pattern, SearchOption.AllDirectories)
+        
+module Workspace =
+    let getBumpableProjects (workspace: Workspace) : Project[] =
+            workspace.Projects
+            |> Array.choose (function
+                | Versioned (metadata, lang, version) when version.IsCalVer
+                    -> Some(Project.Versioned((metadata, lang, version)))
+                | Bumped (metadata, lang, previousVersion, currentVersion)
+                    -> Some(Project.Bumped((metadata, lang, previousVersion, currentVersion)))
+                | _
+                    -> None)
 
 module Xml =        
     let tryLoadXml (absolutePath: string) : System.Xml.Linq.XElement option =

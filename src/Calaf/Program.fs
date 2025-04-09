@@ -2,11 +2,10 @@
 
 open Calaf
 
-//let rootPath = Some "D:/"
 let rootPath = "../../../../.."
 let workspace = Api.CreateWorkspace rootPath
-
-let count = workspace.Projects.Length
+let bumpableProject = Api.Workspace.getBumpableProjects workspace
+let count = bumpableProject.Length
 
 printfn "Calendar Version has called. 🚀. \n"
-printfn $"{count} projects found 🚀. \n"
+printfn $"{count} projects are ready to bump 🚀. \n"
