@@ -8,9 +8,9 @@ type Patch = uint32
 //YYYY.MM.PATCH
 //YYYY.MM
 type CalendarVersion = {
-    Year: Year
+    Year:   Year
     Month:  Month
-    Patch: Patch option
+    Patch:  Patch option
 }
 
 type Version =
@@ -24,6 +24,7 @@ type Language =
 
 type ProjectMetadata = {
     Name : string
+    Extension: string
     Directory : string
     AbsolutePath : string
 }

@@ -1,10 +1,10 @@
 ﻿// For more information see https://aka.ms/fsharp-console-apps
 
-open Calaf.FileSystem
+open Calaf
 
 //let rootPath = Some "D:/"
 let rootPath = Some "../../../../.."
-let workspace = InitWorkspace rootPath
+let workspace = Api.CreateWorkspace rootPath
 
 let count = workspace.Projects.Length
 
