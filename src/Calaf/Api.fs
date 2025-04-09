@@ -3,66 +3,68 @@ module rec Calaf.Api
 
 open System.IO
 open FsToolkit.ErrorHandling
- 
-let getProject (metadata: ProjectMetadata) : Project option =
+
+[<Literal>]
+let searchFilesPattern = "*.?sproj"
+
+let private tryParseProject (metadata: ProjectMetadata) : Project option =
     option {
-        let! xml = Xml.tryReadXml(metadata.AbsolutePath)
-        let! project = Project.tryCreate(metadata, xml)
-        return project
+        let! xml = Xml.tryLoadXml(metadata.AbsolutePath)
+        return! Project.tryCreate(metadata, xml)
     }
     
-let private listProjects (workingDir : DirectoryInfo) =
-    FileSystem.files workingDir
+let private loadProjectsFrom (workingDir : DirectoryInfo) =
+    FileSystem.readFilesMatching searchFilesPattern workingDir
     |> Seq.map ProjectMetadata.create
-    |> Seq.choose getProject
+    |> Seq.choose tryParseProject
     |> Seq.toArray
     
-let CreateWorkspace workingDir =
+let CreateWorkspace (workingDir: string) =
     let workingDir = WorkingDir.create workingDir
-    let projects = workingDir |> listProjects 
+    let projects = workingDir |> loadProjectsFrom 
     {
       Name = workingDir.Name
       Directory = workingDir.FullName
       Projects = projects
     }
-    
+
 
 // Pure
 module Year =
-    let private tryGetSuitableYearString (year: string) : SuitableString option =
+    let private tryGetYearString (year: string) : SuitableVersionPart option =
         match year with
         | year when year.Length = 4 &&
                     year |> Seq.forall System.Char.IsDigit
             -> Some year
         | _ -> None
         
-    let private tryCreateYear (suitableYearString: SuitableString) : Year option =
+    let private tryCreateYear (suitableYearString: SuitableVersionPart) : Year option =
         match System.UInt16.TryParse(suitableYearString) with
         | true, year -> Some year
         | _ -> None
         
     let tryCreate (year: string) : Year option =
         option {
-            let! suitableYearString = tryGetSuitableYearString(year)                
+            let! suitableYearString = tryGetYearString(year)                
             return! tryCreateYear suitableYearString
         }
-        
+
 module Month =
-    let private tryGetSuitableMonthString (month: string) : SuitableString option =
+    let private tryGetMonthString (month: string) : SuitableVersionPart option =
         match month with
         | month when (month.Length = 1 || month.Length = 2) &&
                       month |> Seq.forall System.Char.IsDigit
             -> Some month
         | _ -> None
         
-    let private tryCreateMonth (suitableMonthString: SuitableString) : Month option =
+    let private tryCreateMonth (suitableMonthString: SuitableVersionPart) : Month option =
         match System.Byte.TryParse(suitableMonthString) with
         | true, month -> Some month
         | _ -> None
         
     let tryCreate (month: string) : Month option =
         option {
-            let! suitableMonthString = tryGetSuitableMonthString(month)                
+            let! suitableMonthString = tryGetMonthString(month)                
             return! tryCreateMonth suitableMonthString
         }
 
@@ -119,14 +121,14 @@ module Version =
             let! versionString = tryGetVersionString seqVersionElements
             return! tryCreateVersion versionString
         }
-        
+
 module Language =
     let tryCreate ext =
         match ext with
         | ".fsproj" -> Some(Language.FSharp)
         | ".csproj" -> Some(Language.CSharp)
         | _         -> None
-        
+
 module ProjectMetadata =
     let create (fileInfo: FileInfo) : ProjectMetadata =
         {
@@ -146,26 +148,26 @@ module Project =
                 | Some version -> Versioned(metadata, language, version)
                 | None   -> Eligible(metadata, language)
         }
-        
+
 module WorkingDir =
     let private workingDirOrDefault workingDir =
         defaultArg workingDir "."
 
-    let create (workingDir: string option) =
+    let private workingDirOrDefault2 workingDir =        
+        if System.String.IsNullOrWhiteSpace workingDir then "." else workingDir
+
+    let create(workingDir: string) =
         workingDir
-        |> workingDirOrDefault
+        |> workingDirOrDefault2
         |> DirectoryInfo
 
 // Impure
-module FileSystem =
-    [<Literal>]
-    let searchPattern = "*.?sproj"
-    let files (workingDir: DirectoryInfo) : FileInfo seq =        
-        let files = workingDir.GetFiles(searchPattern, SearchOption.AllDirectories)
-        files |> Array.toSeq
+module FileSystem =    
+    let readFilesMatching (pattern: string) (workingDir: DirectoryInfo) : FileInfo[] =
+        workingDir.GetFiles(pattern, SearchOption.AllDirectories)
 
 module Xml =        
-    let tryReadXml (absolutePath: string) : System.Xml.Linq.XElement option =
+    let tryLoadXml (absolutePath: string) : System.Xml.Linq.XElement option =
         try
             let xml = System.Xml.Linq.XElement.Load(absolutePath)
             Some xml

@@ -3,7 +3,7 @@
 open Calaf
 
 //let rootPath = Some "D:/"
-let rootPath = Some "../../../../.."
+let rootPath = "../../../../.."
 let workspace = Api.CreateWorkspace rootPath
 
 let count = workspace.Projects.Length
