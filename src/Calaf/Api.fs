@@ -20,12 +20,14 @@ let private loadProjectsFrom (workingDir : DirectoryInfo) =
     |> Seq.toArray
     
 let CreateWorkspace (workingDir: string) =
-    let workingDir = WorkingDir.create workingDir
-    let projects = workingDir |> loadProjectsFrom 
+    let directory = WorkingDir.create workingDir
+    let projects = directory |> loadProjectsFrom
+    let version = WorkspaceVersion.create projects
     {
-      Name = workingDir.Name
-      Directory = workingDir.FullName
+      Name = directory.Name
+      Directory = directory.FullName
       Projects = projects
+      Version = version
     }
 
 
@@ -115,11 +117,29 @@ module Version =
                 return Unsupported
         }
         
+    let maxVersion (versions: CalendarVersion[]) : CalendarVersion option =
+        match versions with
+        | [||] -> None
+        | _ ->
+            let maxVersion = versions |> Array.maxBy (fun v -> v.Year, v.Month, v.Patch)
+            Some maxVersion
+        
     let tryCreate (xml: System.Xml.Linq.XElement) : Version option =
         option {
             let! seqVersionElements = trySeqVersionElements xml
             let! versionString = tryGetVersionString seqVersionElements
             return! tryCreateVersion versionString
+        }
+        
+module WorkspaceVersion =
+    let private tryCreatePropertyGroupVersion (projects: Project[]) : CalendarVersion option =
+        Project.chooseCalendarVersions projects
+        |> Version.maxVersion
+        
+    let create (projects: Project[]) : WorkspaceVersion =
+        let propertyGroup = tryCreatePropertyGroupVersion projects
+        {
+          PropertyGroup = propertyGroup
         }
 
 module Language =
@@ -139,6 +159,14 @@ module ProjectMetadata =
         }
 
 module Project =
+    let chooseCalendarVersions (projects: Project[]) : CalendarVersion[] =
+        projects
+        |> Array.choose (function
+            | Versioned (_, _, CalVer version) -> Some version
+            | Bumped (_, _, _, version) -> Some version
+            | _ -> None)
+        
+        
     let tryCreate (metadata: ProjectMetadata, xml: System.Xml.Linq.XElement) : Project option =
         option {            
             let! language = Language.tryCreate metadata.Extension
@@ -160,20 +188,19 @@ module WorkingDir =
         workingDir
         |> workingDirOrDefault2
         |> DirectoryInfo
-
-// Impure
-module FileSystem =    
-    let readFilesMatching (pattern: string) (workingDir: DirectoryInfo) : FileInfo[] =
-        workingDir.GetFiles(pattern, SearchOption.AllDirectories)
         
-module Workspace =
+module Workspace =        
     let getBumpableProjects (workspace: Workspace) : Project[] =
             workspace.Projects
             |> Array.choose (function
                 | Versioned (_, _, CalVer _) as project -> Some project
                 | Bumped _ as project -> Some project
-                | _ -> None)
+                | _ -> None)    
 
+// Impure
+module FileSystem =    
+    let readFilesMatching (pattern: string) (workingDir: DirectoryInfo) : FileInfo[] =
+        workingDir.GetFiles(pattern, SearchOption.AllDirectories)
 module Xml =        
     let tryLoadXml (absolutePath: string) : System.Xml.Linq.XElement option =
         try

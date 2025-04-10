@@ -17,6 +17,10 @@ type Version =
     | CalVer of CalendarVersion
     | LooksLikeSemVer of string
     | Unsupported
+    
+type WorkspaceVersion = {
+    PropertyGroup: CalendarVersion option
+}
 
 type Language =
     | FSharp
@@ -37,5 +41,6 @@ type Project =
 type Workspace = {
     Name: string
     Directory : string
+    Version : WorkspaceVersion
     Projects : Project[]
 }

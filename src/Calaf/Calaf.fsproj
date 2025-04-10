@@ -6,7 +6,7 @@
         <PackageId>calaf-tool</PackageId>
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>calendarize</ToolCommandName>
-        <Version>2025.4.2</Version>
+        <Version>2025.4.3</Version>
         <Title>Calaf</Title>
         <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     </PropertyGroup>

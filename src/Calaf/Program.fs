@@ -4,8 +4,9 @@ open Calaf
 
 let rootPath = "../../../../.."
 let workspace = Api.CreateWorkspace null
-let bumpableProjects = Api.Workspace.getBumpableProjects workspace
-let count = bumpableProjects.Length
+let count = workspace
+            |> Api.Workspace.getBumpableProjects
+            |> Array.length 
 
-printfn "Calendar Version has called. 🚀. \n"
+printfn $"Current calendar version of property group is {workspace.Version.PropertyGroup}. 🚀. \n"
 printfn $"{count} projects are ready to bump 🚀. \n"
