@@ -170,12 +170,9 @@ module Workspace =
     let getBumpableProjects (workspace: Workspace) : Project[] =
             workspace.Projects
             |> Array.choose (function
-                | Versioned (metadata, lang, version) when version.IsCalVer
-                    -> Some(Project.Versioned((metadata, lang, version)))
-                | Bumped (metadata, lang, previousVersion, currentVersion)
-                    -> Some(Project.Bumped((metadata, lang, previousVersion, currentVersion)))
-                | _
-                    -> None)
+                | Versioned (_, _, CalVer _) as project -> Some project
+                | Bumped _ as project -> Some project
+                | _ -> None)
 
 module Xml =        
     let tryLoadXml (absolutePath: string) : System.Xml.Linq.XElement option =
