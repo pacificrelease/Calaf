@@ -3,7 +3,7 @@
 open Calaf
 
 let rootPath = "../../../../.."
-let workspace = Api.CreateWorkspace rootPath
+let workspace = Api.CreateWorkspace null
 let bumpableProjects = Api.Workspace.getBumpableProjects workspace
 let count = bumpableProjects.Length
 
