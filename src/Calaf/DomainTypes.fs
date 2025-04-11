@@ -1,5 +1,5 @@
 ﻿namespace Calaf
-
+   
 type SuitableVersionPart = string
 type Year  = uint16
 type Month = uint8

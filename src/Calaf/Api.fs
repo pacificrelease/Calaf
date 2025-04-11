@@ -32,63 +32,62 @@ let CreateWorkspace (workingDir: string) =
 let GetNextVersion (workspace: Workspace) (timeStamp: System.DateTime) : WorkspaceVersion option =
     option {
         let! propertyGroup = workspace.Version.PropertyGroup
-        let! nextPropertyGroupVersion = Version.tryGetNext propertyGroup timeStamp
-        let nextVersion = { PropertyGroup = Some nextPropertyGroupVersion }
-        return nextVersion
+        let! nextPropertyGroupVersion = Version.tryGetNext propertyGroup timeStamp |> Some
+        return { PropertyGroup = nextPropertyGroupVersion }
     }
 
 // Pure
 module Year =
-    let private tryGetYearString (year: string) : SuitableVersionPart option =
+    let private tryParseYearString (year: string) : SuitableVersionPart option =
         match year with
         | year when year.Length = 4 &&
                     year |> Seq.forall System.Char.IsDigit
             -> Some year
         | _ -> None
         
-    let private tryCreateYear (suitableYearString: SuitableVersionPart) : Year option =
+    let private tryParseYear (suitableYearString: SuitableVersionPart) : Year option =
         match System.UInt16.TryParse(suitableYearString) with
         | true, year -> Some year
         | _ -> None
 
     // TODO: Use ERROR instead of option
-    let tryCreateFromInt32 (year: System.Int32) : Year option =
+    let tryParseFromInt32 (year: System.Int32) : Year option =
         try
             let year = System.Convert.ToUInt16(year)
             Some year
         with _ ->
             None        
 
-    let tryCreateFromString (year: string) : Year option =
+    let tryParseFromString (year: string) : Year option =
         option {
-            let! suitableYearString = tryGetYearString(year)                
-            return! tryCreateYear suitableYearString
+            let! suitableYearString = tryParseYearString(year)                
+            return! tryParseYear suitableYearString
         }
 
 module Month =
-    let private tryGetMonthString (month: string) : SuitableVersionPart option =
+    let private tryParseMonthString (month: string) : SuitableVersionPart option =
         match month with
         | month when (month.Length = 1 || month.Length = 2) &&
                       month |> Seq.forall System.Char.IsDigit
             -> Some month
         | _ -> None
         
-    let private tryCreateMonth (suitableMonthString: SuitableVersionPart) : Month option =
+    let private tryParseMonth (suitableMonthString: SuitableVersionPart) : Month option =
         match System.Byte.TryParse(suitableMonthString) with
         | true, month -> Some month
         | _ -> None
         
-    let tryCreateFromInt32 (month: System.Int32) : Month option =
+    let tryParseFromInt32 (month: System.Int32) : Month option =
         try
             let month = System.Convert.ToByte(month)
             Some month
         with _ ->
             None
-        
-    let tryCreate (month: string) : Month option =
-        option {
-            let! suitableMonthString = tryGetMonthString(month)                
-            return! tryCreateMonth suitableMonthString
+            
+    let tryParseFromString (month: string) : Month option =
+        option {            
+            let! suitableMonthString = tryParseMonthString(month)                
+            return! tryParseMonth suitableMonthString
         }
 
 module Patch =
@@ -98,20 +97,20 @@ module Patch =
         | Some patch -> (patch + increment)
         | None -> increment
         
-    let tryCreate (patch: string) : Patch option =
+    let tryParseFromString (patch: string) : Patch option =
         match System.UInt32.TryParse(patch) with
         | true, patch -> Some patch
         | _ -> None
 
 module Version =
-    let private trySeqVersionElements(xElement: System.Xml.Linq.XElement) =
+    let private tryExtractVersionElements(xElement: System.Xml.Linq.XElement) =
         option {
             let versionElements = xElement.Elements("PropertyGroup") |> Seq.map _.Elements("Version")
             let version = versionElements |> Seq.tryHead
             return! version
         }              
         
-    let private tryGetVersionString (versionElements: System.Xml.Linq.XElement seq) : string option =
+    let private tryExtractVersionString (versionElements: System.Xml.Linq.XElement seq) : string option =
         option {
             return! match versionElements with
                     | seq when Seq.isEmpty seq -> None
@@ -119,22 +118,22 @@ module Version =
                     | seq -> Some (seq |> Seq.head).Value
         }       
         
-    let private tryCreateVersion (suitableVersionString: string)=
+    let private tryParseVersion (suitableVersionString: string)=
         option {
             let parts = suitableVersionString.Split('.')
             match parts with
             | [| year; month; patch |] ->
-                let year = Year.tryCreateFromString year
-                let month = Month.tryCreate month
-                let patch = Patch.tryCreate patch
+                let year = Year.tryParseFromString year
+                let month = Month.tryParseFromString month
+                let patch = Patch.tryParseFromString patch
                 match year, month, patch with
                 | Some year, Some month, patch ->
                     return CalVer({ Year = year; Month = month; Patch = patch })
                 | _ ->
                     return LooksLikeSemVer(suitableVersionString)
             | [| year; month |] ->
-                let year = Year.tryCreateFromString year
-                let month = Month.tryCreate month
+                let year = Year.tryParseFromString year
+                let month = Month.tryParseFromString month
                 match year, month with
                 | Some year, Some month ->
                     return CalVer({ Year = year; Month = month; Patch = None })
@@ -143,6 +142,39 @@ module Version =
             | _ ->
                 return Unsupported
         }
+    
+    // TODO: Use ERROR instead of option    
+    let private tryBumpCurrent (currentVersion: CalendarVersion) (timeStamp: System.DateTime) : CalendarVersion option =
+        option {
+            let! year = Year.tryParseFromInt32 timeStamp.Year
+            let! month = Month.tryParseFromInt32 timeStamp.Month            
+            let bumpYear = year > currentVersion.Year            
+            if bumpYear then
+                return { Year = year
+                         Month = month
+                         Patch = None }
+            else
+                let bumpMonth = month > currentVersion.Month
+                if bumpMonth then
+                    return { Year = currentVersion.Year
+                             Month = month
+                             Patch = None }
+                else
+                    let patch = currentVersion.Patch |> Patch.bump |> Some
+                    return { Year = currentVersion.Year
+                             Month = currentVersion.Month
+                             Patch = patch }           
+        }
+     
+    // // TODO: Use ERROR instead of option
+    // let private tryCreateNew (timeStamp: System.DateTime) : CalendarVersion option =
+    //     option {
+    //         let! year = Year.tryParseFromInt32 timeStamp.Year
+    //         let! month = Month.tryParseFromInt32 timeStamp.Month            
+    //         return { Year = year
+    //                  Month = month
+    //                  Patch = None }
+    //     }
         
     let tryMax (versions: CalendarVersion[]) : CalendarVersion option =
         match versions with
@@ -154,26 +186,14 @@ module Version =
      // TODO: Use ERROR instead of option
     let tryGetNext (currentVersion: CalendarVersion) (timeStamp: System.DateTime) : CalendarVersion option =
         option {
-            let! tsYear = Year.tryCreateFromInt32 timeStamp.Year
-            let! tsMonth = Month.tryCreateFromInt32 timeStamp.Month
-            
-            let bumpYear = tsYear > currentVersion.Year            
-            if bumpYear then
-                return { Year = tsYear; Month = tsMonth; Patch = None }
-            else
-                let bumpMonth = tsMonth > currentVersion.Month
-                if bumpMonth then
-                    return { Year = currentVersion.Year; Month = tsMonth; Patch = None }
-                else
-                    let patch = currentVersion.Patch |> Patch.bump |> Some
-                    return { Year = currentVersion.Year; Month = currentVersion.Month; Patch = patch }
+            return! tryBumpCurrent currentVersion timeStamp
         }
         
-    let tryCreate (xml: System.Xml.Linq.XElement) : Version option =
+    let tryParse (xml: System.Xml.Linq.XElement) : Version option =
         option {
-            let! seqVersionElements = trySeqVersionElements xml
-            let! versionString = tryGetVersionString seqVersionElements
-            return! tryCreateVersion versionString
+            let! seqVersionElements = tryExtractVersionElements xml
+            let! versionString = tryExtractVersionString seqVersionElements
+            return! tryParseVersion versionString
         }
         
 module WorkspaceVersion =
@@ -183,12 +203,10 @@ module WorkspaceVersion =
         
     let create (projects: Project[]) : WorkspaceVersion =
         let propertyGroup = tryCreatePropertyGroupVersion projects
-        {
-          PropertyGroup = propertyGroup
-        }
+        { PropertyGroup = propertyGroup }
 
 module Language =
-    let tryCreate ext =
+    let tryParse ext =
         match ext with
         | ".fsproj" -> Some(Language.FSharp)
         | ".csproj" -> Some(Language.CSharp)
@@ -196,12 +214,10 @@ module Language =
 
 module ProjectMetadata =
     let create (fileInfo: FileInfo) : ProjectMetadata =
-        {
-          Name = fileInfo.Name            
+        { Name = fileInfo.Name            
           Directory = fileInfo.DirectoryName
           AbsolutePath = fileInfo.FullName
-          Extension = fileInfo.Extension
-        }
+          Extension = fileInfo.Extension }
 
 module Project =
     let choosePending (projects: Project[]) : Project[] =
@@ -220,8 +236,8 @@ module Project =
         
     let tryCreate (metadata: ProjectMetadata, xml: System.Xml.Linq.XElement) : Project option =
         option {            
-            let! language = Language.tryCreate metadata.Extension
-            let version = Version.tryCreate xml
+            let! language = Language.tryParse metadata.Extension
+            let version = Version.tryParse xml
             return
                 match version with
                 | Some version -> Versioned(metadata, language, version)
@@ -235,7 +251,7 @@ module WorkingDir =
     let private workingDirOrDefault2 workingDir =        
         if System.String.IsNullOrWhiteSpace workingDir then "." else workingDir
 
-    let create(workingDir: string) =
+    let create (workingDir: string) =
         workingDir
         |> workingDirOrDefault2
         |> DirectoryInfo            
