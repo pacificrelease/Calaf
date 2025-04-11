@@ -14,3 +14,7 @@ module Xml =
             Some xml
         with _ ->
             None
+            
+module Clock =
+    let nowUtc () =
+        System.DateTime.UtcNow

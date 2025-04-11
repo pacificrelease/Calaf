@@ -4,10 +4,9 @@ module rec Calaf.Api
 open System.IO
 open FsToolkit.ErrorHandling
 
-[<Literal>]
-let searchFilesPattern = "*.?sproj"
-    
-let CreateWorkspace (workingDir: string) =
+open Calaf.Functions
+
+let CreateWorkspace workingDir searchFilesPattern =
     let tryParseProject (metadata: ProjectMetadata) : Project option =
         option {
             let! xml = Xml.tryLoadXml(metadata.AbsolutePath)

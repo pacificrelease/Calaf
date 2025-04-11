@@ -3,13 +3,12 @@
 open System
 open Calaf
 
+[<Literal>]
+let searchFilesPattern = "*.?sproj"
+
 let rootPath = "../../../../.."
-let now = DateTime.UtcNow
-let workspace = Api.CreateWorkspace null
-let pendingProjectsCount = workspace.Projects
-                        |> Project.choosePending
-                        |> Array.length
-let nextVersion = Api.GetNextVersion workspace now
+let workspace = Api.CreateWorkspace null searchFilesPattern
+let nextVersion = Clock.nowUtc() |> Api.GetNextVersion workspace 
 
 if workspace.Version.PropertyGroup.IsNone
 then
@@ -18,7 +17,6 @@ then
     printfn "For example: <Version>2023.10</Version> \n"
     Environment.Exit(1)
 else
-    printfn $"Current calendar version of property group is {workspace.Version.PropertyGroup}. 🚀. \n"
-    printfn $"{pendingProjectsCount} projects are ready to bump 🚀. \n"
-    printfn $"{nextVersion} will be a next version 🚀. \n"
+    printfn $"Current version is {workspace.Version.PropertyGroup.Value}. 🚀. \n"
+    printfn $"Next version will be {nextVersion.Value.PropertyGroup.Value}. 🚀. \n"
     Environment.Exit(0)

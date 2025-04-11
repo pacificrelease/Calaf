@@ -1,5 +1,5 @@
 // Pure
-namespace rec Calaf
+module rec Calaf.Functions
 
 open System.IO
 open FsToolkit.ErrorHandling
