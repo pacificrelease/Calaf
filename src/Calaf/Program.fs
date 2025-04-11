@@ -7,7 +7,7 @@ let rootPath = "../../../../.."
 let now = DateTime.UtcNow
 let workspace = Api.CreateWorkspace null
 let pendingProjectsCount = workspace.Projects
-                        |> Api.Project.choosePending
+                        |> Project.choosePending
                         |> Array.length
 let nextVersion = Api.GetNextVersion workspace now
 
