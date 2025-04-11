@@ -5,7 +5,7 @@ open Calaf
 
 let rootPath = "../../../../.."
 let now = DateTime.UtcNow
-let workspace = Api.CreateWorkspace rootPath
+let workspace = Api.CreateWorkspace null
 let pendingProjectsCount = workspace.Projects
                         |> Api.Project.choosePending
                         |> Array.length
