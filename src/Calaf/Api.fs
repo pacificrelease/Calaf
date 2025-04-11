@@ -6,22 +6,21 @@ open FsToolkit.ErrorHandling
 
 [<Literal>]
 let searchFilesPattern = "*.?sproj"
-
-let private tryParseProject (metadata: ProjectMetadata) : Project option =
-    option {
-        let! xml = Xml.tryLoadXml(metadata.AbsolutePath)
-        return! Project.tryCreate(metadata, xml)
-    }
-    
-let private loadProjectsFrom (workingDir : DirectoryInfo) =
-    FileSystem.readFilesMatching searchFilesPattern workingDir
-    |> Seq.map ProjectMetadata.create
-    |> Seq.choose tryParseProject
-    |> Seq.toArray
     
 let CreateWorkspace (workingDir: string) =
+    let tryParseProject (metadata: ProjectMetadata) : Project option =
+        option {
+            let! xml = Xml.tryLoadXml(metadata.AbsolutePath)
+            return! Project.tryCreate(metadata, xml)
+        }        
+    let loadProjects (workingDir : DirectoryInfo) =
+        FileSystem.readFilesMatching searchFilesPattern workingDir
+        |> Seq.map ProjectMetadata.create
+        |> Seq.choose tryParseProject
+        |> Seq.toArray
+    
     let directory = WorkingDir.create workingDir
-    let projects = directory |> loadProjectsFrom
+    let projects = directory |> loadProjects
     let version = WorkspaceVersion.create projects
     {
       Name = directory.Name
@@ -30,6 +29,13 @@ let CreateWorkspace (workingDir: string) =
       Version = version
     }
 
+let GetNextVersion (workspace: Workspace) (timeStamp: System.DateTime) : WorkspaceVersion option =
+    option {
+        let! propertyGroup = workspace.Version.PropertyGroup
+        let! nextPropertyGroupVersion = Version.tryGetNext propertyGroup timeStamp
+        let nextVersion = { PropertyGroup = Some nextPropertyGroupVersion }
+        return nextVersion
+    }
 
 // Pure
 module Year =
@@ -44,8 +50,16 @@ module Year =
         match System.UInt16.TryParse(suitableYearString) with
         | true, year -> Some year
         | _ -> None
-        
-    let tryCreate (year: string) : Year option =
+
+    // TODO: Use ERROR instead of option
+    let tryCreateFromInt32 (year: System.Int32) : Year option =
+        try
+            let year = System.Convert.ToUInt16(year)
+            Some year
+        with _ ->
+            None        
+
+    let tryCreateFromString (year: string) : Year option =
         option {
             let! suitableYearString = tryGetYearString(year)                
             return! tryCreateYear suitableYearString
@@ -64,6 +78,13 @@ module Month =
         | true, month -> Some month
         | _ -> None
         
+    let tryCreateFromInt32 (month: System.Int32) : Month option =
+        try
+            let month = System.Convert.ToByte(month)
+            Some month
+        with _ ->
+            None
+        
     let tryCreate (month: string) : Month option =
         option {
             let! suitableMonthString = tryGetMonthString(month)                
@@ -71,6 +92,12 @@ module Month =
         }
 
 module Patch =
+    let bump (patch: Patch option) : Patch =
+        let increment = 1u
+        match patch with
+        | Some patch -> (patch + increment)
+        | None -> increment
+        
     let tryCreate (patch: string) : Patch option =
         match System.UInt32.TryParse(patch) with
         | true, patch -> Some patch
@@ -97,7 +124,7 @@ module Version =
             let parts = suitableVersionString.Split('.')
             match parts with
             | [| year; month; patch |] ->
-                let year = Year.tryCreate year
+                let year = Year.tryCreateFromString year
                 let month = Month.tryCreate month
                 let patch = Patch.tryCreate patch
                 match year, month, patch with
@@ -106,7 +133,7 @@ module Version =
                 | _ ->
                     return LooksLikeSemVer(suitableVersionString)
             | [| year; month |] ->
-                let year = Year.tryCreate year
+                let year = Year.tryCreateFromString year
                 let month = Month.tryCreate month
                 match year, month with
                 | Some year, Some month ->
@@ -117,12 +144,30 @@ module Version =
                 return Unsupported
         }
         
-    let maxVersion (versions: CalendarVersion[]) : CalendarVersion option =
+    let tryMax (versions: CalendarVersion[]) : CalendarVersion option =
         match versions with
         | [||] -> None
         | _ ->
             let maxVersion = versions |> Array.maxBy (fun v -> v.Year, v.Month, v.Patch)
             Some maxVersion
+     
+     // TODO: Use ERROR instead of option
+    let tryGetNext (currentVersion: CalendarVersion) (timeStamp: System.DateTime) : CalendarVersion option =
+        option {
+            let! tsYear = Year.tryCreateFromInt32 timeStamp.Year
+            let! tsMonth = Month.tryCreateFromInt32 timeStamp.Month
+            
+            let bumpYear = tsYear > currentVersion.Year            
+            if bumpYear then
+                return { Year = tsYear; Month = tsMonth; Patch = None }
+            else
+                let bumpMonth = tsMonth > currentVersion.Month
+                if bumpMonth then
+                    return { Year = currentVersion.Year; Month = tsMonth; Patch = None }
+                else
+                    let patch = currentVersion.Patch |> Patch.bump |> Some
+                    return { Year = currentVersion.Year; Month = currentVersion.Month; Patch = patch }
+        }
         
     let tryCreate (xml: System.Xml.Linq.XElement) : Version option =
         option {
@@ -134,7 +179,7 @@ module Version =
 module WorkspaceVersion =
     let private tryCreatePropertyGroupVersion (projects: Project[]) : CalendarVersion option =
         Project.chooseCalendarVersions projects
-        |> Version.maxVersion
+        |> Version.tryMax
         
     let create (projects: Project[]) : WorkspaceVersion =
         let propertyGroup = tryCreatePropertyGroupVersion projects
@@ -159,13 +204,19 @@ module ProjectMetadata =
         }
 
 module Project =
+    let choosePending (projects: Project[]) : Project[] =
+        projects
+        |> Array.choose (function
+            | Versioned (_, _, CalVer _) as project -> Some project
+            //| Bumped _ as project -> Some project
+            | _ -> None)
+
     let chooseCalendarVersions (projects: Project[]) : CalendarVersion[] =
         projects
         |> Array.choose (function
             | Versioned (_, _, CalVer version) -> Some version
             | Bumped (_, _, _, version) -> Some version
-            | _ -> None)
-        
+            | _ -> None)        
         
     let tryCreate (metadata: ProjectMetadata, xml: System.Xml.Linq.XElement) : Project option =
         option {            
@@ -187,15 +238,7 @@ module WorkingDir =
     let create(workingDir: string) =
         workingDir
         |> workingDirOrDefault2
-        |> DirectoryInfo
-        
-module Workspace =        
-    let getBumpableProjects (workspace: Workspace) : Project[] =
-            workspace.Projects
-            |> Array.choose (function
-                | Versioned (_, _, CalVer _) as project -> Some project
-                | Bumped _ as project -> Some project
-                | _ -> None)    
+        |> DirectoryInfo            
 
 // Impure
 module FileSystem =    
