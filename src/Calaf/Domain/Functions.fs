@@ -70,10 +70,11 @@ module Patch =
         | _ -> None
 
 module Version =
+    // TODO: Use ERROR instead of option
     let private tryExtractVersionElements(xElement: System.Xml.Linq.XElement) =
         option {
             let versionElements = xElement.Elements("PropertyGroup") |> Seq.map _.Elements("Version")
-            let version = versionElements |> Seq.tryHead
+            let version = versionElements |> Seq.tryExactlyOne
             return! version
         }              
         
@@ -85,9 +86,9 @@ module Version =
                     | seq -> Some (seq |> Seq.head).Value
         }       
         
-    let private tryParseVersion (suitableVersionString: string)=
+    let private tryParseVersion (bareVersion: string)=
         option {
-            let parts = suitableVersionString.Split('.')
+            let parts = bareVersion.Split('.')
             match parts with
             | [| year; month; patch |] ->
                 let year = Year.tryParseFromString year
@@ -97,7 +98,7 @@ module Version =
                 | Some year, Some month, patch ->
                     return CalVer({ Year = year; Month = month; Patch = patch })
                 | _ ->
-                    return LooksLikeSemVer(suitableVersionString)
+                    return LooksLikeSemVer(bareVersion)
             | [| year; month |] ->
                 let year = Year.tryParseFromString year
                 let month = Month.tryParseFromString month
@@ -152,8 +153,8 @@ module Version =
         
     let tryParse (xml: System.Xml.Linq.XElement) : Version option =
         option {
-            let! seqVersionElements = tryExtractVersionElements xml
-            let! versionString = tryExtractVersionString seqVersionElements
+            let! versionElements = tryExtractVersionElements xml
+            let! versionString = tryExtractVersionString versionElements
             return! tryParseVersion versionString
         }
         
