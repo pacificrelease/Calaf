@@ -1,10 +1,10 @@
+﻿// Impure
 namespace Calaf
 
 open System.IO
 open Calaf.Errors
 
-// Impure
-module FileSystem =
+module internal FileSystem =
     let private getPathOrCurrentDir path =        
         if System.String.IsNullOrWhiteSpace path then "." else path
         
@@ -28,14 +28,3 @@ module FileSystem =
             |> DomainError.InitWorkspaceError
             |> Error
 
-module Xml =        
-    let TryLoadXml (absolutePath: string) : System.Xml.Linq.XElement option =
-        try
-            let xml = System.Xml.Linq.XElement.Load(absolutePath)
-            Some xml
-        with _ ->
-            None
-
-module Clock =
-    let NowUtc () =
-        System.DateTime.UtcNow

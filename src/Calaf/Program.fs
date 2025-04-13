@@ -7,7 +7,7 @@ open Calaf
 let searchFilesPattern = "*.?sproj"
 
 let rootPath = "../../../../.."
-let result = Api.CreateWorkspace null searchFilesPattern
+let result = Api.CreateWorkspace rootPath searchFilesPattern
 
 match result with
 | Error error ->
@@ -15,7 +15,7 @@ match result with
     Environment.Exit(1)
     
 | Ok workspace ->
-    let nextVersion = Clock.NowUtc() |> Api.GetNextVersion workspace
+    let nextVersion = Clock.NowUtc |> Api.GetNextVersion workspace
     if workspace.Version.PropertyGroup.IsNone
     then
         printfn $"Workspace {workspace.Directory} not initialized. \n"

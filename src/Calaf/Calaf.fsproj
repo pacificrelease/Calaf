@@ -13,9 +13,18 @@
 
     <ItemGroup>
         <Compile Include="Domain\Errors.fs" />
-        <Compile Include="Domain\Types.fs" />
-        <Compile Include="Domain\Functions.fs" />
-        <Compile Include="Infrastructure.fs" />
+        <Compile Include="Domain\DomainTypes.fs" />
+        <Compile Include="Domain\Patch.fs" />
+        <Compile Include="Domain\Month.fs" />
+        <Compile Include="Domain\Year.fs" />
+        <Compile Include="Domain\Version.fs" />
+        <Compile Include="Domain\Language.fs" />
+        <Compile Include="Domain\ProjectMetadata.fs" />
+        <Compile Include="Domain\Project.fs" />
+        <Compile Include="Domain\WorkspaceVersion.fs" />
+        <Compile Include="Infrastructure\FileSystem.fs" />
+        <Compile Include="Infrastructure\Xml.fs" />
+        <Compile Include="Infrastructure\Clock.fs" />
         <Compile Include="Api.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
