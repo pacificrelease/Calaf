@@ -7,7 +7,7 @@ open Calaf
 let searchFilesPattern = "*.?sproj"
 
 let rootPath = "../../../../.."
-let result = Api.CreateWorkspace "dsdsddd" searchFilesPattern
+let result = Api.CreateWorkspace null searchFilesPattern
 
 match result with
 | Error error ->
