@@ -201,15 +201,3 @@ module Project =
                 | Some version -> Versioned(metadata, language, version)
                 | None   -> Eligible(metadata, language)
         }
-
-module WorkingDir =
-    let private workingDirOrDefault workingDir =
-        defaultArg workingDir "."
-
-    let private workingDirOrDefault2 workingDir =        
-        if System.String.IsNullOrWhiteSpace workingDir then "." else workingDir
-
-    let create (workingDir: string) =
-        workingDir
-        |> workingDirOrDefault2
-        |> DirectoryInfo
