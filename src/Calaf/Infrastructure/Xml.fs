@@ -8,4 +8,3 @@ module internal Xml =
             Some xml
         with _ ->
             None
-

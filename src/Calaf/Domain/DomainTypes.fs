@@ -35,9 +35,9 @@ type ProjectMetadata = {
 }
 
 type Project =
-    | Eligible  of metadata: ProjectMetadata * lang: Language
-    | Versioned of metadata: ProjectMetadata * lang: Language * currentVersion: Version
-    | Bumped    of metadata: ProjectMetadata * lang: Language * previousVersion: CalendarVersion * currentVersion: CalendarVersion
+    | Unversioned of metadata: ProjectMetadata * lang: Language
+    | Versioned   of metadata: ProjectMetadata * lang: Language * currentVersion: Version
+    | Bumped      of metadata: ProjectMetadata * lang: Language * previousVersion: CalendarVersion * currentVersion: CalendarVersion
 
 type Workspace = {
     Name: string

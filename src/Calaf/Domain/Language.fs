@@ -4,6 +4,6 @@ open Calaf.Domain.DomainTypes
  
  let tryParse ext =
     match ext with
-    | ".fsproj" -> Some(Language.FSharp)
-    | ".csproj" -> Some(Language.CSharp)
+    | ".fsproj" -> Language.FSharp |> Some
+    | ".csproj" -> Language.CSharp |> Some
     | _         -> None

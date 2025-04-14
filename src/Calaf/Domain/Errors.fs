@@ -4,5 +4,7 @@ namespace Calaf.Domain.Errors
 open Calaf.Domain.DomainTypes
 
 type DomainError =
-    | InitWorkspaceError of desc: string
-    | BumpVersionError of desc: string * currentVersion: Version * timeStamp: System.DateTime
+    | InitWorkspaceError         of msg: string
+    | UnversionedProjectError    of project: Project
+    | InvalidProjectVersionError of project: Project
+    | BumpedProjectError         of project: Project

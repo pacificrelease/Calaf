@@ -24,13 +24,15 @@ module Api =
             
             let! directory = workingDir |> FileSystem.TryGetDirectoryInfo        
             let projects = directory |> loadProjects
-            let version = WorkspaceVersion.create projects
-            let workspace = { Name = directory.Name
-                              Directory = directory.FullName
-                              Projects = projects
-                              Version = version }
-            return workspace
+            return Workspace.create(directory, projects)
         }
+        
+    let BumpWorkspace (workspace: Workspace) (timeStamp: System.DateTime) : WorkspaceVersion option =
+        option {
+            let! propertyGroup = workspace.Version.PropertyGroup
+            let! nextPropertyGroupVersion = Version.tryBump propertyGroup timeStamp |> Some
+            return { PropertyGroup = nextPropertyGroupVersion }
+        }    
 
     // TODO: Remove this function because of another workflows is going to be used
     let GetNextVersion (workspace: Workspace) (timeStamp: System.DateTime) : WorkspaceVersion option =

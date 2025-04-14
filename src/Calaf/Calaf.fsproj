@@ -22,6 +22,7 @@
         <Compile Include="Domain\ProjectMetadata.fs" />
         <Compile Include="Domain\Project.fs" />
         <Compile Include="Domain\WorkspaceVersion.fs" />
+        <Compile Include="Domain\Workspace.fs" />
         <Compile Include="Infrastructure\FileSystem.fs" />
         <Compile Include="Infrastructure\Xml.fs" />
         <Compile Include="Infrastructure\Clock.fs" />
