@@ -9,12 +9,18 @@ open Calaf.Domain.Errors
 open Calaf.Domain
 
 module Api =
-    let CreateWorkspace workingDir searchFilesPattern : Result<Workspace, DomainError> =
+    let CreateWorkspace workingDir searchFilesPattern : Result<Workspace, CalafError> =
         result {             
             let tryParseProject (metadata: ProjectMetadata) : Project option =
-                option {
-                    let! xml = Xml.TryLoadXml(metadata.AbsolutePath)
-                    return! Project.tryCreate(metadata, xml)
+                option {                
+                    let result = Xml.TryLoadXml(metadata.AbsolutePath)
+                    match result with
+                    | Error _ ->
+                        // Handle error or mb add new type of the Project -> Unavailable (for example)
+                        return! None
+                    | Ok xml ->
+                        let! project = Project.tryCreate(metadata, xml)
+                        return project
                 }        
             let loadProjects (workingDir : DirectoryInfo) =
                 FileSystem.ReadFilesMatching searchFilesPattern workingDir
@@ -22,7 +28,7 @@ module Api =
                 |> Seq.choose tryParseProject
                 |> Seq.toArray
             
-            let! directory = workingDir |> FileSystem.TryGetDirectoryInfo        
+            let! directory = workingDir |> FileSystem.TryGetDirectoryInfo |> Result.mapError CalafError.FileSystem
             let projects = directory |> loadProjects
             return Workspace.create(directory, projects)
         }

@@ -34,15 +34,12 @@ let tryBump (project: Project, nextVersion: CalendarVersion) =
         (pm, lang, currentVersion, nextVersion)
         |> Bumped
         |> Ok
-    | Versioned _ as v ->
-        v
-        |> InvalidProjectVersionError 
+    | Versioned _ ->
+        NoCalendarVersionProject
         |> Error
-    | Unversioned _ as u ->
-        u
-        |> UnversionedProjectError
+    | Unversioned _ ->
+        UnversionedProject
         |> Error
-    | Bumped _ as b ->
-        b
-        |> BumpedProjectError
+    | Bumped _ ->
+        AlreadyBumpedProject
         |> Error 

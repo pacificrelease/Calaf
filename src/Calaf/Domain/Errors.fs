@@ -1,10 +1,20 @@
 ﻿// Domain Errors
 namespace Calaf.Domain.Errors
 
-open Calaf.Domain.DomainTypes
-
-type DomainError =
-    | InitWorkspaceError         of msg: string
-    | UnversionedProjectError    of project: Project
-    | InvalidProjectVersionError of project: Project
-    | BumpedProjectError         of project: Project
+type BumpProjectError =
+    | NoCalendarVersionProject
+    | UnversionedProject
+    | AlreadyBumpedProject
+    
+type FileSystemError =
+    | NotExistOrBadPath of msg: string
+    | AccessPathError   of ex: exn
+    
+type XmlError =
+    | ReadXmlError of ex: exn
+    
+type CalafError =
+    | Bump       of BumpProjectError
+    | FileSystem of FileSystemError
+    | Xml        of XmlError
+    

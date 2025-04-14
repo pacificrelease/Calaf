@@ -13,20 +13,19 @@ module internal FileSystem =
     let ReadFilesMatching (pattern: string) (path: DirectoryInfo) : FileInfo[] =
         path.GetFiles(pattern, SearchOption.AllDirectories)    
 
-    let TryGetDirectoryInfo (path: string) : Result<DirectoryInfo, DomainError> =
+    let TryGetDirectoryInfo (path: string) : Result<DirectoryInfo, FileSystemError> =
         try
-            if path |> getPathOrCurrentDir |> Directory.Exists
+            let path = path |> getPathOrCurrentDir |> DirectoryInfo
+            if path.Exists
             then
                 path
-                |> getPathOrCurrentDir
-                |> DirectoryInfo
                 |> Ok
             else
-                $"Path {path} does not exist or does not have enough permissions to access it."
-                |> DomainError.InitWorkspaceError 
+                $"Path {path.FullName} does not exist or can't determine if it exists."
+                |> NotExistOrBadPath 
                 |> Error
         with exn ->
-            exn.Message
-            |> DomainError.InitWorkspaceError
+            exn
+            |> AccessPathError
             |> Error
 
