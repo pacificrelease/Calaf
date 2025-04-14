@@ -4,7 +4,9 @@ namespace Calaf
 open System.IO
 open FsToolkit.ErrorHandling
 
-open Calaf.Errors
+open Calaf.Domain.DomainTypes
+open Calaf.Domain.Errors
+open Calaf.Domain
 
 module Api =
     let CreateWorkspace workingDir searchFilesPattern : Result<Workspace, DomainError> =
@@ -30,9 +32,10 @@ module Api =
             return workspace
         }
 
+    // TODO: Remove this function because of another workflows is going to be used
     let GetNextVersion (workspace: Workspace) (timeStamp: System.DateTime) : WorkspaceVersion option =
         option {
             let! propertyGroup = workspace.Version.PropertyGroup
-            let! nextPropertyGroupVersion = Version.tryGetNext propertyGroup timeStamp |> Some
+            let! nextPropertyGroupVersion = Version.tryBump propertyGroup timeStamp |> Some
             return { PropertyGroup = nextPropertyGroupVersion }
         }

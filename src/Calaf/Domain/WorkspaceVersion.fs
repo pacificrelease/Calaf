@@ -1,9 +1,9 @@
-﻿namespace Calaf
+﻿module internal Calaf.Domain.WorkspaceVersion
 
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>] 
-module internal WorkspaceVersion =    
-    let create (projects: Project[]) : WorkspaceVersion =
-        let propertyGroupVersion = projects
-                                |> Project.chooseCalendarVersions
-                                |> Version.tryMax 
-        { PropertyGroup = propertyGroupVersion }
+open Calaf.Domain.DomainTypes
+
+let create (projects: Project[]) : WorkspaceVersion =
+    let propertyGroupVersion = projects
+                            |> Project.chooseCalendarVersions
+                            |> Version.tryMax 
+    { PropertyGroup = propertyGroupVersion }

@@ -1,5 +1,5 @@
 ﻿// Domain Types
-namespace Calaf
+namespace Calaf.Domain.DomainTypes
    
 type SuitableVersionPart = string
 type Year  = uint16
