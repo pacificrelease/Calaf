@@ -10,5 +10,5 @@ let bump (patch: Patch option) : Patch =
     
 let tryParseFromString (patch: string) : Patch option =
     match System.UInt32.TryParse(patch) with
-    | true, patch -> Some patch
+    | true, patch when patch > 0u -> Some patch
     | _ -> None
