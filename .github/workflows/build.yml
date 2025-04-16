@@ -40,4 +40,4 @@ jobs:
         run: dotnet build ${{ vars.SOLUTION }} --no-restore --configuration ${{ vars.CONFIGURATION }}
         
       - name: Test
-        run: dotnet test ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --verbosity detailed --collect:"XPlat Code Coverage" --failfast
+        run: dotnet test ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --verbosity detailed --collect:"XPlat Code Coverage" -- RunConfiguration.FailFast=true
