@@ -40,4 +40,24 @@ jobs:
         run: dotnet build ${{ vars.SOLUTION }} --no-restore --configuration ${{ vars.CONFIGURATION }}
         
       - name: Test
-        run: dotnet test ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --verbosity detailed --collect:"XPlat Code Coverage" -- RunConfiguration.FailFast=true
+        run: dotnet test ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --verbosity normal --collect:"XPlat Code Coverage" -- RunConfiguration.FailFast=true
+        
+      - name: Install ReportGenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+        
+      - name: Convert Coverage to Cobertura
+        run: reportgenerator -reports:**/coverage.cobertura.xml -targetdir:coverage-report -reporttypes:Cobertura
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-report
+          path: coverage-report
+          
+      - name: Upload Coverage to Codecov
+        if: false
+        uses: codecov/codecov-action@v3
+        with:
+          files: coverage-report/Cobertura.xml
+          fail_ci_if_error: true
+          verbose: true
