@@ -12,6 +12,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="AssemblyInfo.fs" />
         <Compile Include="Domain\Errors.fs" />
         <Compile Include="Domain\DomainTypes.fs" />
         <Compile Include="Domain\Patch.fs" />
