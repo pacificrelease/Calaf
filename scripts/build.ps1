@@ -21,11 +21,14 @@ Write-Host "🧪 Absolute Solution path: $AbsoluteSolutionPath"
 
 Write-Host "🧪 Absolute Output path: $AbsoluteOutputPath"
 
-Write-Host "⭐ [1/3] Restoring solution packages $Settings.SolutionRelativePath ..."
+Write-Host "⭐ [1/4] Restoring solution packages $Settings.SolutionRelativePath ..."
 dotnet restore $Settings.SolutionRelativePath
 
-Write-Host "⭐ [2/3] Building solution $SolutionPath ..."
+Write-Host "⭐ [2/4] Building solution $SolutionPath ..."
 dotnet build $SolutionPath --no-restore --configuration $Configuration
 
-Write-Host "⭐ [3/3] Packing to $AbsoluteOutputPath ..."
+Write-Host "⭐ [3/4] Running tests ..."
+dotnet test $SolutionPath --no-build --configuration $Configuration --verbosity detailed --collect:"XPlat Code Coverage" --failfast
+
+Write-Host "⭐ [4/4] Packing to $AbsoluteOutputPath ..."
 dotnet pack $SolutionPath --no-build --configuration $Configuration --output $OutputPath

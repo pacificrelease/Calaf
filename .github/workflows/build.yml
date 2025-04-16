@@ -6,10 +6,7 @@ on:
       - main
   pull_request:
     branches:
-      - main
-        
-env: 
-  SOLUTION: 'Calaf.sln'
+      - main 
   
 jobs:
   build:
@@ -37,7 +34,10 @@ jobs:
             9.0.x
           
       - name: Restore
-        run: dotnet restore ${{ env.SOLUTION }}
+        run: dotnet restore ${{ vars.SOLUTION }}
       
       - name: Build
-        run: dotnet build ${{ env.SOLUTION }} --no-restore
+        run: dotnet build ${{ vars.SOLUTION }} --no-restore
+        
+      - name: Test
+        run: dotnet test ${{ vars.SOLUTION }} --no-build --verbosity detailed --collect:"XPlat Code Coverage" --failfast
