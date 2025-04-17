@@ -2,19 +2,11 @@
 
 open FsCheck.FSharp
 
-module Generator =
-    
-    
-    
-    let greaterThanZeroUInt32 =
+module Generator =    
+    let greaterThanZeroBeforeUInt32MinusOne =
         gen {
-            let! hi = Gen.choose(0, 0xFFFF)
-            let! lo = Gen.choose(0, 0xFFFF)
-            let combined = (uint32 hi <<< 16) ||| uint32 lo
-            if combined = 0u then
-                return 1u
-            else
-                return combined
+            let! genLessThanMax = Gen.choose64(1L, (int64 System.UInt32.MaxValue - 1L))
+            return genLessThanMax |> uint32
         }
         
     let nonNumericString =
@@ -74,9 +66,9 @@ module Generator =
         }
 
 module Arbitrary =
-    type greaterThanZeroUInt32 =
+    type greaterThanZeroBeforeUInt32MinusOne =
         static member greaterThanZeroUInt32() =
-            Arb.fromGen Generator.greaterThanZeroUInt32
+            Arb.fromGen Generator.greaterThanZeroBeforeUInt32MinusOne
             
     type internal nonNumericString =
         static member nonNumericString() =
