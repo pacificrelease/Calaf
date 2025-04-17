@@ -14,9 +14,8 @@ module TryParseFromStringPropertyTests =
         |> tryParseFromString  = Some validPatch
         
     [<Property(Arbitrary = [| typeof<Arbitrary.nonNumericString> |])>]
-    let ``Invalid string parses to None`` (nonNumberPatchStr: string) =
-        nonNumberPatchStr
-        |> string
+    let ``Invalid string parses to None`` (nonNumberStr: string) =
+        nonNumberStr
         |> tryParseFromString= None
         
     [<Property(Arbitrary = [| typeof<Arbitrary.overflowUInt32String> |])>]
