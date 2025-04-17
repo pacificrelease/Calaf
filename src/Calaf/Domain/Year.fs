@@ -1,32 +1,16 @@
 ﻿module internal Calaf.Domain.Year
 
-open FsToolkit.ErrorHandling
-
 open Calaf.Domain.DomainTypes
 
-let private tryParseYearString (year: string) : SuitableVersionPart option =
+let private validate (lowerBoundary: uint16, upperBoundary: uint16) (year: System.UInt16) : Year option =
     match year with
-    | year when year.Length = 4 &&
-                year |> Seq.forall System.Char.IsDigit
-        -> Some year
-    | _ -> None
-    
-let private tryParseYear (suitableYearString: SuitableVersionPart) : Year option =
-    match System.UInt16.TryParse(suitableYearString) with
-    | true, year -> Some year
-    | _ -> None
-
-
-// TODO: Use ERROR instead of option
-let tryParseFromInt32 (year: System.Int32) : Year option =
-    try
-        let year = System.Convert.ToUInt16(year)
-        Some year
-    with _ ->
-        None        
+    | year when year >= lowerBoundary &&
+                year <= upperBoundary -> Some year
+    | _ -> None    
 
 let tryParseFromString (year: string) : Year option =
-    option {
-        let! suitableYearString = tryParseYearString(year)                
-        return! tryParseYear suitableYearString
-    }
+    let validate = validate (1900us, 40000us)
+    match year |> System.UInt16.TryParse with
+    | true, year ->
+        year |> validate
+    | _ -> None
