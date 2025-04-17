@@ -13,8 +13,10 @@ let private tryParseMonthString (month: string) : SuitableVersionPart option =
     
 let private tryParseMonth (suitableMonthString: SuitableVersionPart) : Month option =
     match System.Byte.TryParse(suitableMonthString) with
-    | true, month -> Some month
-    | _ -> None
+    | true, month when month > byte 1 && month <= byte 12 ->
+        Some month
+    | _ ->
+        None
     
     
 let tryParseFromInt32 (month: System.Int32) : Month option =
