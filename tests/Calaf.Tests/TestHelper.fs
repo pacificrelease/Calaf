@@ -5,15 +5,15 @@ open FsCheck.FSharp
 module Generator =
     let private genNegative =
         gen {
-            let! neg = Gen.choose(-99999, -1)
-            return string neg
+            let! neg = Gen.choose(System.Int32.MinValue, -1)
+            return neg
         }
         
     let private genFloat =
         gen {
-            let! whole = Gen.choose(0, 10000)
-            let! frac = Gen.choose(1, 999999)
-            return $"{whole}.{frac:D6}"
+            let! mantissa = Gen.choose(-1_000_000_000, 1_000_000_000)
+            let! exponent = Gen.choose(-308, 308)
+            return float mantissa * System.Math.Pow(10.0, float exponent) |> string
         }
         
     let greaterThanZeroBeforeUInt32MinusOne =
@@ -55,6 +55,11 @@ module Generator =
                 let! big = Gen.choose64(int64 System.UInt32.MaxValue + 1L, System.Int64.MaxValue)
                 return string big
             }
+            
+        let genNegative =
+            gen {
+                return string genNegative
+            }
         
         gen {
             let! choice = Gen.frequency [
@@ -84,6 +89,11 @@ module Generator =
                 return string overflow
             }
             
+        let genNegative =
+            gen {
+                return string genNegative
+            }
+            
         gen {
             let! choice = Gen.frequency [
                 3, genTooBig
@@ -92,9 +102,25 @@ module Generator =
             ]
             return choice
         }
+        
+    let overflowMonthInt32 =
+        let genLittleBig =
+            Gen.elements [0; 13; -1; System.Int32.MinValue; System.Int32.MaxValue]
+            
+        let genTooBig =
+            Gen.choose(13, System.Int32.MaxValue)
+            
+        gen {
+            let! choice = Gen.frequency [
+                1, genLittleBig
+                3, genTooBig
+                3, genNegative
+            ]
+            return choice
+        }
 
 module Arbitrary =
-    type greaterThanZeroBeforeUInt32MinusOne =
+    type internal greaterThanZeroBeforeUInt32MinusOne =
         static member greaterThanZeroUInt32() =
             Arb.fromGen Generator.greaterThanZeroBeforeUInt32MinusOne
             
@@ -117,3 +143,7 @@ module Arbitrary =
     type internal overflowMonthString =
         static member overflowMonthString() =
             Arb.fromGen Generator.overflowMonthString
+            
+    type internal overflowMonthInt32 =
+        static member overflowMonthInt32() =
+            Arb.fromGen Generator.overflowMonthInt32

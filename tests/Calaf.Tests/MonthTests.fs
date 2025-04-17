@@ -8,13 +8,13 @@ open Calaf.Tests
 
 module TryParseFromStringPropertyTests =    
     [<Property(Arbitrary = [| typeof<Arbitrary.validMonthByte> |])>]
-    let ``Valid string parses to corresponding value`` (validMonth: System.Byte) =
+    let ``Valid string parses to corresponding value`` (validMonth: byte) =
         validMonth
         |> string
-        |> tryParseFromString = Some validMonth
+        |> tryParseFromString = Some(byte validMonth)
         
     [<Property(Arbitrary = [| typeof<Arbitrary.leadingZeroDigitString> |])>]
-    let ``leading zero month digit string parses to corresponding value`` (validMonth: string) =
+    let ``Leading zero month digit string parses to corresponding value`` (validMonth: string) =
         validMonth
         |> tryParseFromString = Some(System.Byte.Parse(validMonth))
     
@@ -27,6 +27,18 @@ module TryParseFromStringPropertyTests =
     let ``Number out of 1-12 range parses to None`` (overflowMonth: string) =
         overflowMonth
         |> tryParseFromString = None
+
+module TryParseFromInt32PropertyTests =
+    [<Property(Arbitrary = [| typeof<Arbitrary.validMonthByte> |])>]
+    let ``Valid integer parses to corresponding value`` (validMonth: byte) =
+        validMonth
+        |> int
+        |> tryParseFromInt32 = Some(byte validMonth)
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.overflowMonthInt32> |])>]
+    let ``Integers out of 1-12 range parses to None`` (overflowMonth: int) =
+        overflowMonth
+        |> tryParseFromInt32 = None
         
 module TryParseFromStringTests =
     [<Fact>]
