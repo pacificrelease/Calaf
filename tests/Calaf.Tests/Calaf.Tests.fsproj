@@ -6,7 +6,7 @@
         <GenerateProgramFile>false</GenerateProgramFile>
         <IsTestProject>true</IsTestProject>
         <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-        <Version>2025.4.7</Version>
+        <Version>2025.4.8</Version>
     </PropertyGroup>
 
     <ItemGroup>
