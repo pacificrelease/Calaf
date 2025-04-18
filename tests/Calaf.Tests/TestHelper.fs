@@ -164,6 +164,44 @@ module Generator =
             ]
             return choice
         }
+        
+    let validThreePartCalVerString =
+        gen {
+            let! year = validYearUInt16
+            let! month = validMonthByte
+            let! patch = validPatchUInt32
+            return $"{year}.{month}.{patch}"
+        }
+        
+    let validTwoPartCalVerString =
+        gen {
+            let! year = validYearUInt16
+            let! month = validMonthByte
+            return $"{year}.{month}"
+        }
+        
+    let validSemVerString =
+        let genBigSemVer =
+            gen {
+                let! major = Gen.choose64(0, int64 System.UInt32.MaxValue)
+                let! minor = Gen.choose64(0, int64 System.UInt32.MaxValue)
+                let! patch = Gen.choose64(0, int64 System.UInt32.MaxValue)
+                return $"{major}.{minor}.{patch}"
+            }
+        let genSmallSemVer =
+            gen {
+                let! major = Gen.choose64(0, 999)
+                let! minor = Gen.choose64(0, 99999)
+                let! patch = Gen.choose64(1, 99999)
+                return $"{major}.{minor}.{patch}"
+            }
+        gen {
+            let! choice = Gen.frequency [
+                1, genBigSemVer
+                1, genSmallSemVer
+            ]
+            return choice
+        }
 
 module Arbitrary =
     type internal validPatchUInt32 =
@@ -213,3 +251,15 @@ module Arbitrary =
     type internal overflowYearInt32 =
         static member overflowYearInt32() =
             Arb.fromGen Generator.overflowYearInt32
+            
+    type internal validThreePartCalVerString =
+        static member validThreePartCalVerString() =
+            Arb.fromGen Generator.validThreePartCalVerString
+            
+    type internal validTwoPartCalVerString =
+        static member validTwoPartCalVerString() =
+            Arb.fromGen Generator.validTwoPartCalVerString
+            
+    type internal validSemVerString =
+        static member validSemVerString() =
+            Arb.fromGen Generator.validSemVerString

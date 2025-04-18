@@ -1,11 +1,11 @@
-﻿namespace Calaf.Tests.YearTests
+﻿module Calaf.Tests.YearTests
 
 open FsCheck.Xunit
 
 open Calaf.Tests
 open Calaf.Domain.Year
 
-module TryParseFromStringPropertyTests =
+module TryParseFromStringPropertyTests =    
     [<Property(Arbitrary = [| typeof<Arbitrary.validYearUInt16> |], MaxTest = 200)>]
     let ``Valid string parses to corresponding value`` (validYear: uint16) =
         validYear
@@ -27,7 +27,7 @@ module TryParseFromStringPropertyTests =
         overflowYear
         |> tryParseFromString = None
         
-module TryParseFromInt32PropertyTests =
+module TryParseFromInt32PropertyTests =    
     [<Property(Arbitrary = [| typeof<Arbitrary.validYearUInt16> |], MaxTest = 200)>]
     let ``Valid integer (1 - UInt16 max) parses to the corresponding value`` (validYear: uint16) =
         validYear
