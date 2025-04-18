@@ -9,11 +9,12 @@ module Generator =
             return neg
         }
         
-    let private genFloat =
+    let private genFloat =        
         gen {
-            let! mantissa = Gen.choose(-1_000_000_000, 1_000_000_000)
-            let! exponent = Gen.choose(-308, 308)
-            return float mantissa * System.Math.Pow(10.0, float exponent) |> string
+            let! sign = Gen.elements [""; "-"]
+            let! integer = Gen.choose(0, 1_000_000)
+            let! fraction = Gen.choose(1, 1_000_000)
+            return $"{sign}{integer}.{fraction:D6}"
         }
         
     let greaterThanZeroBeforeUInt32MinusOne =

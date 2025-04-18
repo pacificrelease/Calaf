@@ -23,14 +23,19 @@ Write-Host "🧪 Absolute Solution path: $AbsoluteSolutionPath"
 
 Write-Host "🧪 Absolute Output path: $AbsoluteOutputPath"
 
-Write-Host "⭐ [1/4] Restoring solution packages $Settings.SolutionRelativePath ..."
+Write-Host "⭐ [1/5] Restoring solution packages $Settings.SolutionRelativePath ..."
 dotnet restore $Settings.SolutionRelativePath
 
-Write-Host "⭐ [2/4] Building solution $SolutionPath ..."
+Write-Host "⭐ [2/5] Building solution $SolutionPath ..."
 dotnet build $SolutionPath --no-restore --configuration $Configuration
 
-Write-Host "⭐ [3/4] Running tests ..."
-dotnet test $SolutionPath --no-build --configuration $Configuration --verbosity detailed --collect:"XPlat Code Coverage" --failfast
+$CoverageResultDir = Join-Path $PSScriptRoot "../tests-results"
+Write-Host "⭐ [3/5] Running tests ..."
+dotnet test $SolutionPath --no-build --configuration $Configuration --verbosity detailed --collect:"XPlat Code Coverage" --results-directory:"$CoverageResultDir" -- RunConfiguration.FailFast=true
 
-Write-Host "⭐ [4/4] Packing to $AbsoluteOutputPath ..."
+$CoverageReportDir = Join-Path $PSScriptRoot "../tests-results/coverage-report"
+Write-Host "⭐ [4/5] Saving tests report ..."
+reportgenerator -reports:"$CoverageResultDir/**/coverage.cobertura.xml" -targetdir:"$CoverageReportDir" -reporttypes:Cobertura,Html
+
+Write-Host "⭐ [5/5] Packing to $AbsoluteOutputPath ..."
 dotnet pack $SolutionPath --no-build --configuration $Configuration --output $OutputPath
