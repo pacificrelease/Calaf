@@ -38,17 +38,35 @@ let tryParse (bareVersion: string) : Version option =
     option {
         let parts = bareVersion.Split('.')
         match parts with
-        | [| year; month; patch |] ->
-            let year = Year.tryParseFromString year
-            let month = Month.tryParseFromString month
-            let patch = Patch.tryParseFromString patch
+        | [| first; second; third |] ->
+            let major   = SemVer.tryParseFromString<Major> first
+            let minor   = SemVer.tryParseFromString<Minor> second
+            let patch   = SemVer.tryParseFromString<Patch> third
+            
+            let year    =
+                match major with
+                | Some major -> major |> int32 |> Year.tryParseFromInt32
+                | _ -> Year.tryParseFromString first
+            let month =
+                match minor with
+                | Some minor -> minor |> int32 |> Month.tryParseFromInt32
+                | _ -> second |> Month.tryParseFromString 
+            let patch  =
+                match patch with
+                | Some patch -> Some patch
+                | _ -> third |> Patch.tryParseFromString 
+            
             match year, month, patch with
             | Some year, Some month, patch ->
-                return CalVer({ Year = year; Month = month; Patch = patch })
+                return CalVer({ Year = year; Month = month; Patch = patch })            
             | _ ->
-                return LooksLikeSemVer(bareVersion)
+            match major, minor, patch with
+                | Some major, Some minor, Some patch ->
+                    return LooksLikeSemVer({ Major = major; Minor = minor; Patch = patch })
+                | _ ->
+                    return Unsupported
         | [| year; month |] ->
-            let year = Year.tryParseFromString year
+            let year    = Year.tryParseFromString year
             let month = Month.tryParseFromString month
             match year, month with
             | Some year, Some month ->
