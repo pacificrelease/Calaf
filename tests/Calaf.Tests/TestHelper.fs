@@ -148,6 +148,22 @@ module Generator =
             ]
             return choice
         }
+        
+    let overflowYearInt32 =
+        let genLittleBig =
+            Gen.elements [0; -1; System.Int32.MinValue; int System.UInt16.MaxValue + 1]
+            
+        let genTooBig =
+            Gen.choose(int System.UInt16.MaxValue + 1, System.Int32.MaxValue)
+            
+        gen {
+            let! choice = Gen.frequency [
+                1, genLittleBig
+                3, genTooBig
+                3, genNegative
+            ]
+            return choice
+        }
 
 module Arbitrary =
     type internal validPatchUInt32 =
@@ -193,3 +209,7 @@ module Arbitrary =
     type internal overflowYearString =
         static member overflowYearString() =
             Arb.fromGen Generator.overflowYearString
+            
+    type internal overflowYearInt32 =
+        static member overflowYearInt32() =
+            Arb.fromGen Generator.overflowYearInt32

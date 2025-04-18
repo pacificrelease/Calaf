@@ -7,35 +7,35 @@ open Calaf.Domain.Month
 open Calaf.Tests
 
 module TryParseFromStringPropertyTests =    
-    [<Property(Arbitrary = [| typeof<Arbitrary.validMonthByte> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.validMonthByte> |], MaxTest = 200 )>]
     let ``Valid string parses to corresponding value`` (validMonth: byte) =
         validMonth
         |> string
         |> tryParseFromString = Some(byte validMonth)
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.leadingZeroDigitString> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.leadingZeroDigitString> |], MaxTest = 200)>]
     let ``Leading zero month digit string parses to corresponding value`` (validMonth: string) =
         validMonth
         |> tryParseFromString = Some(System.Byte.Parse(validMonth))
     
-    [<Property(Arbitrary = [| typeof<Arbitrary.nonNumericString> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.nonNumericString> |], MaxTest = 200)>]
     let ``Invalid string parses to None`` (nonNumberStr: string) =
         nonNumberStr
         |> tryParseFromString = None
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.overflowMonthString> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.overflowMonthString> |], MaxTest = 200)>]
     let ``Number out of 1-12 range parses to None`` (overflowMonth: string) =
         overflowMonth
         |> tryParseFromString = None
 
 module TryParseFromInt32PropertyTests =
-    [<Property(Arbitrary = [| typeof<Arbitrary.validMonthByte> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.validMonthByte> |], MaxTest = 200)>]
     let ``Valid integer parses to corresponding value`` (validMonth: byte) =
         validMonth
         |> int
         |> tryParseFromInt32 = Some(byte validMonth)
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.overflowMonthInt32> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.overflowMonthInt32> |], MaxTest = 200)>]
     let ``Integers out of 1-12 range parses to None`` (overflowMonth: int) =
         overflowMonth
         |> tryParseFromInt32 = None
