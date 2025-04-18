@@ -2,12 +2,14 @@
     [string]$SettingsFilePath = "../config/local-build-settings.json"
 )
 
-if (!(Test-Path $SettingsFilePath)) {
+if ((Test-Path $SettingsFilePath)) {
+    Write-Host "✅ Settings file: $SettingsFilePath found"    
+}
+else {
     Write-Host "❌ Settings file: $SettingsFilePath not found"
     exit 1
 }
 
-#✅  
 $Settings = Get-Content $SettingsFilePath -Raw | ConvertFrom-Json
 
 $AbsoluteSolutionPath = (Resolve-Path -Path $Settings.SolutionRelativePath).Path
