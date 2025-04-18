@@ -24,15 +24,15 @@ $Configuration = $Settings.Configuration
 #console output eraser symbol like 🧪
 
 
-Write-Host "🧪 Cleaning: $CoverageResultDirectoryPath"
+Write-Host "🛠️ Cleaning: $CoverageResultDirectoryPath ..."
 Get-ChildItem -Path $CoverageResultDirectoryPath -Recurse | Remove-Item -Force -Recurse
 
-Write-Host "🧪 Cleaning: $CoverageReportDirectoryPath"
+Write-Host "🛠️ Cleaning: $CoverageReportDirectoryPath ..."
 Get-ChildItem -Path $CoverageReportDirectoryPath -Recurse | Remove-Item -Force -Recurse
 
-Write-Host "🧪 Absolute Solution path: $AbsoluteSolutionPath"
+Write-Host "🧪 Absolute Solution path is: $AbsoluteSolutionPath"
 
-Write-Host "🧪 Absolute Output path: $AbsoluteOutputPath"
+Write-Host "🧪 Absolute Output path is: $AbsoluteOutputPath"
 
 Write-Host "⭐ [1/5] Restoring solution packages $Settings.SolutionRelativePath ..."
 dotnet restore $Settings.SolutionRelativePath
