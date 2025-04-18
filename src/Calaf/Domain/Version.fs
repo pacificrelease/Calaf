@@ -4,47 +4,6 @@ open FsToolkit.ErrorHandling
 
 open Calaf.Domain.DomainTypes
 
-// TODO: Use ERROR instead of option?
-let private tryExtractVersionElements(xElement: System.Xml.Linq.XElement) =
-    option {
-        let versionElements = xElement.Elements("PropertyGroup") |> Seq.map _.Elements("Version")
-        let version = versionElements |> Seq.tryExactlyOne
-        return! version
-    }              
-    
-let private tryExtractVersionString (versionElements: System.Xml.Linq.XElement seq) : string option =
-    option {
-        return! match versionElements with
-                | seq when Seq.isEmpty seq -> None
-                | seq when Seq.length seq > 1 -> None
-                | seq -> Some (seq |> Seq.head).Value
-    }       
-    
-let private tryParseVersion (bareVersion: string)=
-    option {
-        let parts = bareVersion.Split('.')
-        match parts with
-        | [| year; month; patch |] ->
-            let year = Year.tryParseFromString year
-            let month = Month.tryParseFromString month
-            let patch = Patch.tryParseFromString patch
-            match year, month, patch with
-            | Some year, Some month, patch ->
-                return CalVer({ Year = year; Month = month; Patch = patch })
-            | _ ->
-                return LooksLikeSemVer(bareVersion)
-        | [| year; month |] ->
-            let year = Year.tryParseFromString year
-            let month = Month.tryParseFromString month
-            match year, month with
-            | Some year, Some month ->
-                return CalVer({ Year = year; Month = month; Patch = None })
-            | _ ->
-                return Unsupported
-        | _ ->
-            return Unsupported
-    }
-
 // TODO: Use ERROR instead of option    
 let tryBump (currentVersion: CalendarVersion) (timeStamp: System.DateTime) : CalendarVersion option =
     option {
@@ -75,9 +34,34 @@ let tryMax (versions: CalendarVersion[]) : CalendarVersion option =
         let maxVersion = versions |> Array.maxBy (fun v -> v.Year, v.Month, v.Patch)
         Some maxVersion
     
-let tryParse (xml: System.Xml.Linq.XElement) : Version option =
+// let tryParse (xml: System.Xml.Linq.XElement) : Version option =
+//     option {
+//         let! versionElements = tryExtractVersionElements xml
+//         let! versionString = tryExtractVersionString versionElements
+//         return! tryParseVersion versionString
+//     }
+
+let tryParse (bareVersion: string) : Version option =
     option {
-        let! versionElements = tryExtractVersionElements xml
-        let! versionString = tryExtractVersionString versionElements
-        return! tryParseVersion versionString
+        let parts = bareVersion.Split('.')
+        match parts with
+        | [| year; month; patch |] ->
+            let year = Year.tryParseFromString year
+            let month = Month.tryParseFromString month
+            let patch = Patch.tryParseFromString patch
+            match year, month, patch with
+            | Some year, Some month, patch ->
+                return CalVer({ Year = year; Month = month; Patch = patch })
+            | _ ->
+                return LooksLikeSemVer(bareVersion)
+        | [| year; month |] ->
+            let year = Year.tryParseFromString year
+            let month = Month.tryParseFromString month
+            match year, month with
+            | Some year, Some month ->
+                return CalVer({ Year = year; Month = month; Patch = None })
+            | _ ->
+                return Unsupported
+        | _ ->
+            return Unsupported
     }

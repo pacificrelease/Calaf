@@ -4,7 +4,7 @@ open FsToolkit.ErrorHandling
 
 open Calaf.Domain.DomainTypes
 open Calaf.Domain.Errors
-
+    
 let choosePending (projects: Project[]) : Project[] =
     projects
     |> Array.choose (function
@@ -19,9 +19,28 @@ let chooseCalendarVersions (projects: Project[]) : CalendarVersion[] =
         | _                                -> None)    
     
 let tryCreate (metadata: ProjectMetadata, xml: System.Xml.Linq.XElement) : Project option =
+    // TODO: Use ERROR instead of option?
+    let tryExtractVersionElements(xElement: System.Xml.Linq.XElement) =
+        xElement.Elements("PropertyGroup")
+        |> Seq.map _.Elements("Version")
+        |> Seq.tryExactlyOne
+        
+    let tryExtractVersionString (versionElements: System.Xml.Linq.XElement seq) : string option =
+        match versionElements with
+        | seq when Seq.isEmpty seq -> None
+        | seq when Seq.length seq > 1 -> None
+        | seq -> Some (seq |> Seq.head).Value
+        
+    let tryExtractVersion (xml: System.Xml.Linq.XElement) : Version option =
+        option {
+            let! versionsElements = xml |> tryExtractVersionElements
+            let! bareVersion = versionsElements |> tryExtractVersionString  
+            return! bareVersion |> Version.tryParse
+        }
+        
     option {            
         let! language = Language.tryParse metadata.Extension
-        let version = Version.tryParse xml
+        let version = xml |> tryExtractVersion
         return
             match version with
             | Some version -> Versioned(metadata, language, version)
