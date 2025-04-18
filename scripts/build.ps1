@@ -24,10 +24,10 @@ $Configuration = $Settings.Configuration
 #console output eraser symbol like 🧪
 
 
-Write-Host "🛠️ Cleaning: $CoverageResultDirectoryPath ..."
+Write-Host "🛠️ Cleaning $CoverageResultDirectoryPath"
 Get-ChildItem -Path $CoverageResultDirectoryPath -Recurse | Remove-Item -Force -Recurse
 
-Write-Host "🛠️ Cleaning: $CoverageReportDirectoryPath ..."
+Write-Host "🛠️ Cleaning $CoverageReportDirectoryPath"
 Get-ChildItem -Path $CoverageReportDirectoryPath -Recurse | Remove-Item -Force -Recurse
 
 Write-Host "🧪 Absolute Solution path is: $AbsoluteSolutionPath"
@@ -43,9 +43,8 @@ dotnet build $SolutionPath --no-restore --configuration $Configuration
 Write-Host "⭐ [3/5] Running tests ..."
 dotnet test $SolutionPath --no-build --configuration $Configuration --verbosity detailed --collect:"XPlat Code Coverage" --results-directory:"$CoverageResultDirectoryPath" -- RunConfiguration.FailFast=true
 
-$CoverageReportDir = Join-Path $PSScriptRoot "../tests-results/coverage-report"
 Write-Host "⭐ [4/5] Saving tests reports ..."
-reportgenerator -reports:"$CoverageResultDir/**/coverage.cobertura.xml" -targetdir:"$CoverageReportDirectoryPath" -reporttypes:Cobertura,Html
+reportgenerator -reports:"$CoverageResultDirectoryPath/**/coverage.cobertura.xml" -targetdir:"$CoverageReportDirectoryPath" -reporttypes:Cobertura,Html
 
 Write-Host "⭐ [5/5] Packing to $AbsoluteOutputPath ..."
 dotnet pack $SolutionPath --no-build --configuration $Configuration --output $OutputPath
