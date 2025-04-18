@@ -13,6 +13,7 @@
         <Compile Include="TestHelper.fs" />
         <Compile Include="PatchTests.fs" />
         <Compile Include="MonthTests.fs" />
+        <Compile Include="YearTests.fs" />
     </ItemGroup>
 
     <ItemGroup>

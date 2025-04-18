@@ -22,6 +22,9 @@ module Generator =
             return uint32 genLessThanMax
         }
         
+    let validPatchUInt32 =
+       Gen.choose64(1L, int64 System.UInt32.MaxValue) |> Gen.map uint32
+        
     let nonNumericString =
         let letterChars = ['a'..'z'] @ ['A'..'Z']
         let specialChars = ['!'; '@'; '#'; '$'; '%'; '^'; '&'; '*'; '('; ')'; '-'; '_'; '+'; '='; '~'; '?'; '/'; '\\'; '['; ']'; '{'; '}'; '|'; '<'; '>'; ','; '.'; ':']
@@ -36,7 +39,7 @@ module Generator =
             
         let genGarbage =
             gen {
-                let! garbage = Gen.elements ["NaN"; "Infinity"; "-Infinity"]
+                let! garbage = Gen.elements ["NaN"; "Infinity"; "-Infinity"; ""; " "]
                 return garbage
             }
             
@@ -49,23 +52,22 @@ module Generator =
             return choice
         }
         
-    let overflowUInt32String =
+    let overflowPatchString =
+        let genZero =
+            Gen.constant "0"
+            
         let genTooBig =
             gen {        
                 let! big = Gen.choose64(int64 System.UInt32.MaxValue + 1L, System.Int64.MaxValue)
                 return string big
-            }
-            
-        let genNegative =
-            gen {
-                return string genNegative
-            }
+            }        
         
         gen {
             let! choice = Gen.frequency [
                 3, genTooBig
-                2, genNegative
-                1, genFloat
+                2, genNegative |> Gen.map string                
+                2, genFloat
+                1, genZero
             ]
             return choice
         }
@@ -82,6 +84,12 @@ module Generator =
             return $"0{month}" 
         }
         
+    let leadingZeroUInt16String =
+        gen {
+            let! year = Gen.choose(1, System.UInt16.MaxValue |> int)
+            return $"{year:D6}"
+        }
+        
     let overflowMonthString =
         let genTooBig =
             gen {
@@ -89,15 +97,10 @@ module Generator =
                 return string overflow
             }
             
-        let genNegative =
-            gen {
-                return string genNegative
-            }
-            
         gen {
             let! choice = Gen.frequency [
                 3, genTooBig
-                2, genNegative
+                2, genNegative |> Gen.map string
                 1, genFloat
             ]
             return choice
@@ -118,8 +121,38 @@ module Generator =
             ]
             return choice
         }
+        
+    let validYearUInt16 =
+        gen {
+            let! year = Gen.choose(1, System.UInt16.MaxValue |> int)
+            return uint16 year
+        }
+        
+    let overflowYearCornerCases =
+            Gen.elements [0; -1; int System.UInt16.MinValue; int System.UInt16.MaxValue + 1]
+        
+    let overflowYearString =
+        let genTooBig =
+            gen {
+                let! overflow = Gen.choose64(int64 (System.UInt16.MaxValue + 1us), System.Int64.MaxValue)
+                return string overflow
+            }
+            
+        gen {
+            let! choice = Gen.frequency [
+                2, genTooBig
+                2, genNegative |> Gen.map string
+                1, overflowYearCornerCases |> Gen.map string
+                1, genFloat
+            ]
+            return choice
+        }
 
 module Arbitrary =
+    type internal validPatchUInt32 =
+        static member validPatchUInt32() =
+            Arb.fromGen Generator.validPatchUInt32
+            
     type internal greaterThanZeroBeforeUInt32MinusOne =
         static member greaterThanZeroUInt32() =
             Arb.fromGen Generator.greaterThanZeroBeforeUInt32MinusOne
@@ -128,9 +161,9 @@ module Arbitrary =
         static member nonNumericString() =
             Arb.fromGen Generator.nonNumericString
             
-    type internal overflowUInt32String =
-        static member overflowUInt32String() =
-            Arb.fromGen Generator.overflowUInt32String
+    type internal overflowPatchString =
+        static member overflowPatchString() =
+            Arb.fromGen Generator.overflowPatchString
             
     type internal validMonthByte =
         static member validMonthByte() =
@@ -147,3 +180,15 @@ module Arbitrary =
     type internal overflowMonthInt32 =
         static member overflowMonthInt32() =
             Arb.fromGen Generator.overflowMonthInt32
+            
+    type internal validYearUInt16 =
+        static member validYearUInt16() =
+            Arb.fromGen Generator.validYearUInt16
+            
+    type internal leadingZeroUInt16String =
+        static member leadingZeroUInt16String() =
+            Arb.fromGen Generator.leadingZeroUInt16String
+            
+    type internal overflowYearString =
+        static member overflowYearString() =
+            Arb.fromGen Generator.overflowYearString
