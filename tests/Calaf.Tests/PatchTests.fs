@@ -1,4 +1,4 @@
-﻿namespace Calaf.Tests.PatchTests
+﻿module Calaf.Tests.PatchTests
 
 open FsCheck.Xunit
 open Xunit

@@ -33,13 +33,6 @@ let tryMax (versions: CalendarVersion[]) : CalendarVersion option =
     | _ ->
         let maxVersion = versions |> Array.maxBy (fun v -> v.Year, v.Month, v.Patch)
         Some maxVersion
-    
-// let tryParse (xml: System.Xml.Linq.XElement) : Version option =
-//     option {
-//         let! versionElements = tryExtractVersionElements xml
-//         let! versionString = tryExtractVersionString versionElements
-//         return! tryParseVersion versionString
-//     }
 
 let tryParse (bareVersion: string) : Version option =
     option {
