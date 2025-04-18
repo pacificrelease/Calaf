@@ -1,5 +1,7 @@
 ﻿param(
-    [string]$SettingsFilePath = "../config/local-build-settings.json"
+    [string]$SettingsFilePath = "../config/local-build-settings.json",
+    [string]$CoverageResultDirectoryPath = "../tests-results",
+    [string]$CoverageReportDirectoryPath = "../tests-results/coverage-reports"
 )
 
 if ((Test-Path $SettingsFilePath)) {
@@ -19,6 +21,15 @@ $SolutionPath  = $Settings.SolutionRelativePath
 $OutputPath    = $Settings.OutputPath
 $Configuration = $Settings.Configuration
 
+#console output eraser symbol like 🧪
+
+
+Write-Host "🧪 Cleaning: $CoverageResultDirectoryPath"
+Get-ChildItem -Path $CoverageResultDirectoryPath -Recurse | Remove-Item -Force -Recurse
+
+Write-Host "🧪 Cleaning: $CoverageReportDirectoryPath"
+Get-ChildItem -Path $CoverageReportDirectoryPath -Recurse | Remove-Item -Force -Recurse
+
 Write-Host "🧪 Absolute Solution path: $AbsoluteSolutionPath"
 
 Write-Host "🧪 Absolute Output path: $AbsoluteOutputPath"
@@ -29,13 +40,12 @@ dotnet restore $Settings.SolutionRelativePath
 Write-Host "⭐ [2/5] Building solution $SolutionPath ..."
 dotnet build $SolutionPath --no-restore --configuration $Configuration
 
-$CoverageResultDir = Join-Path $PSScriptRoot "../tests-results"
 Write-Host "⭐ [3/5] Running tests ..."
-dotnet test $SolutionPath --no-build --configuration $Configuration --verbosity detailed --collect:"XPlat Code Coverage" --results-directory:"$CoverageResultDir" -- RunConfiguration.FailFast=true
+dotnet test $SolutionPath --no-build --configuration $Configuration --verbosity detailed --collect:"XPlat Code Coverage" --results-directory:"$CoverageResultDirectoryPath" -- RunConfiguration.FailFast=true
 
 $CoverageReportDir = Join-Path $PSScriptRoot "../tests-results/coverage-report"
-Write-Host "⭐ [4/5] Saving tests report ..."
-reportgenerator -reports:"$CoverageResultDir/**/coverage.cobertura.xml" -targetdir:"$CoverageReportDir" -reporttypes:Cobertura,Html
+Write-Host "⭐ [4/5] Saving tests reports ..."
+reportgenerator -reports:"$CoverageResultDir/**/coverage.cobertura.xml" -targetdir:"$CoverageReportDirectoryPath" -reporttypes:Cobertura,Html
 
 Write-Host "⭐ [5/5] Packing to $AbsoluteOutputPath ..."
 dotnet pack $SolutionPath --no-build --configuration $Configuration --output $OutputPath
