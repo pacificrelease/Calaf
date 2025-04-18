@@ -2,14 +2,23 @@
 
 open Calaf.Domain.DomainTypes
 
-let private validate (lowerBoundary: uint16, upperBoundary: uint16) (year: System.UInt16) : Year option =
+let private validate (year: System.UInt16) : Year option =
+    let lowerBoundary = 1us
+    let upperBoundary = System.UInt16.MaxValue
     match year with
     | year when year >= lowerBoundary &&
                 year <= upperBoundary -> Some year
-    | _ -> None    
+    | _ -> None
+    
+// TODO: Use ERROR instead of option
+let tryParseFromInt32 (year: System.Int32) : Year option =
+    try
+        year
+        |> System.Convert.ToUInt16
+        |> validate
+    with _ -> None
 
 let tryParseFromString (year: string) : Year option =
-    let validate = validate (1900us, 40000us)
     match year |> System.UInt16.TryParse with
     | true, year ->
         year |> validate
