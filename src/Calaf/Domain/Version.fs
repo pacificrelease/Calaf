@@ -8,7 +8,12 @@ let private tryToUInt32 (versionPart: string) : uint32 option =
     match System.UInt32.TryParse versionPart with
     | true, versionPart -> Some versionPart
     | _ -> None
-    
+
+let toString (calVer: CalendarVersion) : string =
+    match calVer.Patch with
+    | Some patch -> $"{calVer.Year}.{calVer.Month}.{patch}"
+    | None -> $"{calVer.Year}.{calVer.Month}"
+
 // TODO: Use ERROR instead of option    
 let tryBump (currentVersion: CalendarVersion) (timeStamp: System.DateTime) : CalendarVersion option =
     option {
