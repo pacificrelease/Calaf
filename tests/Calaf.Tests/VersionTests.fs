@@ -1,39 +1,18 @@
-﻿module Calaf.Tests.VersionTests
+﻿namespace Calaf.Tests.VersionTests
 
 open FsCheck.Xunit
 
 open Calaf.Domain.DomainTypes
 open Calaf.Domain.Version
-
-// Done
-// Three-part CalVer format
-// Strings with format {year}.{month}.{patch} parse to CalVer with those values
-
-// Done
-// Two-part CalVer format
-// Strings with format {year}.{month} parse to CalVer with those values and no patch
-
-// Done
-// SemVer-like format
-// Strings matching SemVer pattern but not CalVer return LooksLikeSemVer
-
-// Done
-// Invalid format
-// Strings with invalid format return Unsupported
-
-// Invalid parts
-// Valid format but invalid year/month/patch values return correct version type
-
-// Empty string
-// Empty string returns Unsupported
+open Calaf.Tests
 
 module TryParsePropertiesTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.validThreePartCalVerString> |], MaxTest = 200)>]
     let ``Valid three-part CalVer string parses to their corresponding values`` (validVersion: string) =
         let parts = validVersion.Split('.')
-        let expectedYear = uint16 parts.[0]
-        let expectedMonth = byte parts.[1]
-        let expectedPatch = uint32 parts.[2]
+        let expectedYear = uint16 parts[0]
+        let expectedMonth = byte parts[1]
+        let expectedPatch = uint32 parts[2]
 
         match tryParse validVersion with
         | Some (CalVer calVer) ->
@@ -45,8 +24,8 @@ module TryParsePropertiesTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.validTwoPartCalVerString> |], MaxTest = 200)>]
     let ``Valid two-part CalVer string parses to their corresponding values`` (validVersion: string) =
         let parts = validVersion.Split('.')
-        let expectedYear = uint16 parts.[0]
-        let expectedMonth = byte parts.[1]
+        let expectedYear = uint16 parts[0]
+        let expectedMonth = byte parts[1]
 
         match tryParse validVersion with
         | Some (CalVer calVer) ->
@@ -58,12 +37,12 @@ module TryParsePropertiesTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.validSemVerString> |], MaxTest = 200)>]
     let ``Valid SemVer string parses to LooksLikeSemVer`` (semVerVersion: string) =
         let parts = semVerVersion.Split('.')
-        let expectedMajor = uint32 parts.[0]
-        let expectedMinor = uint32 parts.[1]
-        let expectedPatch = uint32 parts.[2]
+        let expectedMajor = uint32 parts[0]
+        let expectedMinor = uint32 parts[1]
+        let expectedPatch = uint32 parts[2]
 
         match tryParse semVerVersion with
-        | Some (LooksLikeSemVer semVer) ->
+        | Some (SemVer semVer) ->
             semVer.Major = expectedMajor &&
             semVer.Minor = expectedMinor &&
             semVer.Patch = expectedPatch
@@ -71,5 +50,10 @@ module TryParsePropertiesTests =
         
     [<Property(Arbitrary = [| typeof<Arbitrary.nonNumericString> |], MaxTest = 200)>]
     let ``Invalid string parses to Unsupported`` (invalidVersion: string) =
+        invalidVersion
+        |> tryParse = Some Unsupported
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.invalidThreePartString> |], MaxTest = 200)>]
+    let ``Invalid CalVer/SemVer but valid three-part format parses to Unsupported`` (invalidVersion: string) =
         invalidVersion
         |> tryParse = Some Unsupported

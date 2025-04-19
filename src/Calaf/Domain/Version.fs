@@ -4,19 +4,24 @@ open FsToolkit.ErrorHandling
 
 open Calaf.Domain.DomainTypes
 
+let private tryToUInt32 (versionPart: string) : uint32 option =
+    match System.UInt32.TryParse versionPart with
+    | true, versionPart -> Some versionPart
+    | _ -> None
+    
 // TODO: Use ERROR instead of option    
 let tryBump (currentVersion: CalendarVersion) (timeStamp: System.DateTime) : CalendarVersion option =
     option {
-        let! year = Year.tryParseFromInt32 timeStamp.Year
+        let! year    = Year.tryParseFromInt32 timeStamp.Year
         let! month = Month.tryParseFromInt32 timeStamp.Month            
-        let bumpYear = year > currentVersion.Year            
-        if bumpYear then
+        let shouldBumpYear = year > currentVersion.Year            
+        if shouldBumpYear then
             return { Year = year
                      Month = month
                      Patch = None }
         else
-            let bumpMonth = month > currentVersion.Month
-            if bumpMonth then
+            let shouldBumpMonth = month > currentVersion.Month
+            if shouldBumpMonth then
                 return { Year = currentVersion.Year
                          Month = month
                          Patch = None }
@@ -39,9 +44,9 @@ let tryParse (bareVersion: string) : Version option =
         let parts = bareVersion.Split('.')
         match parts with
         | [| first; second; third |] ->
-            let major   = SemVer.tryParseFromString<Major> first
-            let minor   = SemVer.tryParseFromString<Minor> second
-            let patch   = SemVer.tryParseFromString<Patch> third
+            let major = tryToUInt32 first
+            let minor = tryToUInt32 second
+            let patch = tryToUInt32 third
             
             let year    =
                 match major with
@@ -62,7 +67,7 @@ let tryParse (bareVersion: string) : Version option =
             | _ ->
             match major, minor, patch with
                 | Some major, Some minor, Some patch ->
-                    return LooksLikeSemVer({ Major = major; Minor = minor; Patch = patch })
+                    return SemVer({ Major = major; Minor = minor; Patch = patch })
                 | _ ->
                     return Unsupported
         | [| year; month |] ->

@@ -1,4 +1,4 @@
-﻿module Calaf.Tests.YearTests
+﻿namespace Calaf.Tests.YearTests
 
 open FsCheck.Xunit
 

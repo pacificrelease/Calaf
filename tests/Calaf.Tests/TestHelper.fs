@@ -202,6 +202,14 @@ module Generator =
             ]
             return choice
         }
+        
+    let invalidThreePartString =
+        gen {
+            let! first  = nonNumericString
+            let! second = nonNumericString
+            let! third  = nonNumericString
+            return $"{first}.{second}.{third}"
+        } 
 
 module Arbitrary =
     type internal validPatchUInt32 =
@@ -263,3 +271,7 @@ module Arbitrary =
     type internal validSemVerString =
         static member validSemVerString() =
             Arb.fromGen Generator.validSemVerString
+            
+    type internal invalidThreePartString =
+        static member invalidThreePartString() =
+            Arb.fromGen Generator.invalidThreePartString

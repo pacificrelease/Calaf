@@ -15,7 +15,6 @@
         <Compile Include="AssemblyInfo.fs" />
         <Compile Include="Domain\Errors.fs" />
         <Compile Include="Domain\DomainTypes.fs" />
-        <Compile Include="Domain\SemVer.fs" />
         <Compile Include="Domain\Patch.fs" />
         <Compile Include="Domain\Month.fs" />
         <Compile Include="Domain\Year.fs" />

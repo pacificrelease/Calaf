@@ -3,6 +3,7 @@ namespace Calaf.Domain.DomainTypes
 
 type Major = uint32
 type Minor = uint32
+
 type Year  = uint16
 type Month = uint8
 type Patch = uint32
@@ -24,7 +25,7 @@ type CalendarVersion = {
 
 type Version =
     | CalVer of CalendarVersion
-    | LooksLikeSemVer of SemanticVersion
+    | SemVer of SemanticVersion
     | Unsupported
     
 type WorkspaceVersion = {
