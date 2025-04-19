@@ -212,17 +212,27 @@ module Generator =
             let! third  = nonNumericString
             return $"{first}.{second}.{third}"
         }
-        
-    let calendarVersion =
+    
+    let twoSectionCalendarVersion =
         gen {
             let! year = validYearUInt16
             let! month = validMonthByte
-            let! withPatch = Gen.elements [true; false]
-            let! patch = 
-                if withPatch
-                then validPatchUInt32 |> Gen.map Some
-                else Gen.constant None
-            return { Year = year; Month = month; Patch = patch }
+            return { Year = year; Month = month; Patch = None }
+        }
+        
+    let threeSectionCalendarVersion =
+        gen {
+            let! calVer = twoSectionCalendarVersion
+            let! patch = validPatchUInt32
+            return { calVer with Patch = Some patch }
+        }    
+        
+    let calendarVersion =
+        gen {
+            let! threeSectionCalVer = Gen.elements [true; false]
+            return! if threeSectionCalVer
+                then threeSectionCalendarVersion
+                else twoSectionCalendarVersion
         }
         
     let calendarVersions =
@@ -307,6 +317,14 @@ module Arbitrary =
     type internal calendarVersion =
         static member calendarVersion() =
             Arb.fromGen Generator.calendarVersion
+
+    type internal twoSectionCalendarVersion =
+        static member twoSectionCalendarVersion() =
+            Arb.fromGen Generator.twoSectionCalendarVersion
+            
+    type internal threeSectionCalendarVersion =
+        static member threeSectionCalendarVersion() =
+            Arb.fromGen Generator.threeSectionCalendarVersion            
             
     type internal calendarVersions =
         static member calendarVersions() =

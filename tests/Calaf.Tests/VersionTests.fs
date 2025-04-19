@@ -101,10 +101,48 @@ module TryMaxPropertiesTests =
         versions
         |> Array.forall (fun v -> compare v max.Value <= 0)
         
-//module CreateStringPropertiesTests =
-// 1 | Contains‑Year | – | createString v contains the decimal text of v.Year | The rendered string must always include the numeric year part exactly as given in the record.
-// 2 | Contains‑Month | – | createString v contains the decimal text of v.Month immediately after the first dot (.) | Guarantees that the month component is preserved in the second segment of the output.
-// 3 | Patch‑Segment Count | v.Patch = Some p | createString v has exactly two dots (.) & the last segment equals p | Ensures that when a patch exists, the format is Year.Month.Patch with three numeric segments.
-// 4 | No‑Patch Segment Count | v.Patch = None | createString v has exactly one dot (.) and only two numeric segments | Confirms the shorter Year.Month form when the optional patch is absent.
-// 5 | Equality‑Preserving | v1 = v2 | createString v1 = createString v2 | If two CalendarVersion values are structurally equal, their string representations must also be identical (determinism & referential transparency).
-// 6 | Non‑Empty Output | – | createString v <> \"\" | The function never returns an empty string, reinforcing that at least year and month are always rendered.
+module ToStringPropertiesTests =
+    let private dotSegments (s:string) = s.Split '.'
+    
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
+    let ``CalendarVersion contains it's Year in the string representation`` (calVer: CalendarVersion) =
+        let calVerString = calVer |> toString
+        calVerString.Contains(calVer.Year |> string)
+    
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
+    let ``CalendarVersion contains it's Month in the string representation`` (calVer: CalendarVersion) =
+        let calVerString = calVer |> toString
+        calVerString.Contains(calVer.Month |> string)   
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.threeSectionCalendarVersion> |])>]
+    let ``CalendarVersion with Patch contains it's Patch in the string representation`` (calVer: CalendarVersion) =
+        let calVerString = calVer |> toString
+        calVerString.Contains(calVer.Patch.Value |> string)
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.threeSectionCalendarVersion> |])>]
+    let ``CalendarVersion with Patch contains three string sections`` (calVer: CalendarVersion) =
+        calVer
+        |> toString
+        |> dotSegments
+        |> Array.length  = 3
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.twoSectionCalendarVersion> |])>]
+    let ``CalendarVersion without Patch contains two string sections`` (calVer: CalendarVersion) =
+        calVer
+        |> toString
+        |> dotSegments
+        |> Array.length  = 2
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
+    let ``Equal CalendarVersion values produce identical strings`` (calVer: CalendarVersion)=
+        let copy = calVer
+        let calVerString1 = calVer |> toString
+        let calVerString2 = copy   |> toString
+        calVerString1 = calVerString2
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
+    let ``Output is never empty`` (calVer: CalendarVersion) =
+        calVer
+        |> toString
+        |> System.String.IsNullOrWhiteSpace
+        |> not
