@@ -101,6 +101,78 @@ module TryMaxPropertiesTests =
         versions
         |> Array.forall (fun v -> compare v max.Value <= 0)
         
+module TryBumpPropertiesTests =
+    let private incrementTimeStamp (timeStamp: System.DateTime, incr: TimeStampIncrement ) =
+        match incr with
+        | Year -> timeStamp.AddYears 1
+        | Month -> timeStamp.AddMonths 1
+        | Both -> timeStamp.AddMonths(1).AddYears(1)        
+    
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersionWithSameTimeStamp>; typeof<Arbitrary.timeStampIncrement> |])>]
+    let ``CalendarVersion bumps Year when the TimeStamp Year is greater`` ((calVer: CalendarVersion, timeStamp: System.DateTime), incr: TimeStampIncrement) =
+        let timeStamp = incrementTimeStamp (timeStamp, incr)
+        let bumped = tryBump calVer timeStamp
+        bumped.Value.Year = uint16 timeStamp.Year
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersionWithSameTimeStamp>; typeof<Arbitrary.timeStampIncrement> |])>]
+    let ``CalendarVersion bumps Month when the TimeStamp Month is greater`` ((calVer: CalendarVersion, timeStamp: System.DateTime), incr: TimeStampIncrement) =
+        let timeStamp = incrementTimeStamp (timeStamp, incr)
+        let bumped = tryBump calVer timeStamp
+        bumped.Value.Month = byte timeStamp.Month
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.threePartCalendarVersionWithSameTimeStamp> |])>]
+    let ``Three-part CalendarVersion bumps only Patch when the TimeStamp has the same Year and Month`` (calVer: CalendarVersion, timeStamp: System.DateTime) =
+        let bumped = tryBump calVer timeStamp
+        bumped.Value.Patch > calVer.Patch &&
+        bumped.Value.Month = calVer.Month &&
+        bumped.Value.Year = calVer.Year
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.threePartCalendarVersionWithSameTimeStamp> |])>]
+    let ``CalendarVersion preserves Year and Month when the TimeStamp has the same Year and Month`` (calVer: CalendarVersion, timeStamp: System.DateTime)=
+        let bumped = tryBump calVer timeStamp
+        bumped.Value.Year = calVer.Year &&
+        bumped.Value.Month = calVer.Month
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.threePartCalendarVersionWithSameTimeStamp>; typeof<Arbitrary.timeStampIncrement> |])>]
+    let ``Three-part CalendarVersion reset Patch when the TimeStamp Year and/or Month is greater`` ((calVer: CalendarVersion, timeStamp: System.DateTime), incr: TimeStampIncrement)=
+        let timeStamp = incrementTimeStamp (timeStamp, incr)
+        let bumped = tryBump calVer timeStamp
+        bumped.Value.Patch = None
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.twoPartCalendarVersionWithSameTimeStamp>; typeof<Arbitrary.timeStampIncrement> |])>]
+    let ``Two-part CalendarVersion still has None Patch when the TimeStamp Year and/or Month is greater`` ((calVer: CalendarVersion, timeStamp: System.DateTime), incr: TimeStampIncrement) =
+        let timeStamp = incrementTimeStamp (timeStamp, incr)
+        let bumped = tryBump calVer timeStamp
+        bumped.Value.Patch = None
+        
+// +
+// Year Bumping
+// When timestamp year > current version year, version is updated with timestamp year & month, patch reset
+
+// +
+// Month Bumping
+// When year unchanged but timestamp month > current month, version updates month, patch reset
+
+// +
+// Patch Bumping
+// When year and month unchanged, patch is incremented
+
+// +
+// Patch Reset
+// When year or month is bumped, patch is reset to None
+
+// Invalid DateTime
+// Returns None if year or month from timestamp can't be parsed
+
+// Monotonicity
+// Bumped version should be > current version
+
+// Identity Preservation
+// Year and month remain unchanged when not bumped
+
+// Idempotence
+// Multiple bumps with same timestamp are equivalent to single bump
+        
 module ToStringPropertiesTests =
     let private dotSegments (s:string) = s.Split '.'
     

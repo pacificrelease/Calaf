@@ -4,6 +4,8 @@ open FsCheck.FSharp
 
 open Calaf.Domain.DomainTypes
 
+type TimeStampIncrement = Year | Month | Both
+
 module Generator =
     let private genNegative =
         gen {
@@ -246,8 +248,44 @@ module Generator =
                 1, Gen.arrayOfLength bigCount calendarVersion
             ]
             return choice
-        }       
+        }
         
+    let private timeStampYearUpperBoundary = System.DateTime.MaxValue.Year - 1
+    
+    let twoPartCalendarVersionWithSameTimeStamp =
+        let genCalVer =
+            gen { 
+                let! year  = Gen.choose(1, timeStampYearUpperBoundary)
+                let! month = Gen.choose(1, 11)       
+                return { Year = uint16 year; Month = byte month; Patch = None }
+            }            
+        gen {
+            let! calVer = genCalVer
+            let! day = Gen.choose(1, 28)
+            let timeStamp = (int calVer.Year, int calVer.Month, day) |> System.DateTime
+            return (calVer, timeStamp)
+        }
+        
+    let threePartCalendarVersionWithSameTimeStamp =            
+        gen {
+            let! calVer, timeStamp = twoPartCalendarVersionWithSameTimeStamp
+            let! patch = validPatchUInt32 
+            return ({ calVer with Patch = Some patch }, timeStamp)
+        }
+        
+    let calendarVersionWithSameTimeStamp =
+        gen {
+            let! threeSectionCalVer = Gen.elements [true; false]
+            return! if threeSectionCalVer
+                then threePartCalendarVersionWithSameTimeStamp
+                else twoPartCalendarVersionWithSameTimeStamp
+                        
+        }
+        
+    let timeStampIncrement =
+        gen {
+            return! Gen.elements [ TimeStampIncrement.Year; TimeStampIncrement.Month; TimeStampIncrement.Both ]
+        }
 
 module Arbitrary =
     type internal validPatchUInt32 =
@@ -329,3 +367,19 @@ module Arbitrary =
     type internal calendarVersions =
         static member calendarVersions() =
             Arb.fromGen Generator.calendarVersions
+    
+    type internal twoPartCalendarVersionWithSameTimeStamp =
+        static member twoPartCalendarVersionWithSameTimeStamp() =
+            Arb.fromGen Generator.twoPartCalendarVersionWithSameTimeStamp
+            
+    type internal threePartCalendarVersionWithSameTimeStamp =
+        static member threePartCalendarVersionWithSameTimeStamp() =
+            Arb.fromGen Generator.threePartCalendarVersionWithSameTimeStamp
+            
+    type internal calendarVersionWithSameTimeStamp =
+        static member calendarVersionWithSameTimeStamp() =
+            Arb.fromGen Generator.calendarVersionWithSameTimeStamp
+            
+    type internal timeStampIncrement =
+        static member timeStampIncrement() =
+            Arb.fromGen Generator.timeStampIncrement
