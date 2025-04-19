@@ -1,7 +1,7 @@
 ﻿param(
     [string]$SettingsFilePath = "../config/local-build-settings.json",
-    [string]$CoverageResultDirectoryPath = "../tests-results",
-    [string]$CoverageReportDirectoryPath = "../tests-results/coverage-reports"
+    [string]$CoverageResultDirectoryPath = "../tests/coverage-results",
+    [string]$CoverageReportDirectoryPath = "../tests/coverage-reports"
 )
 
 if ((Test-Path $SettingsFilePath)) {
@@ -21,14 +21,26 @@ $SolutionPath  = $Settings.SolutionRelativePath
 $OutputPath    = $Settings.OutputPath
 $Configuration = $Settings.Configuration
 
-#console output eraser symbol like 🧪
+#Test-Path -Path $directoryPath -PathType Container
+if (Test-Path -Path  $CoverageResultDirectoryPath -PathType Container) {
+    Write-Host "✅ Coverage result directory: $CoverageResultDirectoryPath found"
+    Write-Host "🛠️ Cleaning $CoverageResultDirectoryPath"
+    Get-ChildItem -Path $CoverageResultDirectoryPath -Recurse | Remove-Item -Force -Recurse
+}
+else {
+    Write-Host "🧪 Coverage result directory: $CoverageResultDirectoryPath not found. Creating it now..."
+    New-Item -ItemType Directory -Path $CoverageResultDirectoryPath
+}
 
-
-Write-Host "🛠️ Cleaning $CoverageResultDirectoryPath"
-Get-ChildItem -Path $CoverageResultDirectoryPath -Recurse | Remove-Item -Force -Recurse
-
-Write-Host "🛠️ Cleaning $CoverageReportDirectoryPath"
-Get-ChildItem -Path $CoverageReportDirectoryPath -Recurse | Remove-Item -Force -Recurse
+if (Test-Path -Path $CoverageReportDirectoryPath -PathType Container) {
+    Write-Host "✅ Coverage report directory: $CoverageReportDirectoryPath found"
+    Write-Host "🛠️ Cleaning $CoverageReportDirectoryPath"
+    Get-ChildItem -Path $CoverageReportDirectoryPath -Recurse | Remove-Item -Force -Recurse
+}
+else {
+    Write-Host "🧪 Coverage report directory: $CoverageReportDirectoryPath not found. Creating it now..."
+    New-Item -ItemType Directory -Path $CoverageReportDirectoryPath
+}
 
 Write-Host "🧪 Absolute Solution path is: $AbsoluteSolutionPath"
 
