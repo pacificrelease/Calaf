@@ -57,3 +57,46 @@ module TryParsePropertiesTests =
     let ``Invalid CalVer/SemVer but valid three-part format parses to Unsupported`` (invalidVersion: string) =
         invalidVersion
         |> tryParse = Some Unsupported
+        
+module TryMaxPropertiesTests =
+    [<Property(MaxTest = 200)>]
+    let ``Empty array returns None`` () =
+        let versions = [||]
+        versions
+        |> tryMax = None
+
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |], MaxTest = 200)>]
+    let ``Single element returns that element`` (version: CalendarVersion) =
+        let versions = [| version |]
+        versions
+        |> tryMax = Some version
+
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersions> |], MaxTest = 200)>]
+    let ``Multiple elements returns the maximum`` (versions: CalendarVersion[]) =
+        versions
+        |> tryMax
+        |> Option.isSome
+      
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersions> |], MaxTest = 200)>]
+    let ``Result element belongs to input`` (versions: CalendarVersion[]) =
+        let max = versions |> tryMax
+        let contains = versions |> Array.contains max.Value
+        contains
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersions> |], MaxTest = 200)>]
+    let ``Order invariance (array reversal does not affect result)`` (versions: CalendarVersion[]) =
+        versions
+        |> tryMax = tryMax (Array.rev versions)
+    
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersions> |])>]
+    let ``Duplicate tolerance`` (versions: CalendarVersion[]) =
+        let max = tryMax versions
+        let duplicated = Array.append versions [| max.Value |]
+        tryMax duplicated = max
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersions> |])>]
+    let ``Result is maximum`` (versions: CalendarVersion[]) =
+        let max = versions
+                |> tryMax                
+        versions
+        |> Array.forall (fun v -> compare v max.Value <= 0)

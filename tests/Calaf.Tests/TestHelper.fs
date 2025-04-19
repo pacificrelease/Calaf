@@ -2,6 +2,8 @@
 
 open FsCheck.FSharp
 
+open Calaf.Domain.DomainTypes
+
 module Generator =
     let private genNegative =
         gen {
@@ -209,7 +211,33 @@ module Generator =
             let! second = nonNumericString
             let! third  = nonNumericString
             return $"{first}.{second}.{third}"
-        } 
+        }
+        
+    let calendarVersion =
+        gen {
+            let! year = validYearUInt16
+            let! month = validMonthByte
+            let! withPatch = Gen.elements [true; false]
+            let! patch = 
+                if withPatch
+                then validPatchUInt32 |> Gen.map Some
+                else Gen.constant None
+            return { Year = year; Month = month; Patch = patch }
+        }
+        
+    let calendarVersions =
+        gen {
+            let! smallCount = Gen.choose(1, 50)
+            let! middleCount = Gen.choose(51, 1000)            
+            let! bigCount = Gen.choose(1001, 25_000)            
+            let! choice = Gen.frequency [
+                3, Gen.arrayOfLength smallCount calendarVersion
+                2, Gen.arrayOfLength middleCount calendarVersion
+                1, Gen.arrayOfLength bigCount calendarVersion
+            ]
+            return choice
+        }       
+        
 
 module Arbitrary =
     type internal validPatchUInt32 =
@@ -275,3 +303,11 @@ module Arbitrary =
     type internal invalidThreePartString =
         static member invalidThreePartString() =
             Arb.fromGen Generator.invalidThreePartString
+            
+    type internal calendarVersion =
+        static member calendarVersion() =
+            Arb.fromGen Generator.calendarVersion
+            
+    type internal calendarVersions =
+        static member calendarVersions() =
+            Arb.fromGen Generator.calendarVersions
