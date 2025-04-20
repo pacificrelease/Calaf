@@ -4,6 +4,24 @@ open FsToolkit.ErrorHandling
 
 open Calaf.Domain.DomainTypes
 open Calaf.Domain.Errors
+
+module internal Schema =
+    
+    [<Literal>]
+    let private VersionXElementName = "Version"
+    [<Literal>]
+    let private PropertyGroupXElementName = "PropertyGroup"    
+    
+    // TODO: Use ERROR instead of option?
+    let tryExtractVersionElement (xElement: System.Xml.Linq.XElement) =
+        xElement.Elements(PropertyGroupXElementName)
+        |> Seq.map _.Elements(VersionXElementName)
+        |> Seq.tryExactlyOne
+        |> Option.bind Seq.tryHead
+        
+    let setVersion (version: string) (xElement: System.Xml.Linq.XElement) =
+        xElement.Value <- version
+        xElement
     
 let choosePending (projects: Project[]) : Project[] =
     projects
@@ -18,25 +36,11 @@ let chooseCalendarVersions (projects: Project[]) : CalendarVersion[] =
         | Bumped (_, _, _, version)        -> Some version
         | _                                -> None)    
     
-let tryCreate (metadata: ProjectMetadata, xml: System.Xml.Linq.XElement) : Project option =
-    // TODO: Use ERROR instead of option?
-    let tryExtractVersionElements(xElement: System.Xml.Linq.XElement) =
-        xElement.Elements("PropertyGroup")
-        |> Seq.map _.Elements("Version")
-        |> Seq.tryExactlyOne
-        
-    let tryExtractVersionString (versionElements: System.Xml.Linq.XElement seq) : string option =
-        match versionElements with
-        | seq when Seq.isEmpty seq -> None
-        | seq when Seq.length seq > 1 -> None
-        | seq -> Some (seq |> Seq.head).Value
-        
+let tryCreate (xml: System.Xml.Linq.XElement) (metadata: ProjectMetadata) : Project option =        
     let tryExtractVersion (xml: System.Xml.Linq.XElement) : Version option =
-        option {
-            let! versionsElements = xml |> tryExtractVersionElements
-            let! bareVersion = versionsElements |> tryExtractVersionString  
-            return! bareVersion |> Version.tryParse
-        }
+        xml
+        |> Schema.tryExtractVersionElement
+        |> Option.bind (fun x -> Version.tryParse <| x.Value)
         
     option {            
         let! language = Language.tryParse metadata.Extension
@@ -47,10 +51,15 @@ let tryCreate (metadata: ProjectMetadata, xml: System.Xml.Linq.XElement) : Proje
             | None         -> Unversioned(metadata, language)
     }
     
-let tryBump (project: Project, nextVersion: CalendarVersion) =
+let tryBump (xml: System.Xml.Linq.XElement) (project: Project) (nextVersion: CalendarVersion) =
+    let tryInsertVersion (nextVersion: CalendarVersion) (xml: System.Xml.Linq.XElement) : System.Xml.Linq.XElement option =        
+        xml
+        |> Schema.tryExtractVersionElement
+        |> Option.map (fun x -> Schema.setVersion (nextVersion |> Version.toString ) x)
+        
     match project with
-    | Versioned(pm, lang, CalVer currentVersion) ->
-        (pm, lang, currentVersion, nextVersion)
+    | Versioned (projectMetadata, lang, CalVer currentVersion) ->
+        (projectMetadata, lang, currentVersion, nextVersion)
         |> Bumped
         |> Ok
     | Versioned _ ->
@@ -61,4 +70,5 @@ let tryBump (project: Project, nextVersion: CalendarVersion) =
         |> Error
     | Bumped _ ->
         AlreadyBumpedProject
-        |> Error 
+        |> Error
+        

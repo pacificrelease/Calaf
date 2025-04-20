@@ -22,8 +22,7 @@ module Api =
                         // Handle error or mb add new type of the Project -> Unavailable (for example)
                         return! None
                     | Ok xml ->
-                        let! project = Project.tryCreate(metadata, xml)
-                        return project
+                        return! Project.tryCreate xml metadata
                 }        
             let loadProjects (workingDir : DirectoryInfo) =
                 result {
