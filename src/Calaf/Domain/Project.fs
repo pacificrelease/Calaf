@@ -13,15 +13,21 @@ module internal Schema =
     let private PropertyGroupXElementName = "PropertyGroup"    
     
     // TODO: Use ERROR instead of option?
-    let tryExtractVersionElement (xElement: System.Xml.Linq.XElement) =
-        xElement.Elements(PropertyGroupXElementName)
+    let tryExtractVersionElement (projectDocument: System.Xml.Linq.XElement) =
+        projectDocument.Elements(PropertyGroupXElementName)
         |> Seq.map _.Elements(VersionXElementName)
         |> Seq.tryExactlyOne
         |> Option.bind Seq.tryHead
         
-    let setVersion (version: string) (xElement: System.Xml.Linq.XElement) =
-        xElement.Value <- version
-        xElement
+    let tryUpdateVersionElement (projectDocument: System.Xml.Linq.XElement) (version: string)=
+        option {
+            // TODO: Maybe better to divide variables, then update and return projectDocument
+            return! projectDocument.Elements(PropertyGroupXElementName)
+            |> Seq.map _.Elements(VersionXElementName)
+            |> Seq.tryExactlyOne
+            |> Option.bind Seq.tryHead
+            |> Option.map (fun versionElement -> versionElement.SetValue(version); projectDocument)
+        }
     
 let choosePending (projects: Project[]) : Project[] =
     projects
@@ -36,7 +42,7 @@ let chooseCalendarVersions (projects: Project[]) : CalendarVersion[] =
         | Bumped (_, _, _, version)        -> Some version
         | _                                -> None)    
     
-let tryCreate (xml: System.Xml.Linq.XElement) (metadata: ProjectMetadata) : Project option =        
+let tryCreate (projectDocument: System.Xml.Linq.XElement) (metadata: ProjectMetadata) : Project option =        
     let tryExtractVersion (xml: System.Xml.Linq.XElement) : Version option =
         xml
         |> Schema.tryExtractVersionElement
@@ -44,31 +50,27 @@ let tryCreate (xml: System.Xml.Linq.XElement) (metadata: ProjectMetadata) : Proj
         
     option {            
         let! language = Language.tryParse metadata.Extension
-        let version = xml |> tryExtractVersion
+        let version = projectDocument |> tryExtractVersion
         return
             match version with
             | Some version -> Versioned(metadata, language, version)
             | None         -> Unversioned(metadata, language)
     }
     
-let tryBump (xml: System.Xml.Linq.XElement) (project: Project) (nextVersion: CalendarVersion) =
-    let tryInsertVersion (nextVersion: CalendarVersion) (xml: System.Xml.Linq.XElement) : System.Xml.Linq.XElement option =        
-        xml
-        |> Schema.tryExtractVersionElement
-        |> Option.map (fun x -> Schema.setVersion (nextVersion |> Version.toString ) x)
-        
+let tryBump (projectDocument: System.Xml.Linq.XElement) (project: Project) (nextVersion: CalendarVersion) =    
+    let tryUpdateVersionElement (projectMetadata: ProjectMetadata) =        
+        match Schema.tryUpdateVersionElement projectDocument (Version.toString nextVersion)  with
+        | Some updated -> updated |> Ok
+        | None -> projectMetadata.Name |> CannotUpdateVersionElement |> Error
+    
     match project with
-    | Versioned (projectMetadata, lang, CalVer currentVersion) ->
-        (projectMetadata, lang, currentVersion, nextVersion)
-        |> Bumped
-        |> Ok
-    | Versioned _ ->
-        NoCalendarVersionProject
-        |> Error
-    | Unversioned _ ->
-        UnversionedProject
-        |> Error
-    | Bumped _ ->
-        AlreadyBumpedProject
-        |> Error
+    | Versioned (projectMetadata, lang, CalVer currentVersion) ->        
+        result {
+            let! updatedProjectDocument = tryUpdateVersionElement projectMetadata
+            let bumpedProject = Bumped(projectMetadata, lang, currentVersion, nextVersion)
+            return (bumpedProject, updatedProjectDocument)            
+        }
+    | Versioned _   -> NoCalendarVersionProject |> Error
+    | Unversioned _ -> UnversionedProject       |> Error
+    | Bumped _      -> AlreadyBumpedProject     |> Error
         

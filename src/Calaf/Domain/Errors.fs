@@ -3,6 +3,7 @@ namespace Calaf.Domain.Errors
 
 type BumpProjectError =
     | NoCalendarVersionProject
+    | CannotUpdateVersionElement of name: string
     | UnversionedProject
     | AlreadyBumpedProject
     
