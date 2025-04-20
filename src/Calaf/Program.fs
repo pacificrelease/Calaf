@@ -3,11 +3,8 @@
 open System
 open Calaf
 
-[<Literal>]
-let searchFilesPattern = "*.?sproj"
-
 let rootPath = "../../../../.."
-let result = Api.CreateWorkspace null searchFilesPattern
+let result = Api.CreateWorkspace null
 
 match result with
 | Error error ->

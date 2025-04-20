@@ -9,6 +9,7 @@ type BumpProjectError =
 type FileSystemError =
     | NotExistOrBadPath of msg: string
     | AccessPathError   of ex: exn
+    | ReadProjectsError of ex: exn
     
 type XmlError =
     | ReadXmlError of ex: exn
