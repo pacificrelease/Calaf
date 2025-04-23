@@ -4,11 +4,26 @@ namespace Calaf
 open Calaf.Domain.Errors
 
 module internal Xml =        
-    let TryLoadXml (absolutePath: string) : Result<System.Xml.Linq.XElement, XmlError> =
+    let TryLoadXml (absolutePath: string) =
         try
             let xml = System.Xml.Linq.XElement.Load(absolutePath)            
-            Ok(xml)
+            xml
+            |> Ok
         with exn ->
             exn
-            |> ReadXmlError
+            |> CannotLoadXml
+            |> Xml
+            |> Error
+            
+    
+    let TrySaveXml (absolutePath: string) (xml: System.Xml.Linq.XElement) =
+        try
+            let options = System.Xml.Linq.SaveOptions.None
+            xml.Save(absolutePath, options)
+            xml
+            |> Ok
+        with exn ->
+            exn
+            |> CannotSaveXml
+            |> Xml
             |> Error

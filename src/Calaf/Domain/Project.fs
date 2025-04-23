@@ -61,16 +61,16 @@ let tryBump (projectDocument: System.Xml.Linq.XElement) (project: Project) (next
     let tryUpdateVersionElement (projectMetadata: ProjectMetadata) =        
         match Schema.tryUpdateVersionElement projectDocument (Version.toString nextVersion)  with
         | Some updated -> updated |> Ok
-        | None -> projectMetadata.Name |> CannotUpdateVersionElement |> Error
+        | None -> projectMetadata.Name |> CannotUpdateVersionElement |> Bump |> Error
     
     match project with
     | Versioned (projectMetadata, lang, CalVer currentVersion) ->        
         result {
             let! updatedProjectDocument = tryUpdateVersionElement projectMetadata
-            let bumpedProject = Bumped(projectMetadata, lang, currentVersion, nextVersion)
+            let bumpedProject = Bumped (projectMetadata, lang, currentVersion, nextVersion) 
             return (bumpedProject, updatedProjectDocument)            
         }
-    | Versioned _   -> NoCalendarVersionProject |> Error
-    | Unversioned _ -> UnversionedProject       |> Error
-    | Bumped _      -> AlreadyBumpedProject     |> Error
+    | Versioned _   -> NoCalendarVersionProject |> Bump |> Error
+    | Unversioned _ -> UnversionedProject       |> Bump |> Error
+    | Bumped _      -> AlreadyBumpedProject     |> Bump |> Error
         

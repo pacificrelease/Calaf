@@ -9,17 +9,18 @@ module internal FileSystem =
     let private getPathOrCurrentDir path =        
         if System.String.IsNullOrWhiteSpace path then "." else path        
      
-    let TryReadPatternFiles (pattern: string) (path: DirectoryInfo) : Result<FileInfo[], FileSystemError> =
+    let TryReadFiles (pattern: string) (path: DirectoryInfo) =
         try
             path.GetFiles(pattern, SearchOption.AllDirectories)
             |> Ok
         with exn ->
             exn
             |> ReadProjectsError
+            |> FileSystem
             |> Error
         
 
-    let TryGetDirectoryInfo (path: string) : Result<DirectoryInfo, FileSystemError> =
+    let TryGetDirectory (path: string) =
         try
             let path = path |> getPathOrCurrentDir |> DirectoryInfo
             if path.Exists
@@ -28,10 +29,11 @@ module internal FileSystem =
                 |> Ok
             else
                 $"Path {path.FullName} does not exist or can't determine if it exists."
-                |> NotExistOrBadPath 
+                |> NotExistOrBadPath
+                |> FileSystem
                 |> Error
         with exn ->
             exn
             |> AccessPathError
+            |> FileSystem
             |> Error
-

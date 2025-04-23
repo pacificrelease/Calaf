@@ -1,22 +1,35 @@
 ﻿// Domain Errors
 namespace Calaf.Domain.Errors
 
+type InitError =
+    | CannotCreateProject of path: string
+    
 type BumpProjectError =
     | NoCalendarVersionProject
     | CannotUpdateVersionElement of name: string
     | UnversionedProject
     | AlreadyBumpedProject
-    
+
+
 type FileSystemError =
     | NotExistOrBadPath of msg: string
     | AccessPathError   of ex: exn
     | ReadProjectsError of ex: exn
     
 type XmlError =
-    | ReadXmlError of ex: exn
+    | CannotLoadXml  of ex: exn
+    | CannotSaveXml of ex: exn
+    
+type ApiError =
+    | GivenNotBumpedProject of name: string
+    | GivenUnversionedProject of name: string
+    | NoPropertyGroupWorkspaceVersion
+    | NoPropertyGroupNextVersion
     
 type CalafError =
+    | Init       of InitError
     | Bump       of BumpProjectError
     | FileSystem of FileSystemError
     | Xml        of XmlError
+    | Api        of ApiError
     
