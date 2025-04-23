@@ -145,34 +145,6 @@ module TryBumpPropertiesTests =
         let bumped = tryBump calVer timeStamp
         bumped.Value.Patch = None
         
-// +
-// Year Bumping
-// When timestamp year > current version year, version is updated with timestamp year & month, patch reset
-
-// +
-// Month Bumping
-// When year unchanged but timestamp month > current month, version updates month, patch reset
-
-// +
-// Patch Bumping
-// When year and month unchanged, patch is incremented
-
-// +
-// Patch Reset
-// When year or month is bumped, patch is reset to None
-
-// Invalid DateTime
-// Returns None if year or month from timestamp can't be parsed
-
-// Monotonicity
-// Bumped version should be > current version
-
-// Identity Preservation
-// Year and month remain unchanged when not bumped
-
-// Idempotence
-// Multiple bumps with same timestamp are equivalent to single bump
-        
 module ToStringPropertiesTests =
     let private dotSegments (s:string) = s.Split '.'
     
