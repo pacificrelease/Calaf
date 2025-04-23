@@ -24,11 +24,12 @@ module Api =
         }
         
     let private saveProject (project, xml) newVersion =        
-        asyncResult {
+        result {
             let! bumpedProject, xml = Project.tryBump xml project newVersion
             match bumpedProject with
             | Bumped (metadata, lang, prevVer, curVer) ->
-                return! Xml.TrySaveXml metadata.AbsolutePath xml            
+                let! xml = Xml.TrySaveXml metadata.AbsolutePath xml
+                return! (Bumped (metadata, lang, prevVer, curVer), xml) |> Ok
             | Versioned (metadata, lang, ver) ->
                 return! GivenNotBumpedProject metadata.Name
                         |> Api
@@ -69,7 +70,19 @@ module Api =
                 | None ->
                     return! NoPropertyGroupNextVersion |> Api |> Error
                 | Some nextVersion ->
+                    let projectsAndXElements =
+                        projectsAndXElements
+                        |> Array.map (fun (project, xml) -> saveProject (project, xml) nextVersion)
+                    let errors = 
+                        errors |> Array.append (projectsAndXElements |> Array.choose (function Error x -> Some x | _ -> None))                    
+                    let projects =
+                        projectsAndXElements
+                        |> Array.choose (function Ok x -> Some x | _ -> None)
+                        |> Array.map fst
+                    
                     return! Workspace.create (dirInfo, projects) |> Ok
+                            
+                    //return! Workspace.create (dirInfo, projects) |> Ok
         }
     
     // let CreateWorkspace workingDir : Result<Workspace, CalafError> =
