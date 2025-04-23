@@ -6,7 +6,11 @@ open Calaf.Domain.Errors
 module internal Xml =        
     let TryLoadXml (absolutePath: string) =
         try
-            let xml = System.Xml.Linq.XElement.Load(absolutePath)            
+            let settings = System.Xml.XmlReaderSettings()
+            settings.DtdProcessing <- System.Xml.DtdProcessing.Prohibit
+            settings.XmlResolver <- null
+            use reader = System.Xml.XmlReader.Create(absolutePath, settings)
+            let xml = System.Xml.Linq.XElement.Load(reader)            
             xml
             |> Ok
         with exn ->
@@ -17,7 +21,7 @@ module internal Xml =
             
     
     let TrySaveXml (absolutePath: string) (xml: System.Xml.Linq.XElement) =
-        try
+        try            
             let options = System.Xml.Linq.SaveOptions.None
             xml.Save(absolutePath, options)
             xml

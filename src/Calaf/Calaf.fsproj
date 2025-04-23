@@ -1,39 +1,35 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-
-        <PackageId>calaf-tool</PackageId>
-        <PackAsTool>true</PackAsTool>
-        <ToolCommandName>calver</ToolCommandName>
-        <Version>2025.4.8</Version>
-        <Title>Calaf</Title>
-        <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-    </PropertyGroup>
-
-    <ItemGroup>
-        <Compile Include="AssemblyInfo.fs" />
-        <Compile Include="Domain\Errors.fs" />
-        <Compile Include="Domain\DomainTypes.fs" />
-        <Compile Include="Domain\Patch.fs" />
-        <Compile Include="Domain\Month.fs" />
-        <Compile Include="Domain\Year.fs" />
-        <Compile Include="Domain\Version.fs" />
-        <Compile Include="Domain\Language.fs" />
-        <Compile Include="Domain\ProjectMetadata.fs" />
-        <Compile Include="Domain\Project.fs" />
-        <Compile Include="Domain\WorkspaceVersion.fs" />
-        <Compile Include="Domain\Workspace.fs" />
-        <Compile Include="Infrastructure\FileSystem.fs" />
-        <Compile Include="Infrastructure\Xml.fs" />
-        <Compile Include="Infrastructure\Clock.fs" />
-        <Compile Include="Api.fs" />
-        <Compile Include="Program.fs" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="FsToolkit.ErrorHandling" Version="4.18.0" />
-      <PackageReference Include="LibGit2Sharp" Version="0.31.0" />
-    </ItemGroup>
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PackageId>calaf-tool</PackageId>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>calver</ToolCommandName>
+    <Version>2025.4.9</Version>
+    <Title>Calaf</Title>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Domain\Errors.fs" />
+    <Compile Include="Domain\DomainTypes.fs" />
+    <Compile Include="Domain\Patch.fs" />
+    <Compile Include="Domain\Month.fs" />
+    <Compile Include="Domain\Year.fs" />
+    <Compile Include="Domain\Version.fs" />
+    <Compile Include="Domain\Language.fs" />
+    <Compile Include="Domain\ProjectMetadata.fs" />
+    <Compile Include="Domain\Project.fs" />
+    <Compile Include="Domain\WorkspaceVersion.fs" />
+    <Compile Include="Domain\Workspace.fs" />
+    <Compile Include="Infrastructure\FileSystem.fs" />
+    <Compile Include="Infrastructure\Xml.fs" />
+    <Compile Include="Infrastructure\Clock.fs" />
+    <Compile Include="Api.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FsToolkit.ErrorHandling" Version="4.18.0" />
+    <PackageReference Include="LibGit2Sharp" Version="0.31.0" />
+  </ItemGroup>
 </Project>
