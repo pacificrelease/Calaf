@@ -34,7 +34,7 @@ module TryParsePropertiesTests =
             calVer.Patch = None
         | _ -> false
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.validSemVerString> |], MaxTest = 200)>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.validSemVerString> |], MaxTest = 500)>]
     let ``Valid SemVer string parses to LooksLikeSemVer`` (semVerVersion: string) =
         let parts = semVerVersion.Split('.')
         let expectedMajor = uint32 parts[0]

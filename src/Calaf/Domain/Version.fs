@@ -37,11 +37,12 @@ let tryBump (currentVersion: CalendarVersion) (timeStamp: System.DateTime) : Cal
                          Patch = patch }           
     }   
     
-let tryMax (versions: CalendarVersion[]) : CalendarVersion option =
+let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
     match versions with
-    | [||] -> None
+    //| [||] -> None
+    | _ when Seq.isEmpty versions -> None
     | _ ->
-        let maxVersion = versions |> Array.maxBy (fun v -> v.Year, v.Month, v.Patch)
+        let maxVersion = versions |> Seq.maxBy (fun v -> v.Year, v.Month, v.Patch)
         Some maxVersion
 
 let tryParse (bareVersion: string) : Version option =

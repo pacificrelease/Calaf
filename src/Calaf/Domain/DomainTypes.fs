@@ -52,5 +52,5 @@ type Workspace = {
     Name: string
     Directory : string
     Version : WorkspaceVersion
-    Projects : Project[]
+    Projects : Project seq
 }

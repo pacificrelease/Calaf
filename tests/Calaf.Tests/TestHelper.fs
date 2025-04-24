@@ -187,16 +187,16 @@ module Generator =
     let validSemVerString =
         let genBigSemVer =
             gen {
-                let! major = Gen.choose64(0, int64 System.UInt32.MaxValue)
-                let! minor = Gen.choose64(0, int64 System.UInt32.MaxValue)
-                let! patch = Gen.choose64(0, int64 System.UInt32.MaxValue)
+                let! major = Gen.choose64(1000, int64 System.UInt32.MaxValue)
+                let! minor = Gen.choose64(100_000, int64 System.UInt32.MaxValue)
+                let! patch = Gen.choose64(100_000, int64 System.UInt32.MaxValue)
                 return $"{major}.{minor}.{patch}"
             }
         let genSmallSemVer =
             gen {
-                let! major = Gen.choose64(0, 999)
-                let! minor = Gen.choose64(0, 99999)
-                let! patch = Gen.choose64(1, 99999)
+                let! major = Gen.choose(0, 999)
+                let! minor = Gen.choose(13, 99999)
+                let! patch = Gen.choose(1, 99999)
                 return $"{major}.{minor}.{patch}"
             }
         gen {

@@ -35,9 +35,9 @@ let choosePending (projects: Project[]) : Project[] =
         | Versioned(_, _, CalVer _) as project -> Some project
         | _                                    -> None)
 
-let chooseCalendarVersions (projects: Project[]) : CalendarVersion[] =
+let chooseCalendarVersions (projects: Project seq) : CalendarVersion seq =
     projects
-    |> Array.choose (function
+    |> Seq.choose (function
         | Versioned (_, _, CalVer version) -> Some version
         | Bumped (_, _, _, version)        -> Some version
         | _                                -> None)    

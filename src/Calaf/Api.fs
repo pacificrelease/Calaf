@@ -3,6 +3,7 @@ namespace Calaf
 
 open FsToolkit.ErrorHandling
 
+open Calaf.Extensions.InternalExtensions
 open Calaf.Domain.DomainTypes
 open Calaf.Domain.Errors
 open Calaf.Domain
@@ -10,7 +11,7 @@ open Calaf.Domain
 module Api =    
     
     [<Literal>]
-    let private supportedDotNetFilesPattern = "*.?sproj"
+    let private supportedFilesPattern = "*.?sproj"
     
     let private initProject projectFileInfo =
         let createProject metadata xml =            
@@ -40,45 +41,30 @@ module Api =
                         |> Error            
         }
         
-    let initWorkspace workingDir =
+    let initWorkspace workingDir =                
         result {
-            let! dirInfo =
-                workingDir |> FileSystem.TryGetDirectory                
-            let! projectsFiles =
-                dirInfo |> FileSystem.TryReadFiles supportedDotNetFilesPattern            
-            let projects, errors =
-                projectsFiles
-                |> Seq.map initProject
-                |> Seq.toArray
-                |> Array.partition (function
-                    | Ok _ -> true
-                    | Error _ -> false)                
-            let projectsAndXElements = projects |> Array.choose (function Ok x -> Some x | _ -> None)
-            let errors = errors |> Array.choose (function Error x -> Some x | _ -> None)
-               
-            let projects = projectsAndXElements |> Array.map fst
-            let workspaceVersion = projectsAndXElements |> Array.map fst |> WorkspaceVersion.create
-            match workspaceVersion.PropertyGroup with
-            | None ->
-                return! NoPropertyGroupWorkspaceVersion
-                        |> Api
-                        |> Error
-            | Some currentVersion ->
-                let timeStamp = Clock.NowUtc
-                let nextVersion = Version.tryBump currentVersion timeStamp
-                match nextVersion with
-                | None ->
-                    return! NoPropertyGroupNextVersion |> Api |> Error
-                | Some nextVersion ->
-                    let projectsAndXElements =
-                        projectsAndXElements
-                        |> Array.map (fun (project, xml) -> saveProject (project, xml) nextVersion)
-                    let errors = 
-                        errors |> Array.append (projectsAndXElements |> Array.choose (function Error x -> Some x | _ -> None))                    
-                    let projects =
-                        projectsAndXElements
-                        |> Array.choose (function Ok x -> Some x | _ -> None)
-                        |> Array.map fst
-                    
-                    return! Workspace.create (dirInfo, projects) |> Ok
+            let! dir = workingDir
+                                |> FileSystem.TryGetDirectory            
+            let! files = dir
+                                |> FileSystem.TryReadFiles supportedFilesPattern
+                
+            let projects, errors = files
+                                |> Seq.map initProject
+                                |> Result.partition           
+            
+            let! currentVer = projects
+                                |> Seq.map fst
+                                |> WorkspaceVersion.create
+                                |> fun x -> x.PropertyGroup |> Option.toResult (NoPropertyGroupWorkspaceVersion |> Api)
+                                
+            let timeStamp = Clock.NowUtc
+            let! bumpedVer = Version.tryBump currentVer timeStamp
+                                |> Option.toResult (NoPropertyGroupNextVersion |> Api)
+                                
+            let projects, errors = projects
+                                |> Seq.map (fun (project, xml) -> saveProject (project, xml) bumpedVer)
+                                |> Result.partition
+                                |> fun (p, e) -> (p |> Seq.map fst , errors |> Seq.append e)
+                                
+            return Workspace.create (dir, projects)
         }

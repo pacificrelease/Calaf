@@ -4,7 +4,7 @@ open System.IO
 
 open Calaf.Domain.DomainTypes
 
-let create (directory: DirectoryInfo, projects: Project[]) : Workspace =    
+let create (directory: DirectoryInfo, projects: Project seq) : Workspace =    
     { Name = directory.Name
       Directory = directory.FullName
       Projects = projects

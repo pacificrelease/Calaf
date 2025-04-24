@@ -4,7 +4,7 @@ open System
 open Calaf
 
 let rootPath = "../../../../.."
-let result = Api.initWorkspace rootPath
+let result = Api.initWorkspace null
 
 match result with
 | Error error ->
