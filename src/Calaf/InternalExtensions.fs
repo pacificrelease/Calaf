@@ -11,10 +11,10 @@ module internal InternalExtensions =
                 | Error e -> oks, e :: errs) ([], [])
             |> fun (oks, errs) ->
                 List.rev oks  |> List.toSeq,
-                List.rev errs |> List.toSeq
+                List.rev errs |> List.toSeq  
     
     module Option =        
         let toResult err opt =
             match opt with
             | Some value -> Ok value
-            | None -> Error err
+            | None       -> Error err

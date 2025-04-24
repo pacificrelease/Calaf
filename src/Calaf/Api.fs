@@ -13,7 +13,7 @@ module Api =
     [<Literal>]
     let private supportedFilesPattern = "*.?sproj"
     
-    let private initProject projectFileInfo =
+    let private init projectFileInfo =
         let createProject metadata xml =            
             match Project.tryCreate xml metadata with
             | None -> CannotCreateProject metadata.Name |> Init |> Error
@@ -24,47 +24,57 @@ module Api =
             return! createProject metadata xml
         }
         
-    let private saveProject (project, xml) newVersion =        
+    let private apply (project, xml) newVersion =        
         result {
-            let! bumpedProject, xml = Project.tryBump xml project newVersion
-            match bumpedProject with
+            let! bumped, xml = Project.tryBump xml project newVersion
+            match bumped with
             | Bumped (metadata, lang, prevVer, curVer) ->
                 let! xml = Xml.TrySaveXml metadata.AbsolutePath xml
                 return! (Bumped (metadata, lang, prevVer, curVer), xml) |> Ok
-            | Versioned (metadata, lang, ver) ->
+            | Versioned (metadata, _, _) ->
                 return! GivenNotBumpedProject metadata.Name
                         |> Api
                         |> Error
-            | Unversioned (metadata, lang) ->
+            | Unversioned (metadata, _) ->
                 return! GivenUnversionedProject metadata.Name
                         |> Api
                         |> Error            
-        }
+        }    
+    
+    let private save projects newVersion =        
+        projects
+        |> Seq.map (fun (project, xml) ->
+            match project with
+            | Versioned (_, lang, CalVer _) ->
+                match apply (project, xml) newVersion with
+                | Ok updated -> Ok updated
+                | Error e    -> Error e
+            | _ -> Ok (project, xml))
         
     let initWorkspace workingDir =                
         result {
             let! dir = workingDir
-                                |> FileSystem.TryGetDirectory            
+                            |> FileSystem.TryGetDirectory            
             let! files = dir
-                                |> FileSystem.TryReadFiles supportedFilesPattern
+                            |> FileSystem.TryReadFiles supportedFilesPattern
                 
-            let projects, errors = files
-                                |> Seq.map initProject
-                                |> Result.partition           
+            let projects,
+                iErrors = files
+                            |> Seq.map init
+                            |> Result.partition           
             
             let! currentVer = projects
-                                |> Seq.map fst
-                                |> WorkspaceVersion.create
-                                |> fun x -> x.PropertyGroup |> Option.toResult (NoPropertyGroupWorkspaceVersion |> Api)
+                            |> Seq.map fst
+                            |> WorkspaceVersion.create
+                            |> fun x -> x.PropertyGroup
+                                        |> Option.toResult (NoPropertyGroupWorkspaceVersion |> Api)
                                 
             let timeStamp = Clock.NowUtc
             let! bumpedVer = Version.tryBump currentVer timeStamp
-                                |> Option.toResult (NoPropertyGroupNextVersion |> Api)
+                            |> Option.toResult (NoPropertyGroupNextVersion |> Api)            
+            let projects,
+                sErrors = save projects bumpedVer
+                            |> Result.partition
                                 
-            let projects, errors = projects
-                                |> Seq.map (fun (project, xml) -> saveProject (project, xml) bumpedVer)
-                                |> Result.partition
-                                |> fun (p, e) -> (p |> Seq.map fst , errors |> Seq.append e)
-                                
-            return Workspace.create (dir, projects)
+            return Workspace.create (dir, projects |> Seq.map fst)
         }
