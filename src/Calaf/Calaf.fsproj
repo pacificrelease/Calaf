@@ -5,7 +5,7 @@
     <PackageId>calaf-tool</PackageId>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>calver</ToolCommandName>
-    <Version>2025.4.9</Version>
+    <Version>2025.4.10</Version>
     <Title>Calaf</Title>
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
   </PropertyGroup>
