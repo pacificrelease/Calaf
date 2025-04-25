@@ -29,18 +29,30 @@ module internal Schema =
             |> Option.map (fun versionElement -> versionElement.SetValue(version); projectDocument)
         }
     
-let choosePending (projects: Project[]) : Project[] =
+let choosePending (projects: Project seq) : Project seq =
     projects
-    |> Array.choose (function
+    |> Seq.choose (function
         | Versioned(_, _, CalVer _) as project -> Some project
         | _                                    -> None)
+
+let chooseBumped (projects: Project seq) : Project seq =
+    projects
+    |> Seq.choose (function
+        | Bumped _ as project -> Some project
+        | _                   -> None)
+    
+let chooseSkipped (projects: Project seq) : Project seq =
+    projects
+    |> Seq.choose(function
+        | Skipped _ as project -> Some project
+        | _                    -> None)
 
 let chooseCalendarVersions (projects: Project seq) : CalendarVersion seq =
     projects
     |> Seq.choose (function
         | Versioned (_, _, CalVer version) -> Some version
         | Bumped (_, _, _, version)        -> Some version
-        | _                                -> None)    
+        | _                                -> None)
     
 let tryCreate (projectDocument: System.Xml.Linq.XElement) (metadata: ProjectMetadata) : Project option =        
     let tryExtractVersion (xml: System.Xml.Linq.XElement) : Version option =
@@ -70,7 +82,10 @@ let tryBump (projectDocument: System.Xml.Linq.XElement) (project: Project) (next
             let bumpedProject = Bumped (projectMetadata, lang, currentVersion, nextVersion) 
             return (bumpedProject, updatedProjectDocument)            
         }
-    | Versioned _   -> NoCalendarVersionProject |> Bump |> Error
+    | Versioned (projectMetadata, lang, currentVersion) ->
+        let skippedProject = Skipped (projectMetadata, lang, currentVersion)
+        (skippedProject, projectDocument) |> Ok
     | Unversioned _ -> UnversionedProject       |> Bump |> Error
     | Bumped _      -> AlreadyBumpedProject     |> Bump |> Error
+    | Skipped _     -> SkippedProject           |> Bump |> Error
         

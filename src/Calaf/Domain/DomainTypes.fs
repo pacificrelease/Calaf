@@ -47,6 +47,7 @@ type Project =
     | Unversioned of metadata: ProjectMetadata * lang: Language
     | Versioned   of metadata: ProjectMetadata * lang: Language * currentVersion: Version
     | Bumped      of metadata: ProjectMetadata * lang: Language * previousVersion: CalendarVersion * currentVersion: CalendarVersion
+    | Skipped     of metadata: ProjectMetadata * lang: Language * currentVersion: Version
 
 type Workspace = {
     Name: string

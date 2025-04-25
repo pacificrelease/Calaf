@@ -9,6 +9,7 @@ type BumpProjectError =
     | CannotUpdateVersionElement of name: string
     | UnversionedProject
     | AlreadyBumpedProject
+    | SkippedProject
 
 
 type FileSystemError =
@@ -23,6 +24,7 @@ type XmlError =
 type ApiError =
     | GivenNotBumpedProject of name: string
     | GivenUnversionedProject of name: string
+    | GivenSkippedProject of name: string
     | NoPropertyGroupWorkspaceVersion
     | NoPropertyGroupNextVersion
     

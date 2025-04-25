@@ -35,6 +35,10 @@ module Api =
                 return! GivenNotBumpedProject metadata.Name
                         |> Api
                         |> Error
+            | Skipped (metadata, _, _) ->
+                return! GivenSkippedProject metadata.Name
+                        |> Api
+                        |> Error
             | Unversioned (metadata, _) ->
                 return! GivenUnversionedProject metadata.Name
                         |> Api
