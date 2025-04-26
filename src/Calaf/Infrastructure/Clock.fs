@@ -1,6 +1,9 @@
 ﻿// Impure
 namespace Calaf
 
+open System
+
 module internal Clock =
-    let NowUtc =
-        System.DateTime.UtcNow
+    let Now () =
+        DateTimeOffset.Now
+        

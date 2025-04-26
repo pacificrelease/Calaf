@@ -73,8 +73,8 @@ module Api =
                             |> fun x -> x.PropertyGroup
                                         |> Option.toResult (NoPropertyGroupWorkspaceVersion |> Api)
                                 
-            let timeStamp = Clock.NowUtc
-            let! bumpedVer = Version.tryBump currentVer timeStamp
+            let timeStamp = Clock.Now()
+            let! bumpedVer = Version.tryBump currentVer timeStamp.UtcDateTime
                             |> Option.toResult (NoPropertyGroupNextVersion |> Api)            
             let projects,
                 sErrors = save projects bumpedVer
