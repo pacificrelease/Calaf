@@ -4,7 +4,7 @@ namespace Calaf
 open Calaf.Domain.Errors
 
 module internal Xml =        
-    let TryLoadXml (absolutePath: string) =
+    let tryLoadXml (absolutePath: string) =
         try
             let settings = System.Xml.XmlReaderSettings()
             settings.DtdProcessing <- System.Xml.DtdProcessing.Prohibit
@@ -20,7 +20,7 @@ module internal Xml =
             |> Error
             
     
-    let TrySaveXml (absolutePath: string) (xml: System.Xml.Linq.XElement) =
+    let trySaveXml (absolutePath: string) (xml: System.Xml.Linq.XElement) =
         try            
             let options = System.Xml.Linq.SaveOptions.None
             xml.Save(absolutePath, options)

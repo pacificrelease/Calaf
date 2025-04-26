@@ -9,7 +9,7 @@ module internal FileSystem =
     let private getPathOrCurrentDir path =        
         if System.String.IsNullOrWhiteSpace path then "." else path        
      
-    let TryReadFiles (pattern: string) (path: DirectoryInfo) =
+    let tryReadFiles (pattern: string) (path: DirectoryInfo) =
         try
             path.GetFiles(pattern, SearchOption.AllDirectories)
             |> Ok
@@ -20,7 +20,7 @@ module internal FileSystem =
             |> Error
         
 
-    let TryGetDirectory (path: string) =
+    let tryGetDirectory (path: string) =
         try
             let path = path |> getPathOrCurrentDir |> DirectoryInfo
             if path.Exists

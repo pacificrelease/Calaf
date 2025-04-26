@@ -20,7 +20,7 @@ module Api =
             | Some project -> (project, xml) |> Ok            
         result {
             let metadata = ProjectMetadata.create projectFileInfo            
-            let! xml = Xml.TryLoadXml(metadata.AbsolutePath)            
+            let! xml = Xml.tryLoadXml(metadata.AbsolutePath)            
             return! createProject metadata xml
         }
         
@@ -29,7 +29,7 @@ module Api =
             let! bumped, xml = Project.tryBump xml project newVersion
             match bumped with
             | Bumped (metadata, lang, prevVer, curVer) ->
-                let! xml = Xml.TrySaveXml metadata.AbsolutePath xml
+                let! xml = Xml.trySaveXml metadata.AbsolutePath xml
                 return! (Bumped (metadata, lang, prevVer, curVer), xml) |> Ok
             | Versioned (metadata, _, _) ->
                 return! GivenNotBumpedProject metadata.Name
@@ -57,9 +57,9 @@ module Api =
         
     let initWorkspace dir =                
         result {
-            let! dir = dir   |> FileSystem.TryGetDirectory
+            let! dir = dir   |> FileSystem.tryGetDirectory
             let! repo = dir  |> Git.tryReadRepository
-            let! files = dir |> FileSystem.TryReadFiles supportedFilesPattern
+            let! files = dir |> FileSystem.tryReadFiles supportedFilesPattern
             
             let projects,
                 iErrors = files
@@ -72,7 +72,7 @@ module Api =
                             |> fun x -> x.PropertyGroup
                                         |> Option.toResult (NoPropertyGroupWorkspaceVersion |> Api)
                                 
-            let timeStamp = Clock.Now()
+            let timeStamp = Clock.now()
             let! bumpedVer = Version.tryBump currentVer timeStamp.UtcDateTime
                             |> Option.toResult (NoPropertyGroupNextVersion |> Api)            
             let projects,

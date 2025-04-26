@@ -4,6 +4,6 @@ namespace Calaf
 open System
 
 module internal Clock =
-    let Now () =
+    let now () =
         DateTimeOffset.Now
         
