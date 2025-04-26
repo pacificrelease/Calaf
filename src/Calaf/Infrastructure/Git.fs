@@ -6,32 +6,30 @@ open LibGit2Sharp
 open Calaf.Contracts
 open Calaf.Domain.Errors
 
-module internal Git =  
+module internal Git =
+    let private toTag (tag: Tag) =
+        match tag.Target with
+        | :? TagAnnotation as tagAnnotation ->
+            { Name = tag.FriendlyName; When = Some tagAnnotation.Tagger.When }
+        | :? Commit as commit ->
+            { Name = tag.FriendlyName; When = Some commit.Committer.When }
+        | _ ->
+            { Name = tag.FriendlyName; When = None }
             
     let private createGitRepository (repo: Repository) =
-        let currentBranch = repo.Head.FriendlyName
-        let dirty = repo.RetrieveStatus().IsDirty
-        let headDetached = repo.Info.IsHeadDetached
         { Directory = repo.Info.WorkingDirectory
-          Dirty = dirty
-          HeadDetached = headDetached          
-          CurrentBranch = currentBranch }            
+          Dirty = repo.RetrieveStatus().IsDirty
+          HeadDetached = repo.Info.IsHeadDetached          
+          CurrentBranch = repo.Head.FriendlyName
+          Tags = repo.Tags |> Seq.map toTag |> Seq.toArray }
     
-    let TryReadRepository (path: DirectoryInfo) =
+    let tryReadRepository (path: DirectoryInfo) =
         try
             if Repository.IsValid(path.FullName)
             then
                 use repo = new Repository(path.FullName)
-                repo
-                |> createGitRepository
-                |> Ok
+                repo |> createGitRepository |> Ok
             else
-               path.FullName
-                |> NoGitRepository 
-                |> Git
-                |> Error
+               path.FullName |> NoGitRepository |> Git |> Error
         with exn ->                     
-            exn
-            |> RepositoryAccessError
-            |> Git
-            |> Error
+            exn |> RepositoryAccessError |> Git |> Error

@@ -58,9 +58,9 @@ module Api =
     let initWorkspace dir =                
         result {
             let! dir = dir   |> FileSystem.TryGetDirectory
-            let! repo = dir |> Git.TryReadRepository
+            let! repo = dir  |> Git.tryReadRepository
             let! files = dir |> FileSystem.TryReadFiles supportedFilesPattern
-                
+            
             let projects,
                 iErrors = files
                             |> Seq.map init
