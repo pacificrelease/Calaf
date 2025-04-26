@@ -55,12 +55,11 @@ module Api =
                 | Error e    -> Error e
             | _ -> Ok (project, xml))
         
-    let initWorkspace workingDir =                
+    let initWorkspace dir =                
         result {
-            let! dir = workingDir
-                            |> FileSystem.TryGetDirectory            
-            let! files = dir
-                            |> FileSystem.TryReadFiles supportedFilesPattern
+            let! dir = dir   |> FileSystem.TryGetDirectory
+            let! repo = dir |> Git.TryReadRepository
+            let! files = dir |> FileSystem.TryReadFiles supportedFilesPattern
                 
             let projects,
                 iErrors = files

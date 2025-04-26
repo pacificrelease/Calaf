@@ -12,6 +12,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="InternalExtensions.fs" />
+    <Compile Include="Contracts.fs" />
     <Compile Include="Domain\Errors.fs" />
     <Compile Include="Domain\DomainTypes.fs" />
     <Compile Include="Domain\Patch.fs" />
@@ -23,6 +24,7 @@
     <Compile Include="Domain\Project.fs" />
     <Compile Include="Domain\WorkspaceVersion.fs" />
     <Compile Include="Domain\Workspace.fs" />
+    <Compile Include="Infrastructure\Git.fs" />
     <Compile Include="Infrastructure\FileSystem.fs" />
     <Compile Include="Infrastructure\Xml.fs" />
     <Compile Include="Infrastructure\Clock.fs" />

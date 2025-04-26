@@ -49,6 +49,32 @@ type Project =
     | Bumped      of metadata: ProjectMetadata * lang: Language * previousVersion: CalendarVersion * currentVersion: CalendarVersion
     | Skipped     of metadata: ProjectMetadata * lang: Language * currentVersion: Version
 
+type CommitHash = string
+
+type GitCommit = {
+    Hash: CommitHash
+    Message: string
+}
+
+type GitTag = {
+    Name: string
+    Version: CalendarVersion
+    Commit: GitCommit
+}
+
+type GitHead =
+    | Detached of commit: GitCommit
+    | Branch   of commit: GitCommit * branch: string
+
+type GitRepositoryDetails = {
+    Directory: string
+    Head: GitHead
+}
+
+type GitRepositoryState =
+    | Dirty        of details: GitRepositoryDetails
+    | Ready        of details: GitRepositoryDetails * tag: GitTag
+
 type Workspace = {
     Name: string
     Directory : string

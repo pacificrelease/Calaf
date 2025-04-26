@@ -11,7 +11,10 @@ type BumpProjectError =
     | AlreadyBumpedProject
     | SkippedProject
 
-
+type GitError =
+    | RepositoryAccessError of ex: exn
+    | NoGitRepository       of directory: string
+    
 type FileSystemError =
     | NotExistOrBadPath of msg: string
     | AccessPathError   of ex: exn
@@ -31,6 +34,7 @@ type ApiError =
 type CalafError =
     | Init       of InitError
     | Bump       of BumpProjectError
+    | Git        of GitError
     | FileSystem of FileSystemError
     | Xml        of XmlError
     | Api        of ApiError
