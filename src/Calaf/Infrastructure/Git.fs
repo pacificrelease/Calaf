@@ -7,9 +7,8 @@ open Calaf.Contracts
 open Calaf.Domain.Errors
 
 module internal Git =
-    type TagsQuantity = byte
     [<Literal>]
-    let private tenTags = 10uy
+    let private hundredTags = 100
     
     let private tryGetCommitInfo (tag: Tag) =
         let rec findCommit (target: obj) =
@@ -28,13 +27,13 @@ module internal Git =
             Some { Name = tag.FriendlyName; Commit = tryGetCommitInfo tag }
         else None
         
-    let private readTags (repo: Repository) (qty: TagsQuantity) =
-        repo.Tags
-        |> Seq.truncate (int qty)
+    let private readTags (repo: Repository) maxTagsCount=
+        repo.Tags        
         |> Seq.map tryGetTagInfo
         |> Seq.choose id
         |> Seq.map (fun t -> t, t.Commit |> Option.map _.When)
         |> Seq.sortByDescending snd
+        |> Seq.truncate maxTagsCount
         |> Seq.map fst
         |> Seq.toArray
         
@@ -43,14 +42,15 @@ module internal Git =
           Dirty = repo.RetrieveStatus().IsDirty
           HeadDetached = repo.Info.IsHeadDetached          
           CurrentBranch = repo.Head.FriendlyName
-          Tags = readTags repo tenTags }
+          Tags = readTags repo hundredTags }
     
     let tryReadRepository (path: DirectoryInfo) =
         try
             if Repository.IsValid(path.FullName)
             then
                 use repo = new Repository(path.FullName)
-                repo |> createGitRepository |> Ok
+                let repoInfo = repo |> createGitRepository
+                repoInfo |> Ok
             else
                path.FullName |> NoGitRepository |> Git |> Error
         with exn ->                     
