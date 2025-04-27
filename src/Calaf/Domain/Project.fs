@@ -15,9 +15,8 @@ module internal Schema =
     // TODO: Use ERROR instead of option?
     let tryExtractVersionElement (projectDocument: System.Xml.Linq.XElement) =
         projectDocument.Elements(PropertyGroupXElementName)
-        |> Seq.map _.Elements(VersionXElementName)
+        |> Seq.collect _.Elements(VersionXElementName)
         |> Seq.tryExactlyOne
-        |> Option.bind Seq.tryHead
         
     let tryUpdateVersionElement (projectDocument: System.Xml.Linq.XElement) (version: string)=
         option {
@@ -72,8 +71,12 @@ let tryCreate (projectDocument: System.Xml.Linq.XElement) (metadata: ProjectMeta
 let tryBump (projectDocument: System.Xml.Linq.XElement) (project: Project) (nextVersion: CalendarVersion) =    
     let tryUpdateVersionElement (projectMetadata: ProjectMetadata) =        
         match Schema.tryUpdateVersionElement projectDocument (Version.toString nextVersion)  with
-        | Some updated -> updated |> Ok
-        | None -> projectMetadata.Name |> CannotUpdateVersionElement |> Bump |> Error
+        | Some updated -> updated
+                        |> Ok
+        | None -> projectMetadata.Name
+                  |> CannotUpdateVersionElement
+                  |> Bump
+                  |> Error
     
     match project with
     | Versioned (projectMetadata, lang, CalVer currentVersion) ->        
@@ -84,8 +87,9 @@ let tryBump (projectDocument: System.Xml.Linq.XElement) (project: Project) (next
         }
     | Versioned (projectMetadata, lang, currentVersion) ->
         let skippedProject = Skipped (projectMetadata, lang, currentVersion)
-        (skippedProject, projectDocument) |> Ok
-    | Unversioned _ -> UnversionedProject       |> Bump |> Error
-    | Bumped _      -> AlreadyBumpedProject     |> Bump |> Error
-    | Skipped _     -> SkippedProject           |> Bump |> Error
+        (skippedProject, projectDocument)
+        |> Ok
+    | Unversioned _ -> UnversionedProject   |> Bump |> Error
+    | Bumped _      -> AlreadyBumpedProject |> Bump |> Error
+    | Skipped _     -> SkippedProject       |> Bump |> Error
         
