@@ -28,11 +28,14 @@ module internal Schema =
             |> Option.map (fun versionElement -> versionElement.SetValue(version); projectDocument)
         }
     
-let choosePending (projects: Project seq) : Project seq =
+let choosePending (projects: (Project * System.Xml.Linq.XElement) seq) : (Project * System.Xml.Linq.XElement) seq =
     projects
-    |> Seq.choose (function
-        | Versioned(_, _, CalVer _) as project -> Some project
-        | _                                    -> None)
+    |> Seq.choose (fun (p, x) ->
+        match p with
+        | Versioned(_, _, CalVer _) as project -> Some (project, x)
+        | _ -> None) 
+    
+
 
 let chooseBumped (projects: Project seq) : Project seq =
     projects
