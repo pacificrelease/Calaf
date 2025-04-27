@@ -1,7 +1,5 @@
 ﻿namespace Calaf.Contracts
 
-type TagsQuantity = byte
-
 type GitCommitInfo = {
     Hash: string
     Message: string

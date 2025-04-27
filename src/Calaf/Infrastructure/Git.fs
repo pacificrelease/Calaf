@@ -7,6 +7,7 @@ open Calaf.Contracts
 open Calaf.Domain.Errors
 
 module internal Git =
+    type TagsQuantity = byte
     [<Literal>]
     let private tenTags = 10uy
     
