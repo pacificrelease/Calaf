@@ -8,8 +8,7 @@ open Calaf.Domain.DomainTypes
 open Calaf.Domain.Errors
 open Calaf.Domain
 
-module Api =    
-    
+module Api =
     [<Literal>]
     let private supportedFilesPattern = "*.?sproj"
     
@@ -57,9 +56,9 @@ module Api =
         
     let initWorkspace dir =                
         result {
-            let! dir = dir   |> FileSystem.tryGetDirectory
-            let! repo = dir  |> Git.tryReadRepository
-            let! files = dir |> FileSystem.tryReadFiles supportedFilesPattern
+            let! dir     = dir |> FileSystem.tryGetDirectory
+            let! repo = dir |> Git.tryReadRepository
+            let! files   = dir |> FileSystem.tryReadFiles supportedFilesPattern
             
             let projects,
                 iErrors = files

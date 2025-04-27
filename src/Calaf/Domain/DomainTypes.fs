@@ -69,11 +69,12 @@ type GitHead =
 type GitRepositoryDetails = {
     Directory: string
     Head: GitHead
+    Tags: GitTag[]
 }
 
 type GitRepositoryState =
-    | Dirty        of details: GitRepositoryDetails
-    | Ready        of details: GitRepositoryDetails * tag: GitTag
+    | Dirty of details: GitRepositoryDetails
+    | Ready of details: GitRepositoryDetails * currentTag: GitTag
 
 type Workspace = {
     Name: string

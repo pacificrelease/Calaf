@@ -1,14 +1,22 @@
 ﻿namespace Calaf.Contracts
 
-type GitTag = {
-    Name: string
-    When: System.DateTimeOffset option
+type TagsQuantity = byte
+
+type GitCommitInfo = {
+    Hash: string
+    Message: string
+    When: System.DateTimeOffset
 }
 
-type GitRepository = {
+type GitTagInfo = {
+    Name: string
+    Commit: GitCommitInfo option
+}
+
+type GitRepositoryInfo = {
     Directory: string
     Dirty: bool
     HeadDetached: bool
     CurrentBranch: string
-    Tags: GitTag[]
+    Tags: GitTagInfo[]
 }
