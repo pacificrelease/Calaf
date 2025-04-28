@@ -13,8 +13,8 @@ module TryParseFromStringPropertyTests =
         |> tryParseFromString = Some validYear
         
     [<Property(Arbitrary = [| typeof<Arbitrary.leadingZeroNonYearUInt16String> |], MaxTest = 200)>]
-    let ``Leading zero out of range Year number string parses to None`` (validYear: string) =
-        validYear |> tryParseFromString = None
+    let ``Leading zero out of range Year number string parses to None`` (outOfRangeYearString: string) =
+        outOfRangeYearString |> tryParseFromString = None
         
     [<Property(Arbitrary = [| typeof<Arbitrary.nonNumericString> |], MaxTest = 200)>]
     let ``Invalid string parses to None`` (nonNumberStr: string) =
