@@ -8,6 +8,20 @@ let private tryToUInt32 (versionPart: string) : uint32 option =
     match System.UInt32.TryParse versionPart with
     | true, versionPart -> Some versionPart
     | _ -> None
+    
+let private versionPrefixes =
+    [ "version."; "ver."; "v."
+      "Version."; "Ver."; "V."
+      "version";  "ver";  "v"
+      "Version";  "Ver";  "V" ]
+    |> List.sortByDescending String.length
+    
+let private stripVersionPrefix (tagString: string) =
+    versionPrefixes
+    |> List.tryFind (fun p -> tagString.StartsWith(p, System.StringComparison.InvariantCultureIgnoreCase))
+    |> function
+       | Some p -> tagString.Substring(p.Length)
+       | None   -> tagString
 
 let toString (calVer: CalendarVersion) : string =
     match calVer.Patch with
@@ -46,6 +60,10 @@ let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
 
 let tryParseFromString (bareVersion: string) : Version option =
     option {
+        if System.String.IsNullOrWhiteSpace bareVersion then
+            return! None
+        else
+        let bareVersion = bareVersion.Trim()
         let parts = bareVersion.Split('.')
         match parts with
         | [| first; second; third |] ->
@@ -88,8 +106,5 @@ let tryParseFromString (bareVersion: string) : Version option =
     }
     
 let tryParseFromTag (tagString: string) : Version option =
-    option {
-        return! [| 'v'; 'V' |]
-        |> tagString.TrimStart
-        |> tryParseFromString
-    }
+   if System.String.IsNullOrWhiteSpace tagString then None
+   else tagString.Trim() |> stripVersionPrefix |> tryParseFromString
