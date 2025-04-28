@@ -50,7 +50,7 @@ Write-Host "⭐ [1/5] Restoring solution packages $Settings.SolutionRelativePath
 dotnet restore $Settings.SolutionRelativePath
 
 Write-Host "⭐ [2/5] Building solution $SolutionPath ..."
-dotnet build $SolutionPath --no-restore --configuration $Configuration
+dotnet build $SolutionPath --no-restore --configuration $Configuration --verbosity detailed
 
 Write-Host "⭐ [3/5] Running tests ..."
 dotnet test $SolutionPath --no-build --configuration $Configuration --verbosity detailed --collect:"XPlat Code Coverage" --results-directory:"$CoverageResultDirectoryPath" -- RunConfiguration.FailFast=true
