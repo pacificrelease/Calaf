@@ -60,7 +60,7 @@ let tryCreate (projectDocument: System.Xml.Linq.XElement) (metadata: ProjectMeta
     let tryExtractVersion (xml: System.Xml.Linq.XElement) : Version option =
         xml
         |> Schema.tryExtractVersionElement
-        |> Option.bind (fun x -> Version.tryParse <| x.Value)
+        |> Option.bind (fun x -> Version.tryParseFromString <| x.Value)
         
     option {            
         let! language = Language.tryParse metadata.Extension

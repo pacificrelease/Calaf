@@ -44,7 +44,7 @@ let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
         let maxVersion = versions |> Seq.maxBy (fun v -> v.Year, v.Month, v.Patch)
         Some maxVersion
 
-let tryParse (bareVersion: string) : Version option =
+let tryParseFromString (bareVersion: string) : Version option =
     option {
         let parts = bareVersion.Split('.')
         match parts with
@@ -85,4 +85,11 @@ let tryParse (bareVersion: string) : Version option =
                 return Unsupported
         | _ ->
             return Unsupported
+    }
+    
+let tryParseFromTag (tagString: string) : Version option =
+    option {
+        return! [| 'v'; 'V' |]
+        |> tagString.TrimStart
+        |> tryParseFromString
     }

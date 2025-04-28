@@ -6,7 +6,7 @@ open FsToolkit.ErrorHandling
 open Calaf.Extensions.InternalExtensions
 open Calaf.Domain.Errors
 open Calaf.Domain
-open Calaf.Api.Projects
+open Calaf.Api.Project
 
 module Runner =
     [<Literal>]

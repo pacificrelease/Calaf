@@ -6,7 +6,7 @@ open Calaf.Domain.DomainTypes
 open Calaf.Domain.Version
 open Calaf.Tests
 
-module TryParsePropertiesTests =
+module TryParseFromStringPropertiesTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.validThreePartCalVerString> |], MaxTest = 200)>]
     let ``Valid three-part CalVer string parses to their corresponding values`` (validVersion: string) =
         let parts = validVersion.Split('.')
@@ -14,7 +14,7 @@ module TryParsePropertiesTests =
         let expectedMonth = byte parts[1]
         let expectedPatch = uint32 parts[2]
 
-        match tryParse validVersion with
+        match tryParseFromString validVersion with
         | Some (CalVer calVer) ->
             calVer.Year = expectedYear &&
             calVer.Month = expectedMonth &&
@@ -27,7 +27,7 @@ module TryParsePropertiesTests =
         let expectedYear = uint16 parts[0]
         let expectedMonth = byte parts[1]
 
-        match tryParse validVersion with
+        match tryParseFromString validVersion with
         | Some (CalVer calVer) ->
             calVer.Year = expectedYear &&
             calVer.Month = expectedMonth &&
@@ -41,7 +41,7 @@ module TryParsePropertiesTests =
         let expectedMinor = uint32 parts[1]
         let expectedPatch = uint32 parts[2]
 
-        match tryParse semVerVersion with
+        match tryParseFromString semVerVersion with
         | Some (SemVer semVer) ->
             semVer.Major = expectedMajor &&
             semVer.Minor = expectedMinor &&
@@ -51,12 +51,12 @@ module TryParsePropertiesTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.nonNumericString> |], MaxTest = 200)>]
     let ``Invalid string parses to Unsupported`` (invalidVersion: string) =
         invalidVersion
-        |> tryParse = Some Unsupported
+        |> tryParseFromString = Some Unsupported
         
     [<Property(Arbitrary = [| typeof<Arbitrary.invalidThreePartString> |], MaxTest = 200)>]
     let ``Invalid CalVer/SemVer but valid three-part format parses to Unsupported`` (invalidVersion: string) =
         invalidVersion
-        |> tryParse = Some Unsupported
+        |> tryParseFromString = Some Unsupported
         
 module TryMaxPropertiesTests =
     [<Property(MaxTest = 200)>]
