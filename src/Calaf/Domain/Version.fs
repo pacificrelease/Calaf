@@ -30,7 +30,6 @@ let private tryCleanString (bareString: string) =
     if System.String.IsNullOrWhiteSpace bareString then
         None
     else
-        //bareString.Trim() |> String.filter (System.Char.IsWhiteSpace >> not) |> Some
         bareString.Trim() |> String.filter (asciiWs.Contains >> not) |> Some
     
 let private tryParse (cleanVersion: CleanString) : Version option =

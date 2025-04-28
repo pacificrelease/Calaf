@@ -136,9 +136,14 @@ module Generator =
             return $"0{month}" 
         }
         
-    let leadingZeroUInt16String =
+    let leadingZeroNonYearUInt16String =
         gen {
-            let! year = Gen.choose(1, System.UInt16.MaxValue |> int)
+            let! lowerThanAllowed   = Gen.choose(1, int Calaf.Domain.Year.lowerYearBoundary - 1)
+            let! greaterThanAllowed = Gen.choose(int Calaf.Domain.Year.upperYearBoundary + 1, int System.UInt16.MaxValue)
+            let! year = Gen.frequency [
+                1, Gen.constant lowerThanAllowed
+                1, Gen.constant greaterThanAllowed
+            ]
             return $"{year:D6}"
         }
         
@@ -176,12 +181,16 @@ module Generator =
         
     let validYearUInt16 =
         gen {
-            let! year = Gen.choose(1, System.UInt16.MaxValue |> int)
+            let! year = Gen.choose(int Calaf.Domain.Year.lowerYearBoundary, int Calaf.Domain.Year.upperYearBoundary)
             return uint16 year
         }
         
     let overflowYearCornerCases =
-            Gen.elements [0; -1; int System.UInt16.MinValue; int System.UInt16.MaxValue + 1]
+            Gen.elements [0; -1
+                          int Calaf.Domain.Year.lowerYearBoundary - 1
+                          int Calaf.Domain.Year.upperYearBoundary + 1
+                          int System.UInt16.MinValue
+                          int System.UInt16.MaxValue + 1]
         
     let overflowYearString =
         let genTooBig =
@@ -202,7 +211,11 @@ module Generator =
         
     let overflowYearInt32 =
         let genLittleBig =
-            Gen.elements [0; -1; System.Int32.MinValue; int System.UInt16.MaxValue + 1]
+            Gen.elements [0; -1
+                          int Calaf.Domain.Year.lowerYearBoundary - 1
+                          int Calaf.Domain.Year.upperYearBoundary + 1
+                          System.Int32.MinValue
+                          int System.UInt16.MaxValue + 1]
             
         let genTooBig =
             Gen.choose(int System.UInt16.MaxValue + 1, System.Int32.MaxValue)
@@ -218,8 +231,8 @@ module Generator =
         
     let validThreePartCalVerString =
         gen {
-            let! year = validYearUInt16
-            let! month = validMonthByte
+            let! year   = validYearUInt16
+            let! month   = validMonthByte
             let! patch = validPatchUInt32
             return $"{year}.{month}.{patch}"
         }    
@@ -348,14 +361,12 @@ module Generator =
             let! whiteSpacesSuffix = genWhiteSpacesString
             
             return $"{whiteSpacesPrefix}{validTagCalVerString}{whiteSpacesSuffix}";
-        }
-        
-    let private timeStampYearUpperBoundary = System.DateTime.MaxValue.Year - 1
+        }    
     
     let twoPartCalendarVersionWithSameTimeStamp =
         let genCalVer =
             gen { 
-                let! year  = Gen.choose(1, timeStampYearUpperBoundary)
+                let! year  = Gen.choose(int Calaf.Domain.Year.lowerYearBoundary, int Calaf.Domain.Year.upperYearBoundary)
                 let! month = Gen.choose(1, 11)       
                 return { Year = uint16 year; Month = byte month; Patch = None }
             }            
@@ -428,9 +439,9 @@ module Arbitrary =
         static member validYearUInt16() =
             Arb.fromGen Generator.validYearUInt16
             
-    type internal leadingZeroUInt16String =
-        static member leadingZeroUInt16String() =
-            Arb.fromGen Generator.leadingZeroUInt16String
+    type internal leadingZeroNonYearUInt16String =
+        static member leadingZeroNonYearUInt16String() =
+            Arb.fromGen Generator.leadingZeroNonYearUInt16String
             
     type internal overflowYearString =
         static member overflowYearString() =

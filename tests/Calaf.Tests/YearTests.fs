@@ -12,10 +12,9 @@ module TryParseFromStringPropertyTests =
         |> string
         |> tryParseFromString = Some validYear
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.leadingZeroUInt16String> |], MaxTest = 200)>]
-    let ``Leading zero year number string parses to corresponding value`` (validYear: string) =
-        validYear
-        |> tryParseFromString = Some(System.UInt16.Parse(validYear))
+    [<Property(Arbitrary = [| typeof<Arbitrary.leadingZeroNonYearUInt16String> |], MaxTest = 200)>]
+    let ``Leading zero out of range Year number string parses to None`` (validYear: string) =
+        validYear |> tryParseFromString = None
         
     [<Property(Arbitrary = [| typeof<Arbitrary.nonNumericString> |], MaxTest = 200)>]
     let ``Invalid string parses to None`` (nonNumberStr: string) =

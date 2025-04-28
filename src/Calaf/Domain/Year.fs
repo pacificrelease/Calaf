@@ -2,12 +2,15 @@
 
 open Calaf.Domain.DomainTypes
 
-let private tryParseYear (year: System.UInt16) : Year option =
-    let lowerBoundary = 1us
-    let upperBoundary = System.UInt16.MaxValue
+[<Literal>]
+let lowerYearBoundary = 1970us
+[<Literal>]
+let upperYearBoundary = 9999us
+
+let private tryParseYear (year: System.UInt16) : Year option =    
     match year with
-    | year when year >= lowerBoundary &&
-                year <= upperBoundary -> Some year
+    | year when year >= lowerYearBoundary &&
+                year <= upperYearBoundary -> Some year
     | _ -> None
     
 // TODO: Use ERROR instead of option
@@ -20,7 +23,5 @@ let tryParseFromInt32 (year: System.Int32) : Year option =
 
 let tryParseFromString (year: string) : Year option =
     match year |> System.UInt16.TryParse with
-    | true, year ->
-        year
-        |> tryParseYear
+    | true, year -> year |> tryParseYear
     | _ -> None
