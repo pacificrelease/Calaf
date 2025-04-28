@@ -99,7 +99,7 @@ module Generator =
             return choice
         }
     
-    let badString =
+    let nullOrWhiteSpaceString =
         gen {
             return! Gen.elements [""; " "; null]
         }
@@ -316,6 +316,13 @@ module Generator =
             return $"{validPrefix}{choice}"
         }
         
+    let validTwoPartTagCalVerString =
+        gen {
+            let! prefix = genTagVersionPrefix
+            let! version = validTwoPartCalVerString
+            return $"{prefix}{version}"
+        }
+        
     let validTagSemVerString =
         gen {
             let! validPrefix = genTagVersionPrefix
@@ -393,9 +400,9 @@ module Arbitrary =
         static member nonNumericString() =
             Arb.fromGen Generator.nonNumericString
             
-    type internal badString =
-        static member badString() =
-            Arb.fromGen Generator.badString
+    type internal nullOrWhiteSpaceString =
+        static member nullOrWhiteSpaceString() =
+            Arb.fromGen Generator.nullOrWhiteSpaceString
             
     type internal overflowPatchString =
         static member overflowPatchString() =
@@ -480,6 +487,10 @@ module Arbitrary =
     type internal validTagCalVerString =
         static member validTagCalVerString() =
             Arb.fromGen Generator.validTagCalVerString
+            
+    type internal validTwoPartTagCalVerString =
+        static member validTwoPartTagCalVerString() =
+            Arb.fromGen Generator.validTwoPartTagCalVerString
     
     type internal whiteSpaceLeadingTrailingValidCalVerString =
         static member whiteSpaceLeadingTrailingValidCalVerString() =

@@ -54,6 +54,12 @@ module TryParseFromStringPropertiesTests =
         | Some (CalVer _) -> true
         | _               -> false
         
+    [<Property(Arbitrary = [| typeof<Arbitrary.validTwoPartCalVerString> |], MaxTest = 200)>]
+    let ``Valid two-part CalVer string parses to CalVer with None Patch`` (twoPartCalVerString: string) =
+        match tryParseFromString twoPartCalVerString with
+        | Some (CalVer calVer) -> calVer.Patch.IsNone
+        | _ -> false
+        
     [<Property(Arbitrary = [| typeof<Arbitrary.nonNumericString> |], MaxTest = 200)>]
     let ``Invalid string parses to Unsupported`` (invalidVersion: string) =
         invalidVersion |> tryParseFromString = Some Unsupported
@@ -62,8 +68,8 @@ module TryParseFromStringPropertiesTests =
     let ``Invalid CalVer/SemVer but valid three-part format parses to Unsupported`` (invalidVersion: string) =
         invalidVersion |> tryParseFromString = Some Unsupported
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.badString> |], MaxTest = 200)>]
-    let ``Bad string parses to None`` (badVersion: string) =
+    [<Property(Arbitrary = [| typeof<Arbitrary.nullOrWhiteSpaceString> |], MaxTest = 200)>]
+    let ``Null or empty or whitespace string parses to None`` (badVersion: string) =
         badVersion |> tryParseFromString = None
         
 module TryParseFromTagPropertiesTests =
@@ -85,6 +91,12 @@ module TryParseFromTagPropertiesTests =
         | Some (CalVer _) -> true
         | _               -> false
         
+    [<Property(Arbitrary = [| typeof<Arbitrary.validTwoPartTagCalVerString> |], MaxTest = 200)>]
+    let ``Valid two-part CalVer string parses to CalVer with None Patch`` (twoPartCalVerString: string) =
+        match tryParseFromTag twoPartCalVerString with
+        | Some (CalVer calVer) -> calVer.Patch.IsNone
+        | _ -> false
+        
     [<Property(Arbitrary = [| typeof<Arbitrary.nonNumericString> |], MaxTest = 200)>]
     let ``Invalid string parses to Unsupported`` (invalidVersion: string) =
         invalidVersion |> tryParseFromString = Some Unsupported
@@ -93,8 +105,8 @@ module TryParseFromTagPropertiesTests =
     let ``Invalid CalVer/SemVer but valid three-part format parses to Unsupported`` (invalidVersion: string) =
         invalidVersion |> tryParseFromString = Some Unsupported
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.badString> |], MaxTest = 200)>]
-    let ``Bad string parses to None`` (badVersion: string) =
+    [<Property(Arbitrary = [| typeof<Arbitrary.nullOrWhiteSpaceString> |], MaxTest = 200)>]
+    let ``Null or empty or whitespace string parses to None`` (badVersion: string) =
         badVersion |> tryParseFromTag = None
         
 module TryMaxPropertiesTests =

@@ -17,8 +17,8 @@ module TryParseFromStringPropertyTests =
     let ``Invalid string parses to None`` (nonNumberStr: string) =
         nonNumberStr |> tryParseFromString = None
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.badString> |], MaxTest = 200)>]
-    let ``Bad string parses to None`` (badStr: string) =
+    [<Property(Arbitrary = [| typeof<Arbitrary.nullOrWhiteSpaceString> |], MaxTest = 200)>]
+    let ``Null or empty or whitespace string parses to None`` (badStr: string) =
         badStr |> tryParseFromString = None
         
     [<Property(Arbitrary = [| typeof<Arbitrary.overflowPatchString> |], MaxTest = 200)>]
