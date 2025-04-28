@@ -50,13 +50,33 @@ module TryParseFromStringPropertiesTests =
         
     [<Property(Arbitrary = [| typeof<Arbitrary.nonNumericString> |], MaxTest = 200)>]
     let ``Invalid string parses to Unsupported`` (invalidVersion: string) =
-        invalidVersion
-        |> tryParseFromString = Some Unsupported
+        invalidVersion |> tryParseFromString = Some Unsupported
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.badString> |], MaxTest = 200)>]
+    let ``Bad string parses to None`` (badVersion: string) =
+        badVersion |> tryParseFromString = None
         
     [<Property(Arbitrary = [| typeof<Arbitrary.invalidThreePartString> |], MaxTest = 200)>]
     let ``Invalid CalVer/SemVer but valid three-part format parses to Unsupported`` (invalidVersion: string) =
         invalidVersion
         |> tryParseFromString = Some Unsupported
+        
+module tryParseFromTagPropertiesTests =
+    [<Property(Arbitrary = [| typeof<Arbitrary.validTagCalVerString> |], MaxTest = 200)>]
+    let ``Correct prefix + valid CalVer string parses to Some CalVer`` (validTagCalVerString: string) =
+        match tryParseFromTag validTagCalVerString with
+        | Some (CalVer _) -> true
+        | _               -> false
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.validTagSemVerString> |], MaxTest = 200)>]
+    let ``Correct prefix + valid SemVer string parses to Some SemVer`` (validTagSemVerString: string) =
+        match tryParseFromTag validTagSemVerString with
+        | Some (SemVer _) -> true
+        | _               -> false
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.badString> |], MaxTest = 200)>]
+    let ``Bad string parses to None`` (badVersion: string) =
+        badVersion |> tryParseFromString = None
         
 module TryMaxPropertiesTests =
     [<Property(MaxTest = 200)>]

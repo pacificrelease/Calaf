@@ -27,8 +27,20 @@ module Generator =
             return uint32 genLessThanMax
         }
         
+    let genTagVersionPrefix =
+        gen {
+            let! prefix = Gen.elements ["v"; "V"; "version"; "Version"; "ver"; "Ver"; "v."; "V."; "version."; "Version."; "ver."; "Ver."]
+            return prefix
+        }
+        
+    let genReleaseCycle =
+        gen {
+            let! tag = Gen.elements ["pre-alpha"; "alpha"; "beta"; "rc"; "rtm"; "ga"; "production"; "stable"]
+            return tag
+        }
+        
     let validPatchUInt32 =
-       Gen.choose64(1L, int64 System.UInt32.MaxValue) |> Gen.map uint32
+       Gen.choose64(1L, int64 System.UInt32.MaxValue) |> Gen.map uint32    
         
     let nonNumericString =
         let letterChars = ['a'..'z'] @ ['A'..'Z']
@@ -44,7 +56,7 @@ module Generator =
             
         let genGarbage =
             gen {
-                let! garbage = Gen.elements ["NaN"; "Infinity"; "-Infinity"; ""; " "]
+                let! garbage = Gen.elements ["NaN"; "Infinity"; "-Infinity"; "null"; "undefined"; "true"; "false"]
                 return garbage
             }
             
@@ -55,6 +67,11 @@ module Generator =
                 1, genGarbage
             ]
             return choice
+        }
+    
+    let badString =
+        gen {
+            return! Gen.elements [""; " "; null]
         }
         
     let overflowPatchString =
@@ -175,14 +192,14 @@ module Generator =
             let! month = validMonthByte
             let! patch = validPatchUInt32
             return $"{year}.{month}.{patch}"
-        }
+        }    
         
     let validTwoPartCalVerString =
         gen {
             let! year = validYearUInt16
             let! month = validMonthByte
             return $"{year}.{month}"
-        }
+        }    
         
     let validSemVerString =
         let genBigSemVer =
@@ -250,6 +267,23 @@ module Generator =
             return choice
         }
         
+    let validTagCalVerString =
+        gen {
+            let! validPrefix = genTagVersionPrefix
+            let! choice = Gen.frequency [
+                1, validThreePartCalVerString
+                1, validTwoPartCalVerString
+            ]
+            return $"{validPrefix}{choice}"
+        }
+        
+    let validTagSemVerString =
+        gen {
+            let! validPrefix = genTagVersionPrefix
+            let! semVer = validSemVerString
+            return $"{validPrefix}{semVer}"
+        }
+        
     let private timeStampYearUpperBoundary = System.DateTime.MaxValue.Year - 1
     
     let twoPartCalendarVersionWithSameTimeStamp =
@@ -299,6 +333,10 @@ module Arbitrary =
     type internal nonNumericString =
         static member nonNumericString() =
             Arb.fromGen Generator.nonNumericString
+            
+    type internal badString =
+        static member badString() =
+            Arb.fromGen Generator.badString
             
     type internal overflowPatchString =
         static member overflowPatchString() =
@@ -379,6 +417,14 @@ module Arbitrary =
     type internal calendarVersionWithSameTimeStamp =
         static member calendarVersionWithSameTimeStamp() =
             Arb.fromGen Generator.calendarVersionWithSameTimeStamp
+            
+    type internal validTagCalVerString =
+        static member validTagCalVerString() =
+            Arb.fromGen Generator.validTagCalVerString
+            
+    type internal validTagSemVerString =
+        static member validTagSemVerString() =
+            Arb.fromGen Generator.validTagSemVerString
             
     type internal timeStampIncrement =
         static member timeStampIncrement() =

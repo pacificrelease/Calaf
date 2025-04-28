@@ -22,6 +22,11 @@ module TryParseFromStringPropertyTests =
         nonNumberStr
         |> tryParseFromString = None
         
+    [<Property(Arbitrary = [| typeof<Arbitrary.badString> |], MaxTest = 200)>]
+    let ``Bad string parses to None`` (badString: string) =
+        badString
+        |> tryParseFromString = None
+        
     [<Property(Arbitrary = [| typeof<Arbitrary.overflowYearString> |], MaxTest = 200)>]
     let ``Number out of 1 - UInt16 max range parses to None`` (overflowYear: string) =
         overflowYear

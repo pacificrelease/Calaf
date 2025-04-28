@@ -15,8 +15,11 @@ module TryParseFromStringPropertyTests =
         
     [<Property(Arbitrary = [| typeof<Arbitrary.nonNumericString> |], MaxTest = 200)>]
     let ``Invalid string parses to None`` (nonNumberStr: string) =
-        nonNumberStr
-        |> tryParseFromString= None
+        nonNumberStr |> tryParseFromString = None
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.badString> |], MaxTest = 200)>]
+    let ``Bad string parses to None`` (badStr: string) =
+        badStr |> tryParseFromString = None
         
     [<Property(Arbitrary = [| typeof<Arbitrary.overflowPatchString> |], MaxTest = 200)>]
     let ``Number out of 1 - UInt32 max range parses to None`` (overflowPatch: string) =
