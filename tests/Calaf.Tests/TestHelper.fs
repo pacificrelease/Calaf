@@ -39,6 +39,28 @@ module Generator =
             return tag
         }
         
+    let genWhiteSpacesString =
+        let genMixed l h =
+            gen {
+                let chars = [' '; '\t'; '\n'; '\r']
+                let! length = Gen.choose(l, h)
+                return! Gen.arrayOfLength length (Gen.elements chars)
+            }
+        let genWhiteSpaceOnly l h =
+            gen {
+                let! length = Gen.choose(l, h)
+                return! Gen.arrayOfLength length (Gen.constant ' ')
+            }
+        gen {
+            let! choice = Gen.frequency [
+                1, genMixed 1 20 |> Gen.map System.String
+                1, genWhiteSpaceOnly 1 20 |> Gen.map System.String
+                1, genMixed 21 (int System.Byte.MaxValue) |> Gen.map System.String
+                1, genWhiteSpaceOnly 21 (int System.Byte.MaxValue) |> Gen.map System.String
+            ]
+            return choice
+        }
+        
     let validPatchUInt32 =
        Gen.choose64(1L, int64 System.UInt32.MaxValue) |> Gen.map uint32    
         
@@ -60,10 +82,18 @@ module Generator =
                 return garbage
             }
             
+        let onlyDots =
+            gen {
+                let! length = Gen.choose(1, 20)
+                let! dots = Gen.arrayOfLength length (Gen.constant '.')
+                return dots |> System.String
+            }
+            
         gen {
             let! choice = Gen.frequency [
                 4, genStringFromChars letterChars
-                3, genStringFromChars letterOrSpecialChars      
+                3, genStringFromChars letterOrSpecialChars
+                2, onlyDots
                 1, genGarbage
             ]
             return choice
@@ -199,7 +229,16 @@ module Generator =
             let! year = validYearUInt16
             let! month = validMonthByte
             return $"{year}.{month}"
-        }    
+        }
+        
+    let validCalVerString =
+        gen {            
+            let! choice = Gen.frequency [
+                1, validThreePartCalVerString
+                1, validTwoPartCalVerString
+            ]
+            return choice
+        }
         
     let validSemVerString =
         let genBigSemVer =
@@ -282,6 +321,26 @@ module Generator =
             let! validPrefix = genTagVersionPrefix
             let! semVer = validSemVerString
             return $"{validPrefix}{semVer}"
+        }
+        
+    let whiteSpaceLeadingTrailingValidCalVerString =
+        gen {
+            let! validCalVerString = validCalVerString
+            
+            let! whiteSpacesPrefix = genWhiteSpacesString
+            let! whiteSpacesSuffix = genWhiteSpacesString
+            
+            return $"{whiteSpacesPrefix}{validCalVerString}{whiteSpacesSuffix}";
+        }
+        
+    let whiteSpaceLeadingTrailingValidTagCalVerString =
+        gen {
+            let! validTagCalVerString = validTagCalVerString
+            
+            let! whiteSpacesPrefix = genWhiteSpacesString
+            let! whiteSpacesSuffix = genWhiteSpacesString
+            
+            return $"{whiteSpacesPrefix}{validTagCalVerString}{whiteSpacesSuffix}";
         }
         
     let private timeStampYearUpperBoundary = System.DateTime.MaxValue.Year - 1
@@ -421,6 +480,14 @@ module Arbitrary =
     type internal validTagCalVerString =
         static member validTagCalVerString() =
             Arb.fromGen Generator.validTagCalVerString
+    
+    type internal whiteSpaceLeadingTrailingValidCalVerString =
+        static member whiteSpaceLeadingTrailingValidCalVerString() =
+            Arb.fromGen Generator.whiteSpaceLeadingTrailingValidCalVerString
+            
+    type internal whiteSpaceLeadingTrailingValidTagCalVerString =
+        static member whiteSpaceLeadingTrailingValidTagCalVerString() =
+            Arb.fromGen Generator.whiteSpaceLeadingTrailingValidTagCalVerString
             
     type internal validTagSemVerString =
         static member validTagSemVerString() =

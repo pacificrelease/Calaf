@@ -46,22 +46,27 @@ module TryParseFromStringPropertiesTests =
             semVer.Major = expectedMajor &&
             semVer.Minor = expectedMinor &&
             semVer.Patch = expectedPatch
-        | _ -> false
+        | _ -> false        
+    
+    [<Property(Arbitrary = [| typeof<Arbitrary.whiteSpaceLeadingTrailingValidCalVerString> |], MaxTest = 200)>]
+    let ``Leading/trailing whitespace in input is ignored`` (str: string) =        
+        match tryParseFromString str with
+        | Some (CalVer _) -> true
+        | _               -> false
         
     [<Property(Arbitrary = [| typeof<Arbitrary.nonNumericString> |], MaxTest = 200)>]
     let ``Invalid string parses to Unsupported`` (invalidVersion: string) =
+        invalidVersion |> tryParseFromString = Some Unsupported
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.invalidThreePartString> |], MaxTest = 200)>]
+    let ``Invalid CalVer/SemVer but valid three-part format parses to Unsupported`` (invalidVersion: string) =
         invalidVersion |> tryParseFromString = Some Unsupported
         
     [<Property(Arbitrary = [| typeof<Arbitrary.badString> |], MaxTest = 200)>]
     let ``Bad string parses to None`` (badVersion: string) =
         badVersion |> tryParseFromString = None
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.invalidThreePartString> |], MaxTest = 200)>]
-    let ``Invalid CalVer/SemVer but valid three-part format parses to Unsupported`` (invalidVersion: string) =
-        invalidVersion
-        |> tryParseFromString = Some Unsupported
-        
-module tryParseFromTagPropertiesTests =
+module TryParseFromTagPropertiesTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.validTagCalVerString> |], MaxTest = 200)>]
     let ``Correct prefix + valid CalVer string parses to Some CalVer`` (validTagCalVerString: string) =
         match tryParseFromTag validTagCalVerString with
@@ -74,9 +79,23 @@ module tryParseFromTagPropertiesTests =
         | Some (SemVer _) -> true
         | _               -> false
         
+    [<Property(Arbitrary = [| typeof<Arbitrary.whiteSpaceLeadingTrailingValidTagCalVerString> |], MaxTest = 200)>]
+    let ``Leading/trailing whitespace in input is ignored`` (str: string) =        
+        match tryParseFromTag str with
+        | Some (CalVer _) -> true
+        | _               -> false
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.nonNumericString> |], MaxTest = 200)>]
+    let ``Invalid string parses to Unsupported`` (invalidVersion: string) =
+        invalidVersion |> tryParseFromString = Some Unsupported
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.invalidThreePartString> |], MaxTest = 200)>]
+    let ``Invalid CalVer/SemVer but valid three-part format parses to Unsupported`` (invalidVersion: string) =
+        invalidVersion |> tryParseFromString = Some Unsupported
+        
     [<Property(Arbitrary = [| typeof<Arbitrary.badString> |], MaxTest = 200)>]
     let ``Bad string parses to None`` (badVersion: string) =
-        badVersion |> tryParseFromString = None
+        badVersion |> tryParseFromTag = None
         
 module TryMaxPropertiesTests =
     [<Property(MaxTest = 200)>]
