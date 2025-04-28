@@ -6,7 +6,6 @@ open FsToolkit.ErrorHandling
 open Calaf.Extensions.InternalExtensions
 open Calaf.Domain.Errors
 open Calaf.Domain
-open Calaf.Api.Project
 
 module Runner =
     [<Literal>]
@@ -20,7 +19,7 @@ module Runner =
             
             let lPprojects,
                 lErrors = files
-                |> Seq.map load
+                |> Seq.map Api.Project.load
                 |> Result.partition
             
             let! currentVer =
@@ -35,12 +34,12 @@ module Runner =
             let bProjects,
                 bErrors = lPprojects
                 |> Project.choosePending
-                |> Seq.map (fun pair -> bump pair bumpedVer)
+                |> Seq.map (fun pair -> Api.Project.bump pair bumpedVer)
                 |> Result.partition
                             
             let sProjects,
                 sErrors =  bProjects
-                |> Seq.map save
+                |> Seq.map Api.Project.save
                 |> Result.partition
 
             return Workspace.create (dir, sProjects |> Seq.map fst)
