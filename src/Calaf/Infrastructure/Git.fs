@@ -1,4 +1,4 @@
-﻿namespace Calaf
+﻿namespace Calaf.Infrastructure
 
 open System.IO
 open LibGit2Sharp

@@ -1,5 +1,5 @@
 ﻿// Impure
-namespace Calaf
+namespace Calaf.Infrastructure
 
 open Calaf.Domain.Errors
 

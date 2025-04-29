@@ -6,6 +6,7 @@ open FsToolkit.ErrorHandling
 open Calaf.Extensions.InternalExtensions
 open Calaf.Domain.Errors
 open Calaf.Domain
+open Calaf.Infrastructure
 
 module Runner =
     [<Literal>]
@@ -14,7 +15,7 @@ module Runner =
     let initWorkspace dir =                
         result {
             let! dir     = dir |> FileSystem.tryGetDirectory
-            let! repo = dir |> Git.tryReadRepository
+            let! repo = dir |> Api.Repository.status
             let! files   = dir |> FileSystem.tryReadFiles supportedFilesPattern
             
             let lPprojects,

@@ -5,7 +5,15 @@ open FsToolkit.ErrorHandling
 open Calaf.Domain.DomainTypes
 open Calaf.Domain.Errors
 open Calaf.Domain
-    
+open Calaf.Infrastructure
+
+module Repository =
+    let status dirInfo =
+        result {
+            let! gitRepoInfo = Git.tryReadRepository dirInfo
+            return gitRepoInfo
+        }
+        
 module Project =    
     let load projectFileInfo =
         let createProject metadata xml =            
@@ -15,7 +23,7 @@ module Project =
             
         result {
             let metadata = ProjectMetadata.create projectFileInfo            
-            let! xml = Calaf.Xml.tryLoadXml(metadata.AbsolutePath)            
+            let! xml = Xml.tryLoadXml(metadata.AbsolutePath)            
             return! createProject metadata xml
         }
         
@@ -29,7 +37,7 @@ module Project =
         result {
             match project with
             | Bumped (metadata, _, _, _) ->
-                let! xml = Calaf.Xml.trySaveXml metadata.AbsolutePath xml
+                let! xml = Xml.trySaveXml metadata.AbsolutePath xml
                 return (project, xml)
             | Versioned (metadata, _, _) ->
                 return! GivenNotBumpedProject metadata.Name
