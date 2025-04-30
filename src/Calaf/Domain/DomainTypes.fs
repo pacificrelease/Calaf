@@ -1,12 +1,14 @@
 ﻿// Domain Types
 namespace Calaf.Domain.DomainTypes
 
+// Common
+type Patch = uint32
+// SemVer
 type Major = uint32
 type Minor = uint32
-
+// CalVer
 type Year  = uint16
 type Month = uint8
-type Patch = uint32
 
 // MAJOR.MINOR.PATCH
 type SemanticVersion = {
@@ -27,11 +29,35 @@ type Version =
     | CalVer of CalendarVersion
     | SemVer of SemanticVersion
     | Unsupported
-    
-type WorkspaceVersion = {
-    PropertyGroup: CalendarVersion option
+
+// Repository
+type CommitMessage = string
+type CommitHash = string
+type TagName = string
+type BranchName = string
+
+type Commit = {
+    Message: CommitMessage
+    Hash: CommitHash
+    When: System.DateTimeOffset
 }
 
+type Tag =
+    | Unversioned of name: TagName
+    | Versioned   of name: TagName * version: Version * commit: Commit option
+
+type Head =
+    | Attached   of commit: Commit * branchName: BranchName
+    | Detached of commit: Commit    
+
+type Repository =
+    | Damaged of directory: string
+    | Unborn  of directory: string 
+    | Dirty   of directory: string * Head: Head * tags: Tag[]
+    | Ready   of directory: string * Head: Head * tags: Tag[]
+    | Bumped  of directory: string * previousVersion: CalendarVersion * currentVersion: CalendarVersion
+
+// Project
 type Language =
     | FSharp
     | CSharp
@@ -49,32 +75,9 @@ type Project =
     | Bumped      of metadata: ProjectMetadata * lang: Language * previousVersion: CalendarVersion * currentVersion: CalendarVersion
     | Skipped     of metadata: ProjectMetadata * lang: Language * currentVersion: Version
 
-type CommitHash = string
-
-type GitCommit = {
-    Hash: CommitHash
-    Message: string
+type WorkspaceVersion = {
+    PropertyGroup: CalendarVersion option
 }
-
-type GitTag = {
-    Name: string
-    Version: CalendarVersion
-    Commit: GitCommit
-}
-
-type GitHead =
-    | Detached of commit: GitCommit
-    | Branch   of commit: GitCommit * branch: string
-
-type GitRepositoryDetails = {
-    Directory: string
-    Head: GitHead
-    Tags: GitTag[]
-}
-
-type GitRepositoryState =
-    | Dirty of details: GitRepositoryDetails
-    | Ready of details: GitRepositoryDetails * currentTag: GitTag
 
 type Workspace = {
     Name: string

@@ -15,7 +15,7 @@ module Runner =
     let initWorkspace dir =                
         result {
             let! dir     = dir |> FileSystem.tryGetDirectory
-            let! repo = dir |> Api.Repository.status
+            let! repo = dir |> Git.tryReadRepository
             let! files   = dir |> FileSystem.tryReadFiles supportedFilesPattern
             
             let lPprojects,

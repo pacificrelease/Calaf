@@ -3,7 +3,7 @@
 open Calaf.Domain.DomainTypes
 
 let create (projects: Project seq) : WorkspaceVersion =
-    let propertyGroupVersion = projects
+    let propertyGroup = projects
                             |> Project.chooseCalendarVersions
                             |> Version.tryMax 
-    { PropertyGroup = propertyGroupVersion }
+    { PropertyGroup = propertyGroup }

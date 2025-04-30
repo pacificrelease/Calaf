@@ -12,9 +12,12 @@ type GitTagInfo = {
 }
 
 type GitRepositoryInfo = {
-    Directory: string
+    Directory: string    
+    Damaged: bool
+    Unborn: bool
+    Detached: bool    
+    CurrentBranch: string option
+    CurrentCommit: GitCommitInfo option
     Dirty: bool
-    HeadDetached: bool
-    CurrentBranch: string
     Tags: GitTagInfo[]
 }

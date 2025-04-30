@@ -6,13 +6,6 @@ open Calaf.Domain.DomainTypes
 open Calaf.Domain.Errors
 open Calaf.Domain
 open Calaf.Infrastructure
-
-module Repository =
-    let status dirInfo =
-        result {
-            let! gitRepoInfo = Git.tryReadRepository dirInfo
-            return gitRepoInfo
-        }
         
 module Project =    
     let load projectFileInfo =

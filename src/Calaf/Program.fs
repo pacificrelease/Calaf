@@ -2,7 +2,13 @@
 
 open System
 open Calaf
-let result = Runner.initWorkspace null
+
+let rootPath = "../../../../.."
+let detachedPath = "../../../../../../NBomber"
+let semverPath = "../../../../../../Giraffe"
+let unbornPath = "../../../../../../Unborn"
+
+let result = Runner.initWorkspace detachedPath
 
 match result with
 | Error error ->
