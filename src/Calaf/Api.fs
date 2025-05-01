@@ -9,7 +9,7 @@ open Calaf.Infrastructure
 
 module Git =
     let init gitRepoInfo =        
-        Git.create gitRepoInfo
+        Repository.create gitRepoInfo
     
 module Project =    
     let load projectFileInfo =
