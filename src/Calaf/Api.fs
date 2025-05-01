@@ -6,7 +6,11 @@ open Calaf.Domain.DomainTypes
 open Calaf.Domain.Errors
 open Calaf.Domain
 open Calaf.Infrastructure
-        
+
+module Git =
+    let init gitRepoInfo =        
+        Git.create gitRepoInfo
+    
 module Project =    
     let load projectFileInfo =
         let createProject metadata xml =            

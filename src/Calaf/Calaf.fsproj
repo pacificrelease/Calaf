@@ -19,6 +19,7 @@
     <Compile Include="Domain\Month.fs" />
     <Compile Include="Domain\Year.fs" />
     <Compile Include="Domain\Version.fs" />
+    <Compile Include="Domain\Git.fs" />
     <Compile Include="Domain\Language.fs" />
     <Compile Include="Domain\ProjectMetadata.fs" />
     <Compile Include="Domain\Project.fs" />

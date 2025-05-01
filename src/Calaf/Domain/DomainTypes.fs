@@ -47,14 +47,14 @@ type Tag =
     | Versioned   of name: TagName * version: Version * commit: Commit option
 
 type Head =
-    | Attached   of commit: Commit * branchName: BranchName
+    | Attached of commit: Commit * branchName: BranchName
     | Detached of commit: Commit    
 
 type Repository =
     | Damaged of directory: string
     | Unborn  of directory: string 
-    | Dirty   of directory: string * Head: Head * tags: Tag[]
-    | Ready   of directory: string * Head: Head * tags: Tag[]
+    | Dirty   of directory: string * head: Head * currentVersion: Version option
+    | Ready   of directory: string * head: Head * currentVersion: Version option
     | Bumped  of directory: string * previousVersion: CalendarVersion * currentVersion: CalendarVersion
 
 // Project

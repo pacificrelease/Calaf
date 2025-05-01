@@ -46,7 +46,7 @@ module internal Git =
             if info.IsHeadUnborn then None
             else repo.Head.Tip |> createGitCommitInfo |> Some
         { Directory     = info.WorkingDirectory
-          Damaged       = isNull repo.Head.Tip
+          Damaged       = not info.IsHeadUnborn && isNull repo.Head.Tip 
           Unborn        = info.IsHeadUnborn
           Detached      = info.IsHeadDetached
           Dirty         = status.IsDirty          

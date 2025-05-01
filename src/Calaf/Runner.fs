@@ -18,6 +18,7 @@ module Runner =
             let! repo = dir |> Git.tryReadRepository
             let! files   = dir |> FileSystem.tryReadFiles supportedFilesPattern
             
+            let repo = Api.Git.init repo
             let lPprojects,
                 lErrors = files
                 |> Seq.map Api.Project.load
