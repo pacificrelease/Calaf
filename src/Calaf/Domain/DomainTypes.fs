@@ -75,7 +75,9 @@ type Project =
     | Bumped      of metadata: ProjectMetadata * lang: Language * previousVersion: CalendarVersion * currentVersion: CalendarVersion
     | Skipped     of metadata: ProjectMetadata * lang: Language * currentVersion: Version
 
+// TODO: Refactor Workspace to DU
 type WorkspaceVersion = {
+    //GitTag: CalendarVersion option
     PropertyGroup: CalendarVersion option
 }
 

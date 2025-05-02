@@ -7,27 +7,24 @@ open Calaf.Contracts
 open Calaf.Domain.Errors
 
 module internal Git =
-    [<Literal>]
-    let private hundredTags = 100
-    
-    let rec tryMapCommit (target: obj) =
+    let rec private tryMapCommit (target: obj) : Commit option =
         match target with
         | :? Commit as c         -> Some c
         | :? TagAnnotation as ta -> tryMapCommit ta.Target
         | _                      -> None
     
-    let private createGitCommitInfo (commit: Commit) =
+    let private createGitCommitInfo (commit: Commit) : GitCommitInfo =
         { Hash = commit.Sha; Message = commit.MessageShort; When = commit.Committer.When }
     
-    let private tryExtractCommitInfo (tag: Tag) =            
+    let private tryExtractCommitInfo (tag: Tag) : GitCommitInfo option =            
         tag.Target |> tryMapCommit |> Option.map createGitCommitInfo        
         
-    let private tryGetTagInfo (tag: Tag) =        
+    let private tryGetTagInfo (tag: Tag) : GitTagInfo option =        
         if not (System.String.IsNullOrWhiteSpace tag.FriendlyName) then            
             Some { Name = tag.FriendlyName; Commit = tryExtractCommitInfo tag }
         else None
         
-    let private readTags (repo: Repository) maxTagsCount=
+    let private readTags (repo: Repository) (maxTagsCount: int) : GitTagInfo seq =
         repo.Tags        
         |> Seq.map tryGetTagInfo
         |> Seq.choose id
@@ -36,7 +33,7 @@ module internal Git =
         |> Seq.truncate maxTagsCount
         |> Seq.map fst
         
-    let private createGitRepository (repo: Repository) =
+    let private createGitRepository (repo: Repository) (tagsQty: int)=
         let info   = repo.Info
         let status = repo.RetrieveStatus()
         let branch =
@@ -52,14 +49,14 @@ module internal Git =
           Dirty         = status.IsDirty          
           CurrentBranch = branch
           CurrentCommit = commit
-          Tags          = readTags repo hundredTags |> Seq.toArray }
+          Tags          = readTags repo tagsQty |> Seq.toArray }
     
-    let tryReadRepository (path: DirectoryInfo) =
+    let tryReadRepository (path: DirectoryInfo) (tagsQty: int) : Result<GitRepositoryInfo, CalafError> =
         try
             if Repository.IsValid(path.FullName)
             then
                 use repo = new Repository(path.FullName)
-                repo |> createGitRepository |> Ok
+                createGitRepository repo tagsQty |> Ok
             else
                path.FullName |> NoGitRepository |> Git |> Error
         with exn ->                     

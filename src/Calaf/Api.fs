@@ -1,7 +1,9 @@
-﻿namespace Calaf.Api
+﻿// Composition Root
+namespace Calaf.Api
 
 open FsToolkit.ErrorHandling
 
+open Calaf.Extensions.InternalExtensions
 open Calaf.Domain.DomainTypes
 open Calaf.Domain.Errors
 open Calaf.Domain
@@ -10,7 +12,7 @@ open Calaf.Infrastructure
 module Git =
     let init gitRepoInfo =        
         Repository.create gitRepoInfo
-    
+
 module Project =    
     let load projectFileInfo =
         let createProject metadata xml =            
@@ -48,4 +50,60 @@ module Project =
                 return! GivenUnversionedProject metadata.Name
                 |> Api
                 |> Error
+        }
+
+// let initWorkspace dir =                
+//     result {
+//         let! dir     = dir |> FileSystem.tryGetDirectory
+//         let! repo = dir |> Git.tryReadRepository
+//         let! files   = dir |> FileSystem.tryReadFiles supportedFilesPattern
+//         
+//         let repo = Api.Git.init repo
+//         let lPprojects,
+//             lErrors = files
+//             |> Seq.map Api.Project.load
+//             |> Result.partition
+//         
+//         let! currentVer =
+//             lPprojects
+//             |> Seq.map fst
+//             |> WorkspaceVersion.create
+//             |> fun x -> x.PropertyGroup |> Option.toResult (NoPropertyGroupWorkspaceVersion |> Api)                                
+//         let timeStamp = Clock.now()
+//         let! bumpedVer =
+//             Version.tryBump currentVer timeStamp.UtcDateTime
+//             |> Option.toResult (NoPropertyGroupNextVersion |> Api)
+//         let bProjects,
+//             bErrors = lPprojects
+//             |> Project.choosePending
+//             |> Seq.map (fun pair -> Api.Project.bump pair bumpedVer)
+//             |> Result.partition
+//                         
+//         let sProjects,
+//             sErrors =  bProjects
+//             |> Seq.map Api.Project.save
+//             |> Result.partition
+//
+//         return Workspace.create (dir, sProjects |> Seq.map fst)
+//     }
+
+module Workspace =
+    [<Literal>]
+    let private supportedFilesPattern = "*.?sproj"
+    [<Literal>]
+    let private hundredTags = 100
+        
+    let create dir =
+        result {
+            let! dir = FileSystem.tryGetDirectory dir
+            let! repo = Git.tryReadRepository dir hundredTags |> Result.map Git.init
+            let! files= FileSystem.tryReadFiles dir supportedFilesPattern            
+            let projects, _ =
+                files
+                |> Seq.map Project.load
+                |> Result.partition
+            
+            // TODO: Return Info/Report with Workspace&Errors for reporting
+            // WorkspaceResponse/WorspaceResult
+            return Workspace.create (dir, projects |> Seq.map fst)
         }

@@ -33,9 +33,7 @@ let choosePending (projects: (Project * System.Xml.Linq.XElement) seq) : (Projec
     |> Seq.choose (fun (p, x) ->
         match p with
         | Versioned(_, _, CalVer _) as project -> Some (project, x)
-        | _ -> None) 
-    
-
+        | _ -> None)
 
 let chooseBumped (projects: Project seq) : Project seq =
     projects
