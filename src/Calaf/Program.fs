@@ -3,7 +3,7 @@
 open System
 open Calaf
 
-let result = Runner.initWorkspace null
+let result = Api.Workspace.create null
 
 match result with
 | Error error ->
