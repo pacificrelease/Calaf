@@ -53,8 +53,8 @@ type Head =
 type Repository =
     | Damaged of directory: string
     | Unborn  of directory: string 
-    | Dirty   of directory: string * head: Head * currentVersion: Version option
-    | Ready   of directory: string * head: Head * currentVersion: Version option
+    | Dirty   of directory: string * head: Head * currentVersion: CalendarVersion option
+    | Ready   of directory: string * head: Head * currentVersion: CalendarVersion option
     | Bumped  of directory: string * previousVersion: CalendarVersion * currentVersion: CalendarVersion
 
 // Project
@@ -75,15 +75,14 @@ type Project =
     | Bumped      of metadata: ProjectMetadata * lang: Language * previousVersion: CalendarVersion * currentVersion: CalendarVersion
     | Skipped     of metadata: ProjectMetadata * lang: Language * currentVersion: Version
 
-// TODO: Refactor Workspace to DU
-type WorkspaceVersion = {
-    //GitTag: CalendarVersion option
-    PropertyGroup: CalendarVersion option
+type Suite = {
+    Version: CalendarVersion option
+    Projects: Project[]    
 }
 
 type Workspace = {
-    Name: string
-    Directory : string
-    Version : WorkspaceVersion
-    Projects : Project seq
+    Directory: string
+    Repository: Repository option
+    Suite: Suite
 }
+    

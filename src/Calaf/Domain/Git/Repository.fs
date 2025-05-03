@@ -10,7 +10,6 @@ let create (repoInfo: GitRepositoryInfo) =
                    |> Seq.map Tag.create
                    |> Tag.chooseCalendarVersions        
                    |> Version.tryMax
-                   |> Option.map CalVer
         ctor (repoInfo.Directory, head, version)
         
     match repoInfo with

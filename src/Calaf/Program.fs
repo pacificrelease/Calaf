@@ -2,6 +2,7 @@
 
 open System
 open Calaf
+open Calaf.Domain.DomainTypes
 
 let result = Api.Workspace.create null
 
@@ -11,12 +12,31 @@ match result with
     Environment.Exit(1)
     
 | Ok workspace ->
-    if workspace.Version.PropertyGroup.IsNone
-    then
-        printfn $"Workspace {workspace.Directory} not initialized. \n"
-        printfn "Please init and add a calendar version to the property group of the projects. \n"
+    match workspace.Repository, workspace.Suite.Version with
+    | Some _, Some version ->
+        printfn $"Workspace: {workspace.Directory}."
+        printfn "Git repository found. Skipping now..."
+        printfn $"Current Suite version is {version}. 🚀. \n"
+        Environment.Exit(0)
+        
+    | None, Some version ->
+        printfn $"Workspace: {workspace.Directory}."
+        printfn "Git repository not found."
+        printfn $"Current Suite version is {version}. 🚀. \n"
+        Environment.Exit(0)
+        
+    | Some _, None ->
+        printfn $"Workspace: {workspace.Directory}."
+        printfn "Git repository found. Skipping now..."
+        printfn "Suite calendar version not found."
+        printfn "Please init and add a calendar version to the Version element of the PropertyGroup to the projects."
         printfn "For example: <Version>2023.10</Version> \n"
         Environment.Exit(1)
-    else
-        printfn $"Current version is {workspace.Version.PropertyGroup.Value}. 🚀. \n"
-        Environment.Exit(0)
+        
+    | None, None ->
+        printfn $"Workspace: {workspace.Directory}."
+        printfn "Git repository not found."
+        printfn "Suite calendar version not found."
+        printfn "Please init and add a calendar version to the Version element of the PropertyGroup to the projects."
+        printfn "For example: <Version>2023.10</Version> \n"
+        Environment.Exit(1)

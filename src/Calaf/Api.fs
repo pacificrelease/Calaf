@@ -9,10 +9,6 @@ open Calaf.Domain.Errors
 open Calaf.Domain
 open Calaf.Infrastructure
 
-module Git =
-    let init gitRepoInfo =        
-        Repository.create gitRepoInfo
-
 module Project =    
     let load projectFileInfo =
         let createProject metadata xml =            
@@ -95,9 +91,10 @@ module Workspace =
         
     let create dir =
         result {
-            let! dir = FileSystem.tryGetDirectory dir
-            let! repo = Git.tryReadRepository dir hundredTags |> Result.map Git.init
-            let! files= FileSystem.tryReadFiles dir supportedFilesPattern            
+            let! dir   = FileSystem.tryGetDirectory dir
+            let! repo  = Git.tryReadRepository dir hundredTags
+            let! files = FileSystem.tryReadFiles dir supportedFilesPattern 
+            
             let projects, _ =
                 files
                 |> Seq.map Project.load
@@ -105,5 +102,5 @@ module Workspace =
             
             // TODO: Return Info/Report with Workspace&Errors for reporting
             // WorkspaceResponse/WorspaceResult
-            return Workspace.create (dir, projects |> Seq.map fst)
+            return Workspace.create (dir, repo, projects |> Seq.map fst)
         }

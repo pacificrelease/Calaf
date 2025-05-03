@@ -51,13 +51,13 @@ module internal Git =
           CurrentCommit = commit
           Tags          = readTags repo tagsQty |> Seq.toArray }
     
-    let tryReadRepository (path: DirectoryInfo) (tagsQty: int) : Result<GitRepositoryInfo, CalafError> =
+    let tryReadRepository (path: DirectoryInfo) (tagsQty: int) =
         try
             if Repository.IsValid(path.FullName)
             then
                 use repo = new Repository(path.FullName)
-                createGitRepository repo tagsQty |> Ok
+                createGitRepository repo tagsQty |> Some |> Ok
             else
-               path.FullName |> NoGitRepository |> Git |> Error
+                None |> Ok
         with exn ->                     
             exn |> RepositoryAccessError |> Git |> Error

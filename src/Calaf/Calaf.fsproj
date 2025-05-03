@@ -26,7 +26,7 @@
     <Compile Include="Domain\Project\Language.fs" />
     <Compile Include="Domain\Project\ProjectMetadata.fs" />
     <Compile Include="Domain\Project\Project.fs" />
-    <Compile Include="WorkspaceVersion.fs" />
+    <Compile Include="Suite.fs" />
     <Compile Include="Workspace.fs" />
     <Compile Include="Infrastructure\Git.fs" />
     <Compile Include="Infrastructure\FileSystem.fs" />

@@ -2,11 +2,10 @@
 
 open System.IO
 
+open Calaf.Contracts
 open Calaf.Domain.DomainTypes
 
-let create (directory: DirectoryInfo, projects: Project seq) : Workspace =
-    let workspaceVersion = WorkspaceVersion.create projects
-    { Name = directory.Name
-      Directory = directory.FullName
-      Projects = projects
-      Version = workspaceVersion }
+let create (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option, projects: Project seq) : Workspace =
+    { Directory  = directory.FullName
+      Repository = repoInfo |> Option.map Repository.create
+      Suite      = projects |> Seq.toArray |> Suite.create }
