@@ -460,7 +460,7 @@ module Generator =
                 return { Name = validSemVerString; Commit = maybeCommit }                       
             }
             
-        let unversionedGitTagInfo =
+        let malformedGitTagInfo =
             gen {
                 let! unversionedTagName = Gen.frequency [
                     3, nonNumericString
@@ -471,7 +471,27 @@ module Generator =
                     1, Gen.constant None
                     3, gitCommitInfo |> Gen.map Some
                 ]
-                return { Name = unversionedTagName; Commit = maybeCommit }       
+                return { Name = unversionedTagName; Commit = maybeCommit }
+            }
+            
+        let calVerOrSemVerWithCommitGitTagInfo =
+            gen {
+                let! tagName = Gen.frequency [
+                    3, validTagCalVerString
+                    1, validTagSemVerString
+                ]
+                let! commit = gitCommitInfo |> Gen.map Some
+                return { Name = tagName; Commit = commit }
+            }
+            
+        let randomGitTagInfo =
+            gen {
+                let! choice = Gen.frequency [
+                    1, malformedGitTagInfo
+                    3, calVerGitTagInfo
+                    2, semVerGitTagInfo
+                ]
+                return choice
             }
 
 module Arbitrary =
@@ -608,6 +628,14 @@ module Arbitrary =
             static member semVerGitTagInfo() =
                 Arb.fromGen Generator.Git.semVerGitTagInfo
                 
-        type unversionedGitTagInfo =
-            static member unversionedGitTagInfo() =
-                Arb.fromGen Generator.Git.unversionedGitTagInfo
+        type malformedGitTagInfo =
+            static member malformedGitTagInfo() =
+                Arb.fromGen Generator.Git.malformedGitTagInfo
+                
+        type calVerOrSemVerWithCommitGitTagInfo =
+            static member calVerOrSemVerWithCommitGitTagInfo() =
+                Arb.fromGen Generator.Git.calVerOrSemVerWithCommitGitTagInfo
+                
+        type randomGitTagInfo =
+            static member randomGitTagInfo() =
+                Arb.fromGen Generator.Git.randomGitTagInfo

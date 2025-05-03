@@ -9,7 +9,7 @@ open Calaf.Tests
 
 module CreatePropertiesTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.Git.calVerGitTagInfo> |])>]
-    let ``CalVer version tag creates Tag.Versioned with CalVer version`` (contract: GitTagInfo)  =
+    let ``CalVer-named tag always creates Tag.Versioned with the corresponding CalVer version`` (contract: GitTagInfo)  =
         match create contract with
         | Tag.Versioned(name, CalVer calVer, commitOption) ->
             name = contract.Name &&
@@ -17,17 +17,32 @@ module CreatePropertiesTests =
         | _ -> false
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Git.semVerGitTagInfo> |])>]
-    let ``SemVer version tag creates Tag.Versioned with SemVer version`` (contract: GitTagInfo) =
+    let ``SemVer-named tag always creates Tag.Versioned with the corresponding SemVer version`` (contract: GitTagInfo) =
         match create contract with
         | Tag.Versioned(name, SemVer semVer, commitOption) ->
             name = contract.Name &&
             Option.isSome contract.Commit = Option.isSome commitOption
         | _ -> false
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.Git.unversionedGitTagInfo> |])>]
-    let ``No version tag creates Tag.Unversioned with the corresponding name`` (contract: GitTagInfo) =
+    [<Property(Arbitrary = [| typeof<Arbitrary.Git.malformedGitTagInfo> |])>]
+    let ``Malform-named tag always creates Tag.Unversioned with the corresponding malformed name`` (contract: GitTagInfo) =
         match create contract with
         | Tag.Unversioned name ->
             name = contract.Name
         | _ -> false
-
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Git.calVerOrSemVerWithCommitGitTagInfo> |])>]
+    let ``CalVer or SemVer named tag with the commit option creates Tag.Versioned with the corresponding commit option`` (contract: GitTagInfo) =
+        match create contract, contract.Commit with
+        | Tag.Versioned(_, _, Some commit), Some expectedCommit ->
+            expectedCommit.Message = commit.Message &&
+            expectedCommit.Hash = commit.Hash &&
+            expectedCommit.When = commit.When
+        | Tag.Versioned(_, _, None), None ->
+            true
+        | _ -> false
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Git.randomGitTagInfo> |])>]
+    let ``Tag never creates unexpected DU cases`` (contract: GitTagInfo) =
+        match create contract with
+        | Tag.Versioned _ | Tag.Unversioned _ -> true
