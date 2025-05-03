@@ -7,8 +7,8 @@ open Calaf.Domain.DomainTypes
 open Calaf.Domain.Commit
 open Calaf.Tests
 
-module CreateTests =        
-    [<Property(Arbitrary = [| typeof<Arbitrary.gitCommitInfo> |])>]
+module CreatePropertiesTests =        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Git.gitCommitInfo> |])>]
     let ``Contract creates a corresponding domain value`` (contract: GitCommitInfo) =        
         let commit = create contract
         commit.Message = contract.Message &&

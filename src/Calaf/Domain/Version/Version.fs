@@ -4,19 +4,19 @@ open FsToolkit.ErrorHandling
 
 open Calaf.Domain.DomainTypes
 
+let internal versionPrefixes =
+    [ "version."; "ver."; "v."
+      "Version."; "Ver."; "V."
+      "version";  "ver";  "v"
+      "Version";  "Ver";  "V" ]
+    |> List.sortByDescending String.length
+    
 type private CleanString = string
 
 let private tryToUInt32 (versionPart: string) : uint32 option =
     match System.UInt32.TryParse versionPart with
     | true, versionPart -> Some versionPart
     | _ -> None
-    
-let private versionPrefixes =
-    [ "version."; "ver."; "v."
-      "Version."; "Ver."; "V."
-      "version";  "ver";  "v"
-      "Version";  "Ver";  "V" ]
-    |> List.sortByDescending String.length
     
 let private stripVersionPrefix (tagString: CleanString) =
     versionPrefixes

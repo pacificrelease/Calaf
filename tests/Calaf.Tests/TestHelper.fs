@@ -31,7 +31,7 @@ module Generator =
         
     let genTagVersionPrefix =
         gen {
-            let! prefix = Gen.elements ["v"; "V"; "version"; "Version"; "ver"; "Ver"; "v."; "V."; "version."; "Version."; "ver."; "Ver."]
+            let! prefix = Gen.elements Calaf.Domain.Version.versionPrefixes
             return prefix
         }
         
@@ -417,28 +417,38 @@ module Generator =
             return! Gen.elements [ TimeStampIncrement.Year; TimeStampIncrement.Month; TimeStampIncrement.Both ]
         }
         
-    let commitMessage =
-        gen {
-            
-            let! choice =
-                Gen.frequency [ 3, Gen.constant (Bogus.Faker().Lorem.Sentence())
-                                1, Gen.elements [""; " "]]
-            return choice
-        }
-    
-    let commitHash =
-        gen {
-            return Bogus.Faker().Random.Hash()
-        }        
+    module Git =        
+        let commitMessage =
+            gen {
+                
+                let! choice =
+                    Gen.frequency [ 3, Gen.constant (Bogus.Faker().Lorem.Sentence())
+                                    1, Gen.elements [""; " "]]
+                return choice
+            }
         
-    let gitCommitInfo : Gen<GitCommitInfo> =
-        gen {
-            let! commitMessage = commitMessage
-            let! commitHash = commitHash
-            let! timeStamp = genValidDateTimeOffset
-            return { Message = commitMessage; Hash = commitHash; When = timeStamp }
-        }
-
+        let commitHash =
+            gen {
+                return Bogus.Faker().Random.Hash()
+            }        
+            
+        let gitCommitInfo : Gen<GitCommitInfo> =
+            gen {
+                let! commitMessage = commitMessage
+                let! commitHash = commitHash
+                let! timeStamp = genValidDateTimeOffset
+                return { Message = commitMessage; Hash = commitHash; When = timeStamp }
+            }
+            
+        let calVerGitTagInfo =
+            gen {
+                let! validCalVerString = validTagCalVerString
+                let! maybeCommit = Gen.frequency [
+                    1, Gen.constant None
+                    3, gitCommitInfo |> Gen.map Some
+                ]
+                return { Name = validCalVerString; Commit = maybeCommit }                                
+            }
 
 module Arbitrary =
     type internal validPatchUInt32 =
@@ -561,6 +571,11 @@ module Arbitrary =
         static member timeStampIncrement() =
             Arb.fromGen Generator.timeStampIncrement
             
-    type internal gitCommitInfo =
-        static member gitCommitInfo() =
-            Arb.fromGen Generator.gitCommitInfo
+    module internal Git =            
+        type gitCommitInfo =
+            static member gitCommitInfo() =
+                Arb.fromGen Generator.Git.gitCommitInfo
+                
+        type calVerGitTagInfo =
+            static member calVerGitTagInfo() =
+                Arb.fromGen Generator.Git.calVerGitTagInfo
