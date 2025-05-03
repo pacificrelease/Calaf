@@ -440,6 +440,14 @@ module Generator =
                 return { Message = commitMessage; Hash = commitHash; When = timeStamp }
             }
             
+        let commit: Gen<Commit> =
+            gen {
+                let! commitMessage = commitMessage
+                let! commitHash = commitHash
+                let! timeStamp = genValidDateTimeOffset
+                return { Message = commitMessage; Hash = commitHash; When = timeStamp }
+            }
+            
         let calVerGitTagInfo =
             gen {
                 let! validCalVerString = validTagCalVerString
@@ -493,6 +501,32 @@ module Generator =
                 ]
                 return choice
             }
+            
+        let calendarVersionTag : Gen<Tag> =
+            let commitChoice = Gen.frequency [
+                    1, Gen.constant None
+                    3, commit |> Gen.map Some ]
+            gen {
+                let! calVerVersion = calendarVersion
+                let tagNameSb = System.Text.StringBuilder($"{calVerVersion.Year}.{calVerVersion.Month}")
+                let tagNameSb = if calVerVersion.Patch.IsSome then tagNameSb.Append calVerVersion.Patch.Value else tagNameSb 
+                let! maybeCommit = commitChoice
+                return Tag.Versioned (tagNameSb.ToString(), (calVerVersion |> CalVer), maybeCommit)
+            }
+            
+        let calendarVersionsTags =
+             gen {
+                let! smallCount = Gen.choose(1, 50)
+                let! middleCount = Gen.choose(51, 100)            
+                let! bigCount = Gen.choose(101, 1000)            
+                let! choice = Gen.frequency [
+                    7, Gen.arrayOfLength smallCount calendarVersionTag
+                    2, Gen.arrayOfLength middleCount calendarVersionTag
+                    1, Gen.arrayOfLength bigCount calendarVersionTag
+                ]
+                return choice
+            }
+            
 
 module Arbitrary =
     type internal validPatchUInt32 =
@@ -639,3 +673,7 @@ module Arbitrary =
         type randomGitTagInfo =
             static member randomGitTagInfo() =
                 Arb.fromGen Generator.Git.randomGitTagInfo
+                
+        type calendarVersionsTags =
+             static member calendarVersionsTags() =
+                Arb.fromGen Generator.Git.calendarVersionsTags
