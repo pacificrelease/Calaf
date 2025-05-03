@@ -449,6 +449,30 @@ module Generator =
                 ]
                 return { Name = validCalVerString; Commit = maybeCommit }                                
             }
+            
+        let semVerGitTagInfo =
+            gen {
+                let! validSemVerString = validTagSemVerString
+                let! maybeCommit = Gen.frequency [
+                    1, Gen.constant None
+                    3, gitCommitInfo |> Gen.map Some
+                ]
+                return { Name = validSemVerString; Commit = maybeCommit }                       
+            }
+            
+        let unversionedGitTagInfo =
+            gen {
+                let! unversionedTagName = Gen.frequency [
+                    3, nonNumericString
+                    2, invalidThreePartString
+                    1, nullOrWhiteSpaceString
+                ]
+                let! maybeCommit = Gen.frequency [
+                    1, Gen.constant None
+                    3, gitCommitInfo |> Gen.map Some
+                ]
+                return { Name = unversionedTagName; Commit = maybeCommit }       
+            }
 
 module Arbitrary =
     type internal validPatchUInt32 =
@@ -579,3 +603,11 @@ module Arbitrary =
         type calVerGitTagInfo =
             static member calVerGitTagInfo() =
                 Arb.fromGen Generator.Git.calVerGitTagInfo
+                
+        type semVerGitTagInfo =
+            static member semVerGitTagInfo() =
+                Arb.fromGen Generator.Git.semVerGitTagInfo
+                
+        type unversionedGitTagInfo =
+            static member unversionedGitTagInfo() =
+                Arb.fromGen Generator.Git.unversionedGitTagInfo

@@ -8,11 +8,11 @@ let chooseCalendarVersions (tags: Tag seq) : CalendarVersion seq =
     |> Seq.choose (function
         | Tag.Versioned (_, CalVer version, _) -> Some version
         | _ -> None)
-        
+
 let create (tagInfo: GitTagInfo) =
     match Version.tryParseFromTag tagInfo.Name with
-    | Some version ->
+    | Some v when v.IsCalVer || v.IsSemVer ->
         let commit = tagInfo.Commit |> Option.map Commit.create
-        Tag.Versioned (tagInfo.Name, version, commit)
-    | None ->
+        Tag.Versioned (tagInfo.Name, v, commit)
+    | _ ->
         Tag.Unversioned tagInfo.Name
