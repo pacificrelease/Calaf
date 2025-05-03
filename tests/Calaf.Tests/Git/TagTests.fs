@@ -46,3 +46,8 @@ module CreatePropertiesTests =
     let ``Tag never creates unexpected DU cases`` (contract: GitTagInfo) =
         match create contract with
         | Tag.Versioned _ | Tag.Unversioned _ -> true
+        
+module ChooseCalendarVersionsPropertiesTests =
+    [<Property>]
+    let ``Empty tags yields empty CalendarVersions sequence`` () =
+        chooseCalendarVersions Seq.empty |> Seq.isEmpty
