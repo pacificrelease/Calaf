@@ -10,12 +10,14 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="TestHelper.fs" />
-    <Compile Include="PatchTests.fs" />
-    <Compile Include="MonthTests.fs" />
-    <Compile Include="YearTests.fs" />
-    <Compile Include="VersionTests.fs" />
+    <Compile Include="Version\PatchTests.fs" />
+    <Compile Include="Version\MonthTests.fs" />
+    <Compile Include="Version\YearTests.fs" />
+    <Compile Include="Version\VersionTests.fs" />
+    <Compile Include="Git\CommitTests.fs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Bogus" Version="35.6.3" />
     <PackageReference Include="coverlet.collector" Version="6.0.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

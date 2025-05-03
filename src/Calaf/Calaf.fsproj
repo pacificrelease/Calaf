@@ -23,10 +23,10 @@
     <Compile Include="Domain\Git\Tag.fs" />
     <Compile Include="Domain\Git\Head.fs" />
     <Compile Include="Domain\Git\Repository.fs" />
-    <Compile Include="Domain\Project\Language.fs" />
-    <Compile Include="Domain\Project\ProjectMetadata.fs" />
-    <Compile Include="Domain\Project\Project.fs" />
-    <Compile Include="Suite.fs" />
+    <Compile Include="Domain\Suite\Language.fs" />
+    <Compile Include="Domain\Suite\ProjectMetadata.fs" />
+    <Compile Include="Domain\Suite\Project.fs" />
+    <Compile Include="Domain\Suite\Suite.fs" />
     <Compile Include="Workspace.fs" />
     <Compile Include="Infrastructure\Git.fs" />
     <Compile Include="Infrastructure\FileSystem.fs" />

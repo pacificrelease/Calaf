@@ -1,7 +1,9 @@
 ﻿namespace Calaf.Tests
 
+open FsCheck
 open FsCheck.FSharp
 
+open Calaf.Contracts
 open Calaf.Domain.DomainTypes
 
 type TimeStampIncrement = Year | Month | Both
@@ -59,6 +61,23 @@ module Generator =
                 1, genWhiteSpaceOnly 21 (int System.Byte.MaxValue) |> Gen.map System.String
             ]
             return choice
+        }
+        
+    let genValidDateTimeOffset =
+        gen {
+            let min = System.DateTimeOffset(System.DateTime(int Calaf.Domain.Year.lowerYearBoundary, 1, 1, 0, 0, 0, System.DateTimeKind.Utc))
+            let max   = System.DateTimeOffset(System.DateTime(int Calaf.Domain.Year.upperYearBoundary, 12, 31, 23, 59, 59, 999, System.DateTimeKind.Utc))
+            let daysMax = int (max - min).TotalDays
+            let! days     = Gen.choose (0, daysMax)
+            let! seconds  = Gen.choose (0, 86_399)
+            let! millis   = Gen.choose (0, 999)
+            let utcInstant = min
+                                 .AddDays(float days)
+                                 .AddSeconds(float seconds)
+                                 .AddMilliseconds(float millis)
+            let! offsetMinutes = Gen.elements [ for m in -14*60 .. 30 .. 14*60 -> m ]
+            let offset = System.TimeSpan.FromMinutes(float offsetMinutes)
+            return utcInstant.ToOffset(offset)
         }
         
     let validPatchUInt32 =
@@ -397,6 +416,29 @@ module Generator =
         gen {
             return! Gen.elements [ TimeStampIncrement.Year; TimeStampIncrement.Month; TimeStampIncrement.Both ]
         }
+        
+    let commitMessage =
+        gen {
+            
+            let! choice =
+                Gen.frequency [ 3, Gen.constant (Bogus.Faker().Lorem.Sentence())
+                                1, Gen.elements [""; " "]]
+            return choice
+        }
+    
+    let commitHash =
+        gen {
+            return Bogus.Faker().Random.Hash()
+        }        
+        
+    let gitCommitInfo : Gen<GitCommitInfo> =
+        gen {
+            let! commitMessage = commitMessage
+            let! commitHash = commitHash
+            let! timeStamp = genValidDateTimeOffset
+            return { Message = commitMessage; Hash = commitHash; When = timeStamp }
+        }
+
 
 module Arbitrary =
     type internal validPatchUInt32 =
@@ -518,3 +560,7 @@ module Arbitrary =
     type internal timeStampIncrement =
         static member timeStampIncrement() =
             Arb.fromGen Generator.timeStampIncrement
+            
+    type internal gitCommitInfo =
+        static member gitCommitInfo() =
+            Arb.fromGen Generator.gitCommitInfo
