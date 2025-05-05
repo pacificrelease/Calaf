@@ -13,6 +13,7 @@
     <Compile Include="Version\PatchTests.fs" />
     <Compile Include="Version\MonthTests.fs" />
     <Compile Include="Version\YearTests.fs" />
+    <Compile Include="Version\DateStewardTests.fs" />
     <Compile Include="Version\VersionTests.fs" />
     <Compile Include="Git\CommitTests.fs" />
     <Compile Include="Git\TagTests.fs" />

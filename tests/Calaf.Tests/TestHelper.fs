@@ -254,6 +254,23 @@ module Generator =
                 ]
                 return choice
             }
+            
+    module internal DateSteward =
+        let inRangeDateTime =
+            gen {
+                let! year = Year.inRangeUInt16Year
+                let! month = Month.inRangeByteMonth
+                let! day = Gen.choose(1, 28)
+                return (int year, int month, day) |> System.DateTime
+            }
+            
+        let outOfRangeDateTime =
+            gen {
+                let! outOfRangeLowerThaAllowed = Gen.choose(int System.UInt16.MinValue, int Calaf.Domain.Year.lowerYearBoundary - 1)
+                let! month = Month.inRangeByteMonth
+                let! day = Gen.choose(1, 28)
+                return (outOfRangeLowerThaAllowed, int month, day) |> System.DateTime
+            }
         
     let validThreePartCalVerString =
         gen {
@@ -672,6 +689,15 @@ module Arbitrary =
         type wrongStringYear =
             static member wrongStringYear() =
                 Arb.fromGen Generator.Year.wrongStringYear
+                
+    module internal DateSteward =
+        type inRangeDateTime =
+            static member inRangeDateTime() =
+                Arb.fromGen Generator.DateSteward.inRangeDateTime
+                
+        type outOfRangeDateTime =
+            static member outOfRangeDateTime() =
+                Arb.fromGen Generator.DateSteward.outOfRangeDateTime
     
     module internal Git =          
         type gitCommitInfo =
