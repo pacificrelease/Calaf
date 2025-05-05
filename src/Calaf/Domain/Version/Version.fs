@@ -31,7 +31,8 @@ let private tryCleanString (bareString: string) =
         None
     else
         bareString.Trim() |> String.filter (asciiWs.Contains >> not) |> Some
-    
+
+// TODO: Refactor to return Error instead of Option  
 let private tryParse (cleanVersion: CleanString) : Version option =
     option {        
         let parts = cleanVersion.Split('.')
@@ -55,7 +56,7 @@ let private tryParse (cleanVersion: CleanString) : Version option =
                 | _ -> third |> Patch.tryParseFromString 
             
             match year, month, patch with
-            | Some year, Some month, patch ->
+            | Ok year, Ok month, patch ->
                 return CalVer({ Year = year; Month = month; Patch = patch })            
             | _ ->
             match major, minor, patch with
@@ -64,10 +65,10 @@ let private tryParse (cleanVersion: CleanString) : Version option =
                 | _ ->
                     return Unsupported
         | [| year; month |] ->
-            let year    = Year.tryParseFromString year
+            let year  = Year.tryParseFromString year
             let month = Month.tryParseFromString month
             match year, month with
-            | Some year, Some month ->
+            | Ok year, Ok month ->
                 return CalVer({ Year = year; Month = month; Patch = None })
             | _ ->
                 return Unsupported
@@ -79,29 +80,24 @@ let toString (calVer: CalendarVersion) : string =
     match calVer.Patch with
     | Some patch -> $"{calVer.Year}.{calVer.Month}.{patch}"
     | None -> $"{calVer.Year}.{calVer.Month}"
-
-// TODO: Use ERROR instead of option    
-let tryBump (currentVersion: CalendarVersion) (timeStamp: System.DateTime) : CalendarVersion option =
-    option {
-        let! year    = Year.tryParseFromInt32 timeStamp.Year
-        let! month = Month.tryParseFromInt32 timeStamp.Month            
-        let shouldBumpYear = year > currentVersion.Year            
-        if shouldBumpYear then
-            return { Year = year
-                     Month = month
-                     Patch = None }
+ 
+let bump (currentVersion: CalendarVersion) (dateStamp: DateStamp) : CalendarVersion =    
+    let shouldBumpYear = dateStamp.Year > currentVersion.Year            
+    if shouldBumpYear then
+        { Year = dateStamp.Year
+          Month = dateStamp.Month
+          Patch = None }
+    else
+        let shouldBumpMonth = dateStamp.Month > currentVersion.Month
+        if shouldBumpMonth then
+            { Year = currentVersion.Year
+              Month = dateStamp.Month
+              Patch = None }
         else
-            let shouldBumpMonth = month > currentVersion.Month
-            if shouldBumpMonth then
-                return { Year = currentVersion.Year
-                         Month = month
-                         Patch = None }
-            else
-                let patch = currentVersion.Patch |> Patch.bump |> Some
-                return { Year = currentVersion.Year
-                         Month = currentVersion.Month
-                         Patch = patch }           
-    }   
+            let patch = currentVersion.Patch |> Patch.bump |> Some
+            { Year = currentVersion.Year
+              Month = currentVersion.Month
+              Patch = patch }
     
 let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
     match versions with

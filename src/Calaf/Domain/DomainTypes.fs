@@ -10,6 +10,11 @@ type Minor = uint32
 type Year  = uint16
 type Month = uint8
 
+type DateStamp = {
+    Year:   Year
+    Month:  Month
+}
+
 // MAJOR.MINOR.PATCH
 type SemanticVersion = {
     Major: Major

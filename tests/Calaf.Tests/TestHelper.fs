@@ -143,123 +143,130 @@ module Generator =
             return choice
         }
         
-    let validMonthByte =
-        gen {
-            let! month = Gen.choose(1, 12)
-            return byte month
-        }
-        
-    let leadingZeroDigitString =
-        gen {
-            let! month = Gen.choose(1, 9)
-            return $"0{month}" 
-        }
-        
-    let leadingZeroNonYearUInt16String =
-        gen {
-            let! lowerThanAllowed   = Gen.choose(1, int Calaf.Domain.Year.lowerYearBoundary - 1)
-            let! greaterThanAllowed = Gen.choose(int Calaf.Domain.Year.upperYearBoundary + 1, int System.UInt16.MaxValue)
-            let! year = Gen.frequency [
-                1, Gen.constant lowerThanAllowed
-                1, Gen.constant greaterThanAllowed
-            ]
-            return $"{year:D6}"
-        }
-        
-    let overflowMonthString =
-        let genTooBig =
+    module Month =
+        let inRangeByteMonth =
             gen {
-                let! overflow = Gen.choose64(13L, System.Int64.MaxValue)
-                return string overflow
+                let! month = Gen.choose(int Calaf.Domain.Month.lowerMonthBoundary,
+                                        int Calaf.Domain.Month.upperMonthBoundary)
+                return byte month
             }
             
-        gen {
-            let! choice = Gen.frequency [
-                3, genTooBig
-                2, genNegative |> Gen.map string
-                1, genFloat
-            ]
-            return choice
-        }
-        
-    let overflowMonthInt32 =
-        let genLittleBig =
-            Gen.elements [0; 13; -1; System.Int32.MinValue; System.Int32.MaxValue]
-            
-        let genTooBig =
-            Gen.choose(13, System.Int32.MaxValue)
-            
-        gen {
-            let! choice = Gen.frequency [
-                1, genLittleBig
-                3, genTooBig
-                3, genNegative
-            ]
-            return choice
-        }
-        
-    let validYearUInt16 =
-        gen {
-            let! year = Gen.choose(int Calaf.Domain.Year.lowerYearBoundary, int Calaf.Domain.Year.upperYearBoundary)
-            return uint16 year
-        }
-        
-    let overflowYearCornerCases =
-            Gen.elements [0; -1
-                          int Calaf.Domain.Year.lowerYearBoundary - 1
-                          int Calaf.Domain.Year.upperYearBoundary + 1
-                          int System.UInt16.MinValue
-                          int System.UInt16.MaxValue + 1]
-        
-    let overflowYearString =
-        let genTooBig =
+        let outOfRangeByteMonth =            
             gen {
-                let! overflow = Gen.choose64(int64 (System.UInt16.MaxValue + 1us), System.Int64.MaxValue)
-                return string overflow
+                let! month = Gen.choose(int Calaf.Domain.Month.upperMonthBoundary + 1, int System.Byte.MaxValue)
+                return byte month 
             }
             
-        gen {
-            let! choice = Gen.frequency [
-                2, genTooBig
-                2, genNegative |> Gen.map string
-                1, overflowYearCornerCases |> Gen.map string
-                1, genFloat
-            ]
-            return choice
-        }
+        let leadingZeroOutOfRangeStringMonth =
+            gen {
+                let! month = outOfRangeByteMonth
+                return $"{month:D6}"
+            }
+            
+        let wrongInt32Month =
+            let wrongCornerCases = Gen.elements [ -1;                         
+                                                  System.Int32.MinValue
+                                                  System.Int32.MaxValue
+                                                  int System.Byte.MaxValue + 1]
+            let smallWrongInt32 = Gen.choose(int System.Int32.MinValue, int System.Byte.MinValue - 1)
+            let bigWrongInt32   = Gen.choose(int System.Byte.MaxValue + 1, System.Int32.MaxValue)
+            gen {
+                return! Gen.frequency [
+                    1, wrongCornerCases
+                    2, smallWrongInt32
+                    2, bigWrongInt32
+                ]
+            }
+            
+        let wrongStringMonth =
+            let genTooBig = Gen.choose64(int64 (System.Byte.MaxValue + 1uy), System.Int64.MaxValue)                
+            gen {
+                let! choice = Gen.frequency [
+                    3, genTooBig   |> Gen.map string
+                    3, genNegative |> Gen.map string
+                    1, nullOrWhiteSpaceString
+                    1, nonNumericString
+                    1, genFloat
+                ]
+                return choice
+            }
         
-    let overflowYearInt32 =
-        let genLittleBig =
-            Gen.elements [0; -1
-                          int Calaf.Domain.Year.lowerYearBoundary - 1
-                          int Calaf.Domain.Year.upperYearBoundary + 1
-                          System.Int32.MinValue
-                          int System.UInt16.MaxValue + 1]
+    module Year =
+        let inRangeUInt16Year =
+            gen {
+                let! year =
+                    Gen.choose(int Calaf.Domain.Year.lowerYearBoundary,
+                               int Calaf.Domain.Year.upperYearBoundary)
+                return uint16 year
+            }
             
-        let genTooBig =
-            Gen.choose(int System.UInt16.MaxValue + 1, System.Int32.MaxValue)
+        let outOfRangeUInt16Year =
+            let outOfRangeCornerCases = Gen.elements [ 0;
+                                                       int Calaf.Domain.Year.lowerYearBoundary - 1
+                                                       int Calaf.Domain.Year.upperYearBoundary + 1 ]
+            let outOfRangeLowerThaAllowed = Gen.choose(int System.UInt16.MinValue, int Calaf.Domain.Year.lowerYearBoundary - 1)
+            let outOfRangeGreaterThaAllowed = Gen.choose(int Calaf.Domain.Year.upperYearBoundary + 1, int System.UInt16.MaxValue)
+            gen {
+                let! year = Gen.frequency [
+                    1, outOfRangeCornerCases
+                    1, outOfRangeLowerThaAllowed
+                    1, outOfRangeGreaterThaAllowed
+                ]
+                return uint16 year 
+            }
             
-        gen {
-            let! choice = Gen.frequency [
-                1, genLittleBig
-                3, genTooBig
-                3, genNegative
-            ]
-            return choice
-        }
+        let leadingZeroOutOfRangeStringYear =
+            gen {
+                let! lowerThanAllowed   = Gen.choose(1, int Calaf.Domain.Year.lowerYearBoundary - 1)
+                let! greaterThanAllowed = Gen.choose(int Calaf.Domain.Year.upperYearBoundary + 1, int System.UInt16.MaxValue)
+                let! year = Gen.frequency [
+                    1, Gen.constant lowerThanAllowed
+                    1, Gen.constant greaterThanAllowed
+                ]
+                return $"{year:D6}"
+            }
+            
+        let wrongInt32Year =
+            let wrongCornerCases = Gen.elements [ -1;                         
+                                                  System.Int32.MinValue
+                                                  System.Int32.MaxValue
+                                                  int System.UInt16.MaxValue + 1]
+            let smallWrongInt32 = Gen.choose(int System.Int32.MinValue, int System.UInt16.MinValue - 1)
+            let bigWrongInt32   = Gen.choose(int System.UInt16.MaxValue + 1, System.Int32.MaxValue)
+            gen {
+                return! Gen.frequency [
+                    1, wrongCornerCases
+                    2, smallWrongInt32
+                    2, bigWrongInt32
+                ]
+            }
+            
+        let wrongStringYear =
+            let genTooBig = Gen.choose64(int64 (System.UInt16.MaxValue + 1us), System.Int64.MaxValue)
+                
+            gen {
+                let! choice = Gen.frequency [
+                    3, genTooBig   |> Gen.map string
+                    3, genNegative |> Gen.map string
+                    1, nullOrWhiteSpaceString
+                    1, nonNumericString
+                    1, genFloat
+                ]
+                return choice
+            }
         
     let validThreePartCalVerString =
         gen {
-            let! year   = validYearUInt16
-            let! month   = validMonthByte
+            let! year  = Year.inRangeUInt16Year
+            let! month = Month.inRangeByteMonth
             let! patch = validPatchUInt32
             return $"{year}.{month}.{patch}"
         }    
         
     let validTwoPartCalVerString =
         gen {
-            let! year = validYearUInt16
-            let! month = validMonthByte
+            let! year  = Year.inRangeUInt16Year
+            let! month = Month.inRangeByteMonth
             return $"{year}.{month}"
         }
         
@@ -305,8 +312,8 @@ module Generator =
     
     let twoSectionCalendarVersion =
         gen {
-            let! year = validYearUInt16
-            let! month = validMonthByte
+            let! year  = Year.inRangeUInt16Year
+            let! month = Month.inRangeByteMonth
             return { Year = year; Month = month; Patch = None }
         }
         
@@ -382,7 +389,7 @@ module Generator =
             return $"{whiteSpacesPrefix}{validTagCalVerString}{whiteSpacesSuffix}";
         }    
     
-    let twoPartCalendarVersionWithSameTimeStamp =
+    let twoPartCalendarVersionWithSameDateStamp =
         let genCalVer =
             gen { 
                 let! year  = Gen.choose(int Calaf.Domain.Year.lowerYearBoundary, int Calaf.Domain.Year.upperYearBoundary - 1)
@@ -391,25 +398,23 @@ module Generator =
             }            
         gen {
             let! calVer = genCalVer
-            let! day = Gen.choose(1, 28)
-            let timeStamp = (int calVer.Year, int calVer.Month, day) |> System.DateTime
-            return (calVer, timeStamp)
+            let dateStamp = { Year = calVer.Year; Month = calVer.Month }
+            return (calVer, dateStamp)
         }
         
-    let threePartCalendarVersionWithSameTimeStamp =            
+    let threePartCalendarVersionWithSameDateStamp =            
         gen {
-            let! calVer, timeStamp = twoPartCalendarVersionWithSameTimeStamp
+            let! calVer, dateStamp = twoPartCalendarVersionWithSameDateStamp
             let! patch = validPatchUInt32 
-            return ({ calVer with Patch = Some patch }, timeStamp)
+            return ({ calVer with Patch = Some patch }, dateStamp)
         }
         
-    let calendarVersionWithSameTimeStamp =
+    let calendarVersionWithSameDateStamp =
         gen {
             let! threeSectionCalVer = Gen.elements [true; false]
             return! if threeSectionCalVer
-                then threePartCalendarVersionWithSameTimeStamp
-                else twoPartCalendarVersionWithSameTimeStamp
-                        
+                then threePartCalendarVersionWithSameDateStamp
+                else twoPartCalendarVersionWithSameDateStamp                        
         }
         
     let timeStampIncrement =
@@ -549,38 +554,6 @@ module Arbitrary =
         static member overflowPatchString() =
             Arb.fromGen Generator.overflowPatchString
             
-    type internal validMonthByte =
-        static member validMonthByte() =
-            Arb.fromGen Generator.validMonthByte
-            
-    type internal leadingZeroDigitString =
-        static member leadingZeroDigitString() =
-            Arb.fromGen Generator.leadingZeroDigitString
-            
-    type internal overflowMonthString =
-        static member overflowMonthString() =
-            Arb.fromGen Generator.overflowMonthString
-            
-    type internal overflowMonthInt32 =
-        static member overflowMonthInt32() =
-            Arb.fromGen Generator.overflowMonthInt32
-            
-    type internal validYearUInt16 =
-        static member validYearUInt16() =
-            Arb.fromGen Generator.validYearUInt16
-            
-    type internal leadingZeroNonYearUInt16String =
-        static member leadingZeroNonYearUInt16String() =
-            Arb.fromGen Generator.leadingZeroNonYearUInt16String
-            
-    type internal overflowYearString =
-        static member overflowYearString() =
-            Arb.fromGen Generator.overflowYearString
-            
-    type internal overflowYearInt32 =
-        static member overflowYearInt32() =
-            Arb.fromGen Generator.overflowYearInt32
-            
     type internal validThreePartCalVerString =
         static member validThreePartCalVerString() =
             Arb.fromGen Generator.validThreePartCalVerString
@@ -613,17 +586,17 @@ module Arbitrary =
         static member calendarVersions() =
             Arb.fromGen Generator.calendarVersions
     
-    type internal twoPartCalendarVersionWithSameTimeStamp =
-        static member twoPartCalendarVersionWithSameTimeStamp() =
-            Arb.fromGen Generator.twoPartCalendarVersionWithSameTimeStamp
+    type internal twoPartCalendarVersionWithSameDateStamp =
+        static member twoPartCalendarVersionWithSameDateStamp() =
+            Arb.fromGen Generator.twoPartCalendarVersionWithSameDateStamp
             
-    type internal threePartCalendarVersionWithSameTimeStamp =
+    type internal threePartCalendarVersionWithSameDateStamp =
         static member threePartCalendarVersionWithSameTimeStamp() =
-            Arb.fromGen Generator.threePartCalendarVersionWithSameTimeStamp
+            Arb.fromGen Generator.threePartCalendarVersionWithSameDateStamp
             
-    type internal calendarVersionWithSameTimeStamp =
-        static member calendarVersionWithSameTimeStamp() =
-            Arb.fromGen Generator.calendarVersionWithSameTimeStamp
+    type internal calendarVersionWithSameDateStamp =
+        static member calendarVersionWithSameDateStamp() =
+            Arb.fromGen Generator.calendarVersionWithSameDateStamp
             
     type internal validTagCalVerString =
         static member validTagCalVerString() =
@@ -649,7 +622,58 @@ module Arbitrary =
         static member timeStampIncrement() =
             Arb.fromGen Generator.timeStampIncrement
             
-    module internal Git =            
+    module internal Month =
+        type inRangeByteMonth =
+            static member inRangeByteMonth() =
+                Arb.fromGen Generator.Month.inRangeByteMonth
+                
+        type outOfRangeUInt16Year =
+            static member outOfRangeByteMonth() =
+                Arb.fromGen Generator.Month.outOfRangeByteMonth
+                
+        type outOfRangeStringMonth =
+            static member outOfRangeStringMonth() =
+                Arb.fromGen (Generator.Month.outOfRangeByteMonth |> Gen.map string)
+                
+        type leadingZeroOutOfRangeStringMonth =
+            static member leadingZeroOutOfRangeStringMonth() =
+                Arb.fromGen Generator.Month.leadingZeroOutOfRangeStringMonth
+                
+        type wrongInt32Month =
+            static member wrongInt32Month() =
+                Arb.fromGen Generator.Month.wrongInt32Month
+                
+        type wrongStringMonth =
+            static member wrongStringMonth() =
+                Arb.fromGen Generator.Month.wrongStringMonth
+        
+        
+    module internal Year =
+        type inRangeUInt16Year =
+            static member inRangeUInt16Year() =
+                Arb.fromGen Generator.Year.inRangeUInt16Year
+                
+        type outOfRangeUInt16Year =
+            static member outOfRangeUInt16Year() =
+                Arb.fromGen Generator.Year.outOfRangeUInt16Year
+                
+        type outOfRangeStringYear =
+            static member outOfRangeUInt16Year() =
+                Arb.fromGen (Generator.Year.outOfRangeUInt16Year |> Gen.map string)
+                
+        type leadingZeroOutOfRangeStringYear =
+            static member leadingZeroOutOfRangeStringYear() =
+                Arb.fromGen Generator.Year.leadingZeroOutOfRangeStringYear
+                
+        type wrongInt32Year =
+            static member wrongInt32Year() =
+                Arb.fromGen Generator.Year.wrongInt32Year
+                
+        type wrongStringYear =
+            static member wrongStringYear() =
+                Arb.fromGen Generator.Year.wrongStringYear
+    
+    module internal Git =          
         type gitCommitInfo =
             static member gitCommitInfo() =
                 Arb.fromGen Generator.Git.gitCommitInfo
