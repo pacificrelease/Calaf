@@ -266,7 +266,7 @@ module Generator =
             
         let outOfRangeDateTime =
             gen {
-                let! outOfRangeLowerThaAllowed = Gen.choose(int System.UInt16.MinValue, int Calaf.Domain.Year.lowerYearBoundary - 1)
+                let! outOfRangeLowerThaAllowed = Gen.choose(int System.UInt16.MinValue + 1, int Calaf.Domain.Year.lowerYearBoundary - 1)
                 let! month = Month.inRangeByteMonth
                 let! day = Gen.choose(1, 28)
                 return (outOfRangeLowerThaAllowed, int month, day) |> System.DateTime
