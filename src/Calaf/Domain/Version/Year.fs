@@ -1,6 +1,6 @@
 ﻿module internal Calaf.Domain.Year
 
-open Calaf.Domain.Errors
+open Calaf.Domain.DomainErrors
 open Calaf.Domain.DomainTypes
 
 [<Literal>]
@@ -8,20 +8,20 @@ let lowerYearBoundary = 1970us
 [<Literal>]
 let upperYearBoundary = 9999us
 
-let private tryParseYear (year: System.UInt16) : Result<Year, CalafError> =    
+let private tryParseYear (year: System.UInt16) : Result<Year, DomainError> =    
     match year with
     | year when year >= lowerYearBoundary &&
                 year <= upperYearBoundary -> Ok year
-    | _ -> OutOfRangeYear |> Validation |> Error
+    | _ -> OutOfRangeYear |> Error
 
-let tryParseFromInt32 (year: System.Int32) : Result<Year, CalafError> =
+let tryParseFromInt32 (year: System.Int32) : Result<Year, DomainError> =
     try
         year
         |> System.Convert.ToUInt16
         |> tryParseYear
-    with _ -> WrongInt32Year |> Validation |> Error
+    with _ -> WrongInt32Year |> Error
 
-let tryParseFromString (year: string) : Result<Year, CalafError> =
+let tryParseFromString (year: string) : Result<Year, DomainError> =
     match year |> System.UInt16.TryParse with
     | true, year -> year |> tryParseYear
-    | _ -> WrongStringYear |> Validation |> Error
+    | _ -> WrongStringYear |> Error

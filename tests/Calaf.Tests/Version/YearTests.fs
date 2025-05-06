@@ -2,7 +2,7 @@
 
 open FsCheck.Xunit
 
-open Calaf.Domain.Errors
+open Calaf.Domain.DomainErrors
 open Calaf.Domain.Year
 open Calaf.Tests
 
@@ -15,25 +15,25 @@ module TryParseFromStringPropertyTests =
     // TODO: make leadingZeroWrongStringYear
     [<Property(Arbitrary = [| typeof<Arbitrary.Year.leadingZeroOutOfRangeStringYear> |], MaxTest = 200)>]
     let ``Leading zero out of range Year number string parses to OutOfRangeYear error`` (outOfRangeYearString: string) =
-        outOfRangeYearString |> tryParseFromString = (OutOfRangeYear |> Validation |> Error)
+        outOfRangeYearString |> tryParseFromString = (OutOfRangeYear |> Error)
         
     // TODO: Remove because of duplication with ``Wrong string parses to WrongStringYear error``
     [<Property(Arbitrary = [| typeof<Arbitrary.nonNumericString> |], MaxTest = 200)>]
     let ``Invalid string parses to WrongStringYear error`` (nonNumberStr: string) =
-        nonNumberStr |> tryParseFromString = (WrongStringYear |> Validation |> Error)
+        nonNumberStr |> tryParseFromString = (WrongStringYear |> Error)
        
     // TODO: Remove because of duplication with ``Wrong string parses to WrongStringYear error``
     [<Property(Arbitrary = [| typeof<Arbitrary.nullOrWhiteSpaceString> |], MaxTest = 200)>]
     let ``Null or empty or whitespace string parses to WrongStringYear error`` (badString: string) =
-        badString |> tryParseFromString = (WrongStringYear |> Validation |> Error)
+        badString |> tryParseFromString = (WrongStringYear |> Error)
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Year.wrongStringYear> |], MaxTest = 200)>]
     let ``Wrong string parses to WrongStringYear error`` (wrongStringYear: string) =
-        wrongStringYear |> tryParseFromString = (WrongStringYear |> Validation |> Error)
+        wrongStringYear |> tryParseFromString = (WrongStringYear |> Error)
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Year.outOfRangeStringYear> |], MaxTest = 200)>]
     let ``Number out of lower and upper boundaries range parses to OutOfRangeYear error`` (outOfRangeStringYear: string) =
-        outOfRangeStringYear |> tryParseFromString = (OutOfRangeYear |> Validation |> Error)
+        outOfRangeStringYear |> tryParseFromString = (OutOfRangeYear |> Error)
         
 module TryParseFromInt32PropertyTests =    
     [<Property(Arbitrary = [| typeof<Arbitrary.Year.inRangeUInt16Year> |], MaxTest = 200)>]
@@ -42,4 +42,4 @@ module TryParseFromInt32PropertyTests =
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Year.wrongInt32Year> |], MaxTest = 200)>]
     let ``Integer out of valid range (1 - UInt16 max) parses to WrongInt32Year error`` (wrongInt32Year: int) =
-        wrongInt32Year |> tryParseFromInt32 = (WrongInt32Year |> Validation |> Error)
+        wrongInt32Year |> tryParseFromInt32 = (WrongInt32Year |> Error)

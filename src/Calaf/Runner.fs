@@ -1,13 +1,6 @@
 ﻿// Api. Composition Root
 namespace Calaf
 
-open FsToolkit.ErrorHandling
-
-open Calaf.Extensions.InternalExtensions
-open Calaf.Domain.Errors
-open Calaf.Domain
-open Calaf.Infrastructure
-
 // module Runner =
 //         
 //     let initWorkspace dir =                

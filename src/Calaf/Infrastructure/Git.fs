@@ -3,8 +3,8 @@
 open System.IO
 open LibGit2Sharp
 
+open Calaf.Contracts.InfrastructureErrors
 open Calaf.Contracts
-open Calaf.Domain.Errors
 
 module internal Git =
     let rec private tryMapCommit (target: obj) : Commit option =
@@ -60,4 +60,4 @@ module internal Git =
             else
                 None |> Ok
         with exn ->                     
-            exn |> RepositoryAccessError |> Git |> Error
+            exn |> RepoAccessDenied |> Git |> Error

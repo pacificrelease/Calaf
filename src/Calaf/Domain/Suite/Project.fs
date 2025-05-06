@@ -2,8 +2,8 @@
     
 open FsToolkit.ErrorHandling
 
+open Calaf.Domain.DomainErrors
 open Calaf.Domain.DomainTypes
-open Calaf.Domain.Errors
 
 module internal Schema =
     
@@ -72,12 +72,8 @@ let tryCreate (projectDocument: System.Xml.Linq.XElement) (metadata: ProjectMeta
 let tryBump (projectDocument: System.Xml.Linq.XElement) (project: Project) (nextVersion: CalendarVersion) =    
     let tryUpdateVersionElement (projectMetadata: ProjectMetadata) =        
         match Schema.tryUpdateVersionElement projectDocument (Version.toString nextVersion)  with
-        | Some updated -> updated
-                        |> Ok
-        | None -> projectMetadata.Name
-                  |> CannotUpdateVersionElement
-                  |> Bump
-                  |> Error
+        | Some updated -> updated |> Ok
+        | None -> projectMetadata.Name |> XElementUpdateFailure |> Error
     
     match project with
     | Versioned (projectMetadata, lang, CalVer currentVersion) ->        
@@ -90,7 +86,7 @@ let tryBump (projectDocument: System.Xml.Linq.XElement) (project: Project) (next
         let skippedProject = Skipped (projectMetadata, lang, currentVersion)
         (skippedProject, projectDocument)
         |> Ok
-    | Unversioned _ -> UnversionedProject   |> Bump |> Error
-    | Bumped _      -> AlreadyBumpedProject |> Bump |> Error
-    | Skipped _     -> SkippedProject       |> Bump |> Error
+    | Unversioned _ -> UnversionedProject   |> Error
+    | Bumped _      -> AlreadyBumpedProject |> Error
+    | Skipped _     -> SkippedProject       |> Error
         

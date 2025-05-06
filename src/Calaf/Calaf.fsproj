@@ -12,8 +12,9 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="InternalExtensions.fs" />
-    <Compile Include="Contracts.fs" />
-    <Compile Include="Domain\Errors.fs" />
+    <Compile Include="Contracts\InfrastructureErrors.fs" />
+    <Compile Include="Contracts\Contracts.fs" />
+    <Compile Include="Domain\DomainErrors.fs" />
     <Compile Include="Domain\DomainTypes.fs" />
     <Compile Include="Domain\Version\Patch.fs" />
     <Compile Include="Domain\Version\Month.fs" />
@@ -31,11 +32,11 @@
     <Compile Include="Workspace.fs" />
     <Compile Include="Infrastructure\Git.fs" />
     <Compile Include="Infrastructure\FileSystem.fs" />
-    <Compile Include="Infrastructure\Xml.fs" />
     <Compile Include="Infrastructure\Clock.fs" />
+    <Compile Include="CalafErrors.fs" />
     <Compile Include="Api.fs" />
     <Compile Include="Runner.fs" />
-    <Compile Include="Program.fs" />
+    <Compile Include="Program.fs" />    
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FsToolkit.ErrorHandling" Version="4.18.0" />

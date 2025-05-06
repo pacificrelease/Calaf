@@ -5,20 +5,21 @@ open FsToolkit.ErrorHandling
 
 open Calaf.Extensions.InternalExtensions
 open Calaf.Domain.DomainTypes
-open Calaf.Domain.Errors
+open Calaf.Domain.DomainErrors
 open Calaf.Domain
 open Calaf.Infrastructure
+open Calaf.CalafErrors
 
 module Project =    
     let load projectFileInfo =
         let createProject metadata xml =            
             match Project.tryCreate xml metadata with
-            | None -> CannotCreateProject metadata.Name |> Init |> Error
+            | None -> CannotCreateProject metadata.Name |> Domain |> Error
             | Some project -> (project, xml) |> Ok
             
         result {
             let metadata = ProjectMetadata.create projectFileInfo            
-            let! xml = Xml.tryLoadXml(metadata.AbsolutePath)            
+            let! xml = Xml.tryLoadXml(metadata.AbsolutePath) |> Result.mapError Infrastructure       
             return! createProject metadata xml
         }
         
@@ -27,25 +28,26 @@ module Project =
             let! bumped, xml = Project.tryBump xml project newVersion
             return (bumped, xml)
         }
-        
+    
+    // There are no errors in the composition root
     let save (project, xml) =
         result {
             match project with
             | Bumped (metadata, _, _, _) ->
-                let! xml = Xml.trySaveXml metadata.AbsolutePath xml
+                let! xml = Xml.trySaveXml metadata.AbsolutePath xml |> Result.mapError Infrastructure
                 return (project, xml)
             | Versioned (metadata, _, _) ->
                 return! GivenNotBumpedProject metadata.Name
-                |> Api
-                |> Error
+                    |> Domain
+                    |> Error
             | Skipped (metadata, _, _) ->
                 return! GivenSkippedProject metadata.Name
-                |> Api
-                |> Error
+                        |> Domain
+                        |> Error
             | Unversioned (metadata, _) ->
-                return! GivenUnversionedProject metadata.Name
-                |> Api
-                |> Error
+                return! GivenUnversionedProject metadata.Name                
+                        |> Domain
+                        |> Error
         }
 
 // let initWorkspace dir =                
@@ -91,9 +93,9 @@ module Workspace =
         
     let create dir =
         result {
-            let! dir   = FileSystem.tryGetDirectory dir
-            let! repo  = Git.tryReadRepository dir hundredTags
-            let! files = FileSystem.tryReadFiles dir supportedFilesPattern 
+            let! dir   = FileSystem.tryGetDirectory dir |> Result.mapError Infrastructure
+            let! repo  = Git.tryReadRepository dir hundredTags |> Result.mapError Infrastructure
+            let! files = FileSystem.tryReadFiles dir supportedFilesPattern |> Result.mapError Infrastructure
             
             let projects, _ =
                 files

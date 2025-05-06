@@ -3,7 +3,35 @@ namespace Calaf.Infrastructure
 
 open System.IO
 
-open Calaf.Domain.Errors
+open Calaf.Contracts.InfrastructureErrors
+
+module internal Xml =        
+    let tryLoadXml (absolutePath: string) : Result<System.Xml.Linq.XElement, InfrastructureError> =
+        try
+            let settings = System.Xml.XmlReaderSettings()
+            settings.DtdProcessing <- System.Xml.DtdProcessing.Prohibit
+            settings.XmlResolver <- null
+            use reader = System.Xml.XmlReader.Create(absolutePath, settings)
+            let xml = System.Xml.Linq.XElement.Load(reader)            
+            xml |> Ok
+        with exn ->
+            exn
+            |> LoadFailure
+            |> Xml
+            |> Error
+            
+    
+    let trySaveXml (absolutePath: string) (xml: System.Xml.Linq.XElement) =
+        try            
+            let options = System.Xml.Linq.SaveOptions.None
+            xml.Save(absolutePath, options)
+            xml
+            |> Ok
+        with exn ->
+            exn
+            |> SaveFailure
+            |> Xml
+            |> Error
 
 module internal FileSystem =
     let private getPathOrCurrentDir path =        
@@ -15,7 +43,7 @@ module internal FileSystem =
             |> Ok
         with exn ->
             exn
-            |> ReadProjectsError
+            |> ReadFailure
             |> FileSystem
             |> Error
         
@@ -29,11 +57,11 @@ module internal FileSystem =
                 |> Ok
             else
                 $"Path {path.FullName} does not exist or can't determine if it exists."
-                |> NotExistOrBadPath
+                |> NoPath
                 |> FileSystem
                 |> Error
         with exn ->
             exn
-            |> AccessPathError
+            |> AccessDenied
             |> FileSystem
             |> Error

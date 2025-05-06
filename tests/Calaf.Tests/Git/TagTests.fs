@@ -11,7 +11,7 @@ module CreatePropertiesTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.Git.calVerGitTagInfo> |])>]
     let ``CalVer-named tag always creates Tag.Versioned with the corresponding CalVer version`` (contract: GitTagInfo)  =
         match create contract with
-        | Tag.Versioned(name, CalVer calVer, commitOption) ->
+        | Tag.Versioned(name, CalVer _, commitOption) ->
             name = contract.Name &&
             Option.isSome contract.Commit = Option.isSome commitOption
         | _ -> false
@@ -19,7 +19,7 @@ module CreatePropertiesTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.Git.semVerGitTagInfo> |])>]
     let ``SemVer-named tag always creates Tag.Versioned with the corresponding SemVer version`` (contract: GitTagInfo) =
         match create contract with
-        | Tag.Versioned(name, SemVer semVer, commitOption) ->
+        | Tag.Versioned(name, SemVer _, commitOption) ->
             name = contract.Name &&
             Option.isSome contract.Commit = Option.isSome commitOption
         | _ -> false
