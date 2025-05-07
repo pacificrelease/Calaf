@@ -92,9 +92,9 @@ module Workspace =
         
     let create dir =
         result {
-            let! dir   = FileSystem.tryGetDirectory dir |> Result.mapError Infrastructure
-            let! repo  = Git.tryReadRepository dir hundredTags |> Result.mapError Infrastructure
-            let! files = FileSystem.tryReadFiles dir supportedFilesPattern |> Result.mapError Infrastructure
+            let! dir   = FileSystem.tryGetDirectory dir                    |> Result.mapError Infrastructure
+            let! files = FileSystem.tryScanFiles dir supportedFilesPattern |> Result.mapError Infrastructure
+            let! repo  = Git.tryReadRepository dir hundredTags     |> Result.mapError Infrastructure            
             
             let projects, _ =
                 files

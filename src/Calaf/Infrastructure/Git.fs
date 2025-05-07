@@ -59,4 +59,4 @@ module internal Git =
             else
                 None |> Ok
         with exn ->                     
-            exn |> RepoAccessDenied |> Git |> Error
+            exn |> RepoAccessFailed |> Git |> Error
