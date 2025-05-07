@@ -2,7 +2,6 @@ module internal Calaf.Domain.DateSteward
 
 open FsToolkit.ErrorHandling
 
-open Calaf.Domain.DomainErrors
 open Calaf.Domain.DomainTypes
 
 let tryCreate (bareDateTime: System.DateTime) : Result<DateStamp, DomainError> =
