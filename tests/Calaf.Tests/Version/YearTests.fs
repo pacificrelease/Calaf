@@ -2,7 +2,7 @@
 
 open FsCheck.Xunit
 
-open Calaf.Domain.DomainErrors
+open Calaf.Domain
 open Calaf.Domain.Year
 open Calaf.Tests
 

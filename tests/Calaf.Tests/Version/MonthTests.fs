@@ -3,7 +3,7 @@
 open FsCheck.Xunit
 open Xunit
 
-open Calaf.Domain.DomainErrors
+open Calaf.Domain
 open Calaf.Domain.Month
 open Calaf.Tests
 
