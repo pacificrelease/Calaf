@@ -3,7 +3,6 @@
 open System.IO
 open LibGit2Sharp
 
-open Calaf.Contracts.InfrastructureErrors
 open Calaf.Contracts
 
 module internal Git =

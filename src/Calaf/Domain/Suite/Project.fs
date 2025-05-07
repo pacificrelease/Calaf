@@ -2,7 +2,6 @@
     
 open FsToolkit.ErrorHandling
 
-open Calaf.Domain.DomainErrors
 open Calaf.Domain.DomainTypes
 
 module internal Schema =

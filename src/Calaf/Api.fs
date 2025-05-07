@@ -4,9 +4,8 @@ namespace Calaf.Api
 open FsToolkit.ErrorHandling
 
 open Calaf.Extensions.InternalExtensions
-open Calaf.Domain.DomainTypes
-open Calaf.Domain.DomainErrors
 open Calaf.Domain
+open Calaf.Domain.DomainTypes
 open Calaf.Infrastructure
 open Calaf.CalafErrors
 

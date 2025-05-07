@@ -1,4 +1,4 @@
-namespace Calaf.Contracts.InfrastructureErrors
+namespace Calaf.Infrastructure
 
 type GitError =
     | NoRepo           of directory: string

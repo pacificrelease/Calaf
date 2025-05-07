@@ -1,7 +1,7 @@
 namespace Calaf.CalafErrors
 
-open Calaf.Contracts.InfrastructureErrors
-open Calaf.Domain.DomainErrors
+open Calaf.Domain
+open Calaf.Infrastructure
 
 type CalafError =
     | Domain         of DomainError

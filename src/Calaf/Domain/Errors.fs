@@ -1,5 +1,5 @@
 ﻿// Domain Errors
-namespace Calaf.Domain.DomainErrors
+namespace Calaf.Domain
 
 // TODO: Dedicate 3 main groups of errors:
 // 1. Adapters/validation errors |> create values on domain boundaries

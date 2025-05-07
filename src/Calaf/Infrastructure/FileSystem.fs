@@ -3,8 +3,6 @@ namespace Calaf.Infrastructure
 
 open System.IO
 
-open Calaf.Contracts.InfrastructureErrors
-
 module internal Xml =        
     let tryLoadXml (absolutePath: string) : Result<System.Xml.Linq.XElement, InfrastructureError> =
         try
