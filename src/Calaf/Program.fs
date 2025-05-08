@@ -1,10 +1,11 @@
-﻿// For more information see https://aka.ms/fsharp-console-apps
+// For more information see https://aka.ms/fsharp-console-apps
 
 open System
-open Calaf
+
+open Calaf.Application
 open Calaf.Domain.DomainTypes
 
-let result = Api.Workspace.create null
+let result = getWorkspace null
 
 match result with
 | Error error ->

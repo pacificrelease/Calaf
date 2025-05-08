@@ -36,7 +36,7 @@
     <Compile Include="Application\Errors.fs" />
     <Compile Include="Application\Summaries.fs" />
     <Compile Include="Application\Application.fs" />    
-    <Compile Include="Application\UseCases\GetWorkspace.fs" />    
+    <Compile Include="Program.fs" />    
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FsToolkit.ErrorHandling" Version="4.18.0" />

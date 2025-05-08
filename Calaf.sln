@@ -6,7 +6,6 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5944D9F3-6620-4AF5-A057-D6DD8CD0E1FB}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
-		Program.fs = Program.fs
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{80320635-4603-4EA4-8718-D2249CE3B7AE}"
