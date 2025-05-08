@@ -1,4 +1,4 @@
-namespace Calaf.CalafErrors
+namespace Calaf.Application
 
 open Calaf.Domain
 open Calaf.Infrastructure

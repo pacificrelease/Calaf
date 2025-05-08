@@ -5,7 +5,9 @@ open System.IO
 open Calaf.Contracts
 open Calaf.Domain.DomainTypes
 
-let create (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option, projects: Project seq) : Workspace =
-    { Directory  = directory.FullName
+let create (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) : Workspace =
+    let projects = 
+        directory.Projects |> Array.map Project.tryCreate
+    { Directory  = directory.Directory
       Repository = repoInfo |> Option.map Repository.create
-      Suite      = projects |> Seq.toArray |> Suite.create }
+      Suite      = projects |> Array.choose id |> Suite.create}

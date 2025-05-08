@@ -2,6 +2,9 @@
 namespace Calaf.Infrastructure
 
 open System.IO
+open FsToolkit.ErrorHandling
+
+open Calaf.Extensions.InternalExtensions
 
 module internal Xml =        
     let tryLoadXml (absolutePath: string) : Result<System.Xml.Linq.XElement, InfrastructureError> =
@@ -14,12 +17,12 @@ module internal Xml =
             xml |> Ok
         with
         | :? System.UnauthorizedAccessException as exn ->
-            exn :> System.Exception
+            (absolutePath, exn :> System.Exception)
             |> FileAccessDenied
             |> FileSystem
             |> Error
         | exn ->
-            exn
+            (absolutePath, exn)
             |> XmlLoadFailed
             |> FileSystem
             |> Error
@@ -32,12 +35,12 @@ module internal Xml =
             xml |> Ok
         with
         | :? System.UnauthorizedAccessException as exn ->
-            exn :> System.Exception
+            (absolutePath, exn :> System.Exception)
             |> FileAccessDenied
             |> FileSystem
             |> Error
         | exn ->
-            exn
+            (absolutePath, exn)
             |> XmlSaveFailed
             |> FileSystem
             |> Error
@@ -46,7 +49,7 @@ module internal FileSystem =
     let private getPathOrCurrentDir path =        
         if System.String.IsNullOrWhiteSpace path then "." else path        
      
-    let tryScanFiles(path: DirectoryInfo) (pattern: string) =
+    let private tryScanFileInfos(path: DirectoryInfo) (pattern: string) =
         try
             path.GetFiles(pattern, SearchOption.AllDirectories) |> Ok
         with exn ->
@@ -56,18 +59,25 @@ module internal FileSystem =
             |> Error
         
 
-    let tryGetDirectory (path: string) =
+    let private tryGetDirectoryInfo (path: string) =
         try
             let path = path |> getPathOrCurrentDir |> DirectoryInfo
             if path.Exists
-            then
-                path |> Ok
-            else
-                DirectoryDoesNotExist
-                |> FileSystem
-                |> Error
+            then path |> Ok
+            else DirectoryDoesNotExist |> FileSystem |> Error
         with exn ->
             exn
             |> DirectoryAccessDenied
             |> FileSystem
             |> Error
+            
+    let tryReadWorkspace (path: string) (pattern: string) =
+        result {
+            let! dirInfo = tryGetDirectoryInfo path
+            let! files = tryScanFileInfos dirInfo pattern
+            let projects, errors = files
+                                   |> Array.map (fun fileInfo -> Xml.tryLoadXml fileInfo.FullName |> Result.map (fun xml ->  fileInfo, xml))
+                                   |> Result.partition
+                                   
+            return Mappings.toWorkspaceDirectoryInfo dirInfo projects
+        }

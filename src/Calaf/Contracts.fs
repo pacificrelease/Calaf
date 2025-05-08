@@ -21,3 +21,16 @@ type GitRepositoryInfo = {
     Dirty: bool
     Tags: GitTagInfo[]
 }
+
+type ProjectInfo = {
+    Name: string
+    Directory: string
+    Extension: string
+    AbsolutePath: string
+    Payload: System.Xml.Linq.XElement
+}
+
+type DirectoryInfo = {
+    Directory: string
+    Projects: ProjectInfo[]
+}

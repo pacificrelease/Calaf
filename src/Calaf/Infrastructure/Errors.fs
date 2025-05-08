@@ -7,10 +7,10 @@ type GitError =
 type FileSystemError =
     | DirectoryDoesNotExist
     | DirectoryAccessDenied of ex: exn
-    | FileAccessDenied      of ex: exn
+    | FileAccessDenied      of absolutePath: string * ex: exn
     | FilesScanFailed       of ex: exn
-    | XmlLoadFailed         of ex: exn
-    | XmlSaveFailed         of ex: exn
+    | XmlLoadFailed         of absolutePath: string * ex: exn
+    | XmlSaveFailed         of absolutePath: string * ex: exn
     
 type InfrastructureError =
     | Git        of GitError

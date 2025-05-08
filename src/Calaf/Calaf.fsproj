@@ -12,7 +12,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="InternalExtensions.fs" />
-    <Compile Include="Contracts\Contracts.fs" />
+    <Compile Include="Contracts.fs" />
     <Compile Include="Domain\Errors.fs" />
     <Compile Include="Domain\DomainTypes.fs" />
     <Compile Include="Domain\Version\Patch.fs" />
@@ -25,17 +25,18 @@
     <Compile Include="Domain\Git\Head.fs" />
     <Compile Include="Domain\Git\Repository.fs" />
     <Compile Include="Domain\Suite\Language.fs" />
-    <Compile Include="Domain\Suite\ProjectMetadata.fs" />
     <Compile Include="Domain\Suite\Project.fs" />
     <Compile Include="Domain\Suite\Suite.fs" />
     <Compile Include="Domain\Workspace.fs" />
     <Compile Include="Infrastructure\Errors.fs" />
+    <Compile Include="Infrastructure\Mappings.fs" />
     <Compile Include="Infrastructure\Git.fs" />
     <Compile Include="Infrastructure\FileSystem.fs" />
     <Compile Include="Infrastructure\Clock.fs" />
-    <Compile Include="CalafErrors.fs" />
-    <Compile Include="Application.fs" />
-    <Compile Include="Program.fs" />    
+    <Compile Include="Application\Errors.fs" />
+    <Compile Include="Application\Summaries.fs" />
+    <Compile Include="Application\Application.fs" />    
+    <Compile Include="Application\UseCases\GetWorkspace.fs" />    
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FsToolkit.ErrorHandling" Version="4.18.0" />

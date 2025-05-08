@@ -1,27 +1,14 @@
-﻿// Composition Root
-namespace Calaf.Api
+﻿// Orchestrator
+// TODO: Replace to Use-Cases
+namespace Calaf.Application
 
 open FsToolkit.ErrorHandling
 
-open Calaf.Extensions.InternalExtensions
 open Calaf.Domain
 open Calaf.Domain.DomainTypes
 open Calaf.Infrastructure
-open Calaf.CalafErrors
 
-module Project =    
-    let load projectFileInfo =
-        let createProject metadata xml =            
-            match Project.tryCreate xml metadata with
-            | None -> CannotCreateProject metadata.Name |> Domain |> Error
-            | Some project -> (project, xml) |> Ok
-            
-        result {
-            let metadata = ProjectMetadata.create projectFileInfo            
-            let! xml = Xml.tryLoadXml(metadata.AbsolutePath) |> Result.mapError Infrastructure       
-            return! createProject metadata xml
-        }
-        
+module Project = 
     let bump (project, xml) newVersion =        
         result {            
             let! bumped, xml = Project.tryBump xml project newVersion
@@ -90,18 +77,12 @@ module Workspace =
     [<Literal>]
     let private hundredTags = 100
         
-    let create dir =
+    // Use case
+    let getWorkspace dir =
         result {
-            let! dir   = FileSystem.tryGetDirectory dir                    |> Result.mapError Infrastructure
-            let! files = FileSystem.tryScanFiles dir supportedFilesPattern |> Result.mapError Infrastructure
-            let! repo  = Git.tryReadRepository dir hundredTags     |> Result.mapError Infrastructure            
-            
-            let projects, _ =
-                files
-                |> Seq.map Project.load
-                |> Result.partition
-            
+            let! directoryInfo = Calaf.Infrastructure.FileSystem.tryReadWorkspace dir supportedFilesPattern
+            let! repoInfo = Git.tryReadRepository directoryInfo.Directory hundredTags
             // TODO: Return Info/Report with Workspace&Errors for reporting
             // WorkspaceResponse/WorspaceResult
-            return Workspace.create (dir, repo, projects |> Seq.map fst)
+            return Workspace.create (directoryInfo, repoInfo)
         }

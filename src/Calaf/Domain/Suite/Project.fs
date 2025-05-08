@@ -2,6 +2,7 @@
     
 open FsToolkit.ErrorHandling
 
+open Calaf.Contracts
 open Calaf.Domain.DomainTypes
 
 module internal Schema =
@@ -53,19 +54,24 @@ let chooseCalendarVersions (projects: Project seq) : CalendarVersion seq =
         | Bumped (_, _, _, version)        -> Some version
         | _                                -> None)
     
-let tryCreate (projectDocument: System.Xml.Linq.XElement) (metadata: ProjectMetadata) : Project option =        
+let tryCreate (projectInfo: ProjectInfo) : Project option =        
     let tryExtractVersion (xml: System.Xml.Linq.XElement) : Version option =
         xml
         |> Schema.tryExtractVersionElement
         |> Option.bind (fun x -> x.Value |> Version.tryParseFromString)
         
-    option {            
+    option {
+        let metadata =
+            { Name = projectInfo.Name
+              Directory = projectInfo.Directory
+              AbsolutePath = projectInfo.AbsolutePath
+              Extension = projectInfo.Extension }
         let! language = Language.tryParse metadata.Extension
-        let version = projectDocument |> tryExtractVersion
+        let version = projectInfo.Payload |> tryExtractVersion
         return
             match version with
             | Some version -> Versioned(metadata, language, version)
-            | None         -> Unversioned(metadata, language)
+            | None -> Unversioned(metadata, language)
     }
     
 let tryBump (projectDocument: System.Xml.Linq.XElement) (project: Project) (nextVersion: CalendarVersion) =    
