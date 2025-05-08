@@ -2,8 +2,7 @@
 
 open System
 
-open Calaf.Application
-open Calaf.Domain.DomainTypes
+open Calaf.Application.Workspace
 
 let result = getWorkspace null
 
