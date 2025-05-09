@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Library</OutputType>
+    <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>false</GenerateProgramFile>
     <IsTestProject>true</IsTestProject>
@@ -9,6 +9,7 @@
     <Version>2025.4.12</Version>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AssemblyInfo.fs" />
     <Compile Include="TestHelper.fs" />
     <Compile Include="Version\PatchTests.fs" />
     <Compile Include="Version\MonthTests.fs" />
@@ -17,6 +18,7 @@
     <Compile Include="Version\VersionTests.fs" />
     <Compile Include="Git\CommitTests.fs" />
     <Compile Include="Git\TagTests.fs" />
+    <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Bogus" Version="35.6.3" />
