@@ -1,10 +1,17 @@
 // For more information see https://aka.ms/fsharp-console-apps
+// Composition Root
 
 open System
 
 open Calaf.Application.Workspace
+open Calaf.Infrastructure
 
-let result = getWorkspace null
+let path = String.Empty
+let result =
+    getWorkspace
+        FileSystem.tryReadWorkspace
+        Git.tryReadRepository
+        path
 
 match result with
 | Error error ->

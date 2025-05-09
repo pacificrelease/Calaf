@@ -34,7 +34,7 @@
     <Compile Include="Infrastructure\FileSystem.fs" />
     <Compile Include="Infrastructure\Clock.fs" />
     <Compile Include="Application\Errors.fs" />
-    <Compile Include="Application\Summaries.fs" />
+    <Compile Include="Application\Responses.fs" />
     <Compile Include="Application\Application.fs" />    
     <Compile Include="Program.fs" />    
   </ItemGroup>
