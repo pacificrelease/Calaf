@@ -36,10 +36,18 @@ type Version =
     | Unsupported
 
 // Repository
+type SignatureName = string
+type SignatureEmail = string
 type CommitMessage = string
 type CommitHash = string
 type TagName = string
 type BranchName = string
+
+type Signature = {
+    Name: SignatureName
+    Email: SignatureEmail
+    When: System.DateTimeOffset
+}
 
 type Commit = {
     Message: CommitMessage
@@ -56,11 +64,12 @@ type Head =
     | Detached of commit: Commit    
 
 type Repository =
-    | Damaged of directory: string
-    | Unborn  of directory: string 
-    | Dirty   of directory: string * head: Head * currentVersion: CalendarVersion option
-    | Ready   of directory: string * head: Head * currentVersion: CalendarVersion option
-    | Bumped  of directory: string * previousVersion: CalendarVersion * currentVersion: CalendarVersion
+    | Damaged  of directory: string
+    | Unsigned of directory: string
+    | Unborn   of directory: string
+    | Dirty    of directory: string * head: Head * signature: Signature * currentVersion: CalendarVersion option
+    | Ready    of directory: string * head: Head * signature: Signature * currentVersion: CalendarVersion option
+    | Bumped   of directory: string * head: Head * signature: Signature * previousVersion: CalendarVersion * currentVersion: CalendarVersion
 
 // Project
 type Language =

@@ -6,12 +6,14 @@ open System
 open Calaf.Application.Workspace
 open Calaf.Infrastructure
 
-let path = String.Empty
+let path = null
+let timeStamp = Clock.now()
 let result =
     getWorkspace
         FileSystem.tryReadWorkspace
         Git.tryReadRepository
         path
+        timeStamp
 
 match result with
 | Error error ->

@@ -20,12 +20,13 @@ module Workspace =
     // Use case        
     let getWorkspace
         (readDirectory: string -> string -> Result<Calaf.Contracts.DirectoryInfo, InfrastructureError>)
-        (readGit: string -> int -> Result<Calaf.Contracts.GitRepositoryInfo option, InfrastructureError>)
+        (readGit: string -> int -> System.DateTimeOffset -> Result<Calaf.Contracts.GitRepositoryInfo option, InfrastructureError>)
         (path: string)
+        (timeStamp: System.DateTimeOffset)
         : Result<Calaf.Domain.DomainTypes.Workspace, CalafError> =
         result {
             let! dir = readDirectory path supportedFilesPattern |> Result.mapError CalafError.Infrastructure
-            let! repo = readGit path tenTags                    |> Result.mapError CalafError.Infrastructure
+            let! repo = readGit path tenTags timeStamp          |> Result.mapError CalafError.Infrastructure
             
             let workspace =
                 Workspace.create (dir, repo)

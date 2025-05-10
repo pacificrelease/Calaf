@@ -1,5 +1,12 @@
 ﻿namespace Calaf.Contracts
 
+// Contracts use by Infrastructure layer
+type GitSignatureInfo = {
+    Email: string
+    Name: string
+    When: System.DateTimeOffset
+}
+
 type GitCommitInfo = {
     Hash: string
     Message: string
@@ -18,6 +25,7 @@ type GitRepositoryInfo = {
     Detached: bool    
     CurrentBranch: string option
     CurrentCommit: GitCommitInfo option
+    Signature: GitSignatureInfo option
     Dirty: bool
     Tags: GitTagInfo[]
 }
