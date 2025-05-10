@@ -6,7 +6,7 @@ open FsCheck.FSharp
 open Calaf.Contracts
 open Calaf.Domain.DomainTypes
 
-type TimeStampIncrement = Year | Month | Both
+type MonthStampIncrement = Year | Month | Both
 
 module Generator =
     let private genNegative =
@@ -406,7 +406,7 @@ module Generator =
             return $"{whiteSpacesPrefix}{validTagCalVerString}{whiteSpacesSuffix}";
         }    
     
-    let twoPartCalendarVersionWithSameDateStamp =
+    let twoPartCalendarVersionWithSameMonthStamp =
         let genCalVer =
             gen { 
                 let! year  = Gen.choose(int Calaf.Domain.Year.lowerYearBoundary, int Calaf.Domain.Year.upperYearBoundary - 1)
@@ -419,24 +419,24 @@ module Generator =
             return (calVer, dateStamp)
         }
         
-    let threePartCalendarVersionWithSameDateStamp =            
+    let threePartCalendarVersionWithSameMonthStamp =            
         gen {
-            let! calVer, dateStamp = twoPartCalendarVersionWithSameDateStamp
+            let! calVer, dateStamp = twoPartCalendarVersionWithSameMonthStamp
             let! patch = validPatchUInt32 
             return ({ calVer with Patch = Some patch }, dateStamp)
         }
         
-    let calendarVersionWithSameDateStamp =
+    let calendarVersionWithSameMonthStamp =
         gen {
             let! threeSectionCalVer = Gen.elements [true; false]
             return! if threeSectionCalVer
-                then threePartCalendarVersionWithSameDateStamp
-                else twoPartCalendarVersionWithSameDateStamp                        
+                then threePartCalendarVersionWithSameMonthStamp
+                else twoPartCalendarVersionWithSameMonthStamp                        
         }
         
-    let timeStampIncrement =
+    let monthStampIncrement =
         gen {
-            return! Gen.elements [ TimeStampIncrement.Year; TimeStampIncrement.Month; TimeStampIncrement.Both ]
+            return! Gen.elements [ MonthStampIncrement.Year; MonthStampIncrement.Month; MonthStampIncrement.Both ]
         }
         
     module Git =        
@@ -603,17 +603,17 @@ module Arbitrary =
         static member calendarVersions() =
             Arb.fromGen Generator.calendarVersions
     
-    type internal twoPartCalendarVersionWithSameDateStamp =
-        static member twoPartCalendarVersionWithSameDateStamp() =
-            Arb.fromGen Generator.twoPartCalendarVersionWithSameDateStamp
+    type internal twoPartCalendarVersionWithSameMonthStamp =
+        static member twoPartCalendarVersionWithSameMonthStamp() =
+            Arb.fromGen Generator.twoPartCalendarVersionWithSameMonthStamp
             
-    type internal threePartCalendarVersionWithSameDateStamp =
-        static member threePartCalendarVersionWithSameTimeStamp() =
-            Arb.fromGen Generator.threePartCalendarVersionWithSameDateStamp
+    type internal threePartCalendarVersionWithSameMonthStamp =
+        static member threePartCalendarVersionWithSameMonthStamp() =
+            Arb.fromGen Generator.threePartCalendarVersionWithSameMonthStamp
             
-    type internal calendarVersionWithSameDateStamp =
-        static member calendarVersionWithSameDateStamp() =
-            Arb.fromGen Generator.calendarVersionWithSameDateStamp
+    type internal calendarVersionWithSameMonthStamp =
+        static member calendarVersionWithSameMonthStamp() =
+            Arb.fromGen Generator.calendarVersionWithSameMonthStamp
             
     type internal validTagCalVerString =
         static member validTagCalVerString() =
@@ -635,9 +635,9 @@ module Arbitrary =
         static member validTagSemVerString() =
             Arb.fromGen Generator.validTagSemVerString
             
-    type internal timeStampIncrement =
-        static member timeStampIncrement() =
-            Arb.fromGen Generator.timeStampIncrement
+    type internal monthStampIncrement =
+        static member monthStampIncrement() =
+            Arb.fromGen Generator.monthStampIncrement
             
     module internal Month =
         type inRangeByteMonth =

@@ -81,17 +81,17 @@ let toString (calVer: CalendarVersion) : string =
     | Some patch -> $"{calVer.Year}.{calVer.Month}.{patch}"
     | None -> $"{calVer.Year}.{calVer.Month}"
  
-let bump (currentVersion: CalendarVersion) (dateStamp: DateStamp) : CalendarVersion =    
-    let shouldBumpYear = dateStamp.Year > currentVersion.Year            
+let bump (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : CalendarVersion =    
+    let shouldBumpYear = monthStamp.Year > currentVersion.Year            
     if shouldBumpYear then
-        { Year = dateStamp.Year
-          Month = dateStamp.Month
+        { Year = monthStamp.Year
+          Month = monthStamp.Month
           Patch = None }
     else
-        let shouldBumpMonth = dateStamp.Month > currentVersion.Month
+        let shouldBumpMonth = monthStamp.Month > currentVersion.Month
         if shouldBumpMonth then
             { Year = currentVersion.Year
-              Month = dateStamp.Month
+              Month = monthStamp.Month
               Patch = None }
         else
             let patch = currentVersion.Patch |> Patch.bump |> Some
