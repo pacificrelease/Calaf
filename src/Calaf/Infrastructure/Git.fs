@@ -21,11 +21,16 @@ module internal Git =
           IsHeadUnborn = repo.Info.IsHeadUnborn
           IsHeadDetached = repo.Info.IsHeadDetached }
         
-    let tryReadRepository (path: string) (maxTagsToRead: int) (timeStamp: System.DateTimeOffset) =
+    // string -> int -> System.DateTimeOffset -> Result<GitRepositoryInfo, InfrastructureError> 
+    let tryReadRepository
+    // TODO: Replace to DirectoryInfo?
+        (directory: string)
+        (maxTagsToRead: int)
+        (timeStamp: System.DateTimeOffset) =
         try
-            if Repository.IsValid(path)
+            if Repository.IsValid(directory)
             then
-                use repo = new Repository(path)
+                use repo = new Repository(directory)
                 let ctx = extractRepositoryContext repo
                 let tags = extractTags repo maxTagsToRead
                 let signature = repo.Config.BuildSignature timeStamp
@@ -35,19 +40,37 @@ module internal Git =
                 None |> Ok
         with exn ->                     
             exn |> RepoAccessFailed |> Git |> Error
-            
-    let tryCommitRepository
-        (path: string)
+       
+     // string -> string -> LibGit2Sharp.Signature -> Result<Commit, InfrastructureError>
+    let tryCommit
+    // TODO: Replace to DirectoryInfo?
+        (directory: string)
         (message: string)
         (signature: Signature)=
         try
-            if Repository.IsValid(path)
+            if Repository.IsValid(directory)
             then
-                use repo = new Repository(path)
+                use repo = new Repository(directory)
                 let commit = repo.Commit(message, signature, signature)
-                commit |> Some |> Ok
+                commit |> Ok
             else
                 RepoNotInitialized |> Git |> Error
-                
+        with exn ->
+            exn |> RepoAccessFailed |> Git |> Error
+    
+    // string -> string -> Commit -> Result<Tag, InfrastructureError>
+    let tryTag
+    // TODO: Replace to DirectoryInfo?
+        (directory: string)
+        (tagName: string)
+        (commit: Commit) =
+        try
+           if Repository.IsValid(directory)
+           then
+            use repo = new Repository(directory)
+            let tag = repo.Tags.Add(tagName, commit)
+            tag |> Ok
+           else
+               RepoNotInitialized |> Git |> Error           
         with exn ->
             exn |> RepoAccessFailed |> Git |> Error

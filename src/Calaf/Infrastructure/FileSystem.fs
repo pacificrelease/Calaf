@@ -29,7 +29,7 @@ module internal Xml =
             
     
     let trySaveXml (absolutePath: string) (xml: System.Xml.Linq.XElement) : Result<System.Xml.Linq.XElement, InfrastructureError> =
-        try            
+        try        
             let options = System.Xml.Linq.SaveOptions.None
             xml.Save(absolutePath, options)
             xml |> Ok
@@ -46,9 +46,9 @@ module internal Xml =
             |> Error
 
 module internal FileSystem =     
-    let private tryScanFileInfos(path: DirectoryInfo) (pattern: string) =
+    let private tryScanFileInfos (directory: DirectoryInfo) (pattern: string) =
         try
-            path.GetFiles(pattern, SearchOption.AllDirectories) |> Ok
+            directory.GetFiles(pattern, SearchOption.AllDirectories) |> Ok
         with exn ->
             exn
             |> FilesScanFailed
@@ -72,9 +72,10 @@ module internal FileSystem =
         result {
             let! dirInfo = tryGetDirectoryInfo path
             let! files = tryScanFileInfos dirInfo pattern
-            let projects, errors = files
-                                   |> Array.map (fun fileInfo -> Xml.tryLoadXml fileInfo.FullName |> Result.map (fun xml ->  fileInfo, xml))
-                                   |> Result.partition
+            let projects, errors =
+                files
+               |> Array.map (fun fileInfo -> Xml.tryLoadXml fileInfo.FullName |> Result.map (fun xml ->  fileInfo, xml))
+               |> Result.partition
                                    
             return Mappings.toWorkspaceDirectoryInfo dirInfo projects
         }
