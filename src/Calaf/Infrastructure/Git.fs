@@ -39,19 +39,12 @@ module internal Git =
     let tryCommitRepository
         (path: string)
         (message: string)
-        (author: Signature)
-        (committer: Signature)=
+        (signature: Signature)=
         try
             if Repository.IsValid(path)
             then
                 use repo = new Repository(path)
-                
-                
-                let author = Signature(author.Name, author.Email, author.When)
-                let committer = Signature(committer.Name, committer.Email, committer.When)
-                
-                // Create a commit with the specified message and author/committer signatures
-                let commit = repo.Commit(message, author, committer)
+                let commit = repo.Commit(message, signature, signature)
                 commit |> Some |> Ok
             else
                 RepoNotInitialized |> Git |> Error

@@ -45,10 +45,7 @@ module internal Xml =
             |> FileSystem
             |> Error
 
-module internal FileSystem =
-    let private getPathOrCurrentDir path =        
-        if System.String.IsNullOrWhiteSpace path then "." else path        
-     
+module internal FileSystem =     
     let private tryScanFileInfos(path: DirectoryInfo) (pattern: string) =
         try
             path.GetFiles(pattern, SearchOption.AllDirectories) |> Ok
@@ -61,7 +58,7 @@ module internal FileSystem =
 
     let private tryGetDirectoryInfo (path: string) =
         try
-            let path = path |> getPathOrCurrentDir |> DirectoryInfo
+            let path = DirectoryInfo path
             if path.Exists
             then path |> Ok
             else DirectoryDoesNotExist |> FileSystem |> Error

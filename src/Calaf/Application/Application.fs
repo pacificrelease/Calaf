@@ -13,7 +13,8 @@ module Workspace =
     [<Literal>]
     let private tenTags = 10
     
-    //val readDirectory: string -> string -> Result<Calaf.Contracts.DirectoryInfo, InfrastructureError>
+    let private getPathOrCurrentDir path =        
+        if System.String.IsNullOrWhiteSpace path then "." else path
         
     // TODO: Return Info/Report with Workspace&Errors for reporting
     // WorkspaceResponse/WorspaceResult
@@ -25,6 +26,7 @@ module Workspace =
         (timeStamp: System.DateTimeOffset)
         : Result<Calaf.Domain.DomainTypes.Workspace, CalafError> =
         result {
+            let path = getPathOrCurrentDir path
             let! dir = readDirectory path supportedFilesPattern |> Result.mapError CalafError.Infrastructure
             let! repo = readGit path tenTags timeStamp          |> Result.mapError CalafError.Infrastructure
             
