@@ -63,6 +63,16 @@ let tryCreate (projectInfo: ProjectXmlFileInfo) : Project option =
             | None -> Unversioned { Metadata = metadata; Language = language }
     }
     
+let tryBump2 (project: VersionedProject) (nextVersion: CalendarVersion) =    
+    match project.Content with
+    | Xml xmlContent ->
+        Version.toString nextVersion
+        |> Schema.tryUpdateVersionElement xmlContent
+        |> Option.map (fun upc ->
+            { project with Content = upc; Version = CalVer nextVersion })
+        |> Option.toResult (XElementUpdateFailure project.Metadata.Name)
+    | Json _ -> Ok project
+    
 let tryBump (project: Project) (nextVersion: CalendarVersion) =    
     match project with
     | Versioned ({ Metadata = pm; Content = Xml pc; Version = CalVer _ } as versionedProject) ->

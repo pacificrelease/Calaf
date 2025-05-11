@@ -11,10 +11,9 @@ let bump (suite: Suite) (nextVersion: CalendarVersion) =
             suite.Projects
             |> Array.traverseResultM (fun project -> 
                 match project with
-                | Versioned { Version = CalVer _ } as p ->
-                    tryBump p nextVersion
-                | project ->
-                    Ok project)
+                | Versioned { Version = CalVer _ } as Versioned p ->
+                    tryBump2 p nextVersion |> Result.map Versioned
+                | project -> Ok project)
                 
         return { 
             Version = Some nextVersion
