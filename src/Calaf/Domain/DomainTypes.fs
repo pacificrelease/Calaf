@@ -83,9 +83,13 @@ type ProjectMetadata = {
     AbsolutePath : string
 }
 
+type ProjectContent = 
+    | Xml  of System.Xml.Linq.XElement
+    | Json of System.Text.Json.JsonDocument
+
 type Project =
     | Unversioned of metadata: ProjectMetadata * lang: Language
-    | Versioned   of metadata: ProjectMetadata * lang: Language * version: Version
+    | Versioned   of metadata: ProjectMetadata * content: ProjectContent * lang: Language * version: Version
 
 type Suite = {
     Version: CalendarVersion option

@@ -30,15 +30,15 @@ type GitRepositoryInfo = {
     Tags: GitTagInfo[]
 }
 
-type ProjectInfo = {
+type ProjectXmlFileInfo = {
     Name: string
     Directory: string
     Extension: string
     AbsolutePath: string
-    Payload: System.Xml.Linq.XElement
+    Content: System.Xml.Linq.XElement
 }
 
 type DirectoryInfo = {
     Directory: string
-    Projects: ProjectInfo[]
+    Projects: ProjectXmlFileInfo[]
 }

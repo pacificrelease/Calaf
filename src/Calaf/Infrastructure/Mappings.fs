@@ -59,17 +59,17 @@ module internal Mappings =
           Tags          = tags |> Array.map toGitTagInfo }
          
     // FileSystem
-    let toProjectFileInfo (file: System.IO.FileInfo) (xml: System.Xml.Linq.XElement) : ProjectInfo =
+    let toProjectXmlFileInfo (file: System.IO.FileInfo) (xml: System.Xml.Linq.XElement) : ProjectXmlFileInfo =
         { Name = file.Name
           Directory = file.DirectoryName
           Extension = file.Extension
           AbsolutePath = file.FullName
-          Payload = xml }
+          Content = xml }
         
     let toWorkspaceDirectoryInfo (directoryInfo: System.IO.DirectoryInfo) (projectsInfos: (System.IO.FileInfo * System.Xml.Linq.XElement) seq) : DirectoryInfo =
         let projectsInfos = 
             projectsInfos
-            |> Seq.map (fun (fileInfo, xml) -> toProjectFileInfo fileInfo xml)
+            |> Seq.map (fun (fileInfo, xml) -> toProjectXmlFileInfo fileInfo xml)
             |> Seq.toArray
         { Directory = directoryInfo.FullName
           Projects = projectsInfos }

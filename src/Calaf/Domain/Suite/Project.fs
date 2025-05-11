@@ -14,35 +14,34 @@ module internal Schema =
     let private PropertyGroupXElementName = "PropertyGroup"    
     
     // TODO: Use ERROR instead of option?
-    let tryExtractVersionElement (projectDocument: System.Xml.Linq.XElement) =
-        projectDocument.Elements(PropertyGroupXElementName)
+    let tryExtractVersionElement (content: System.Xml.Linq.XElement) =
+        content.Elements(PropertyGroupXElementName)
         |> Seq.collect _.Elements(VersionXElementName)
         |> Seq.tryExactlyOne
         
-    let tryUpdateVersionElement (projectDocument: System.Xml.Linq.XElement) (version: string)=
-        option {
+    let tryUpdateVersionElement (content: System.Xml.Linq.XElement) (version: string)=
+        option {            
             // TODO: Maybe better to divide variables, then update and return projectDocument
-            return! projectDocument.Elements(PropertyGroupXElementName)
+            return! content.Elements(PropertyGroupXElementName)
             |> Seq.map _.Elements(VersionXElementName)
             |> Seq.tryExactlyOne
             |> Option.bind Seq.tryHead
-            |> Option.map (fun versionElement -> versionElement.SetValue(version); projectDocument)
+            |> Option.map (fun versionElement -> versionElement.SetValue(version); Xml content)
         }
     
-let choosePending (projects: (Project * System.Xml.Linq.XElement) seq) : (Project * System.Xml.Linq.XElement) seq =
+let chooseCalendarVersioned (projects: Project seq) : Project seq =
     projects
-    |> Seq.choose (fun (p, x) ->
-        match p with
-        | Versioned(_, _, CalVer _) as project -> Some (project, x)
-        | _ -> None)
+    |> Seq.filter (function
+        | Versioned (_, _, _, CalVer _) -> true
+        | _ -> false)
 
 let chooseCalendarVersions (projects: Project seq) : CalendarVersion seq =
     projects
     |> Seq.choose (function
-        | Versioned (_, _, CalVer version) -> Some version
+        | Versioned (_, _, _, CalVer version) -> Some version
         | _                                -> None)
-    
-let tryCreate (projectInfo: ProjectInfo) : Project option =        
+
+let tryCreate (projectInfo: ProjectXmlFileInfo) : Project option =        
     let tryExtractVersion (xml: System.Xml.Linq.XElement) : Version option =
         xml
         |> Schema.tryExtractVersionElement
@@ -53,23 +52,25 @@ let tryCreate (projectInfo: ProjectInfo) : Project option =
             { Name = projectInfo.Name
               Directory = projectInfo.Directory
               AbsolutePath = projectInfo.AbsolutePath
-              Extension = projectInfo.Extension }
+              Extension = projectInfo.Extension }        
         let! language = Language.tryParse metadata.Extension
-        let version = projectInfo.Payload |> tryExtractVersion
+        let version = projectInfo.Content |> tryExtractVersion        
         return
             match version with
-            | Some version -> Versioned(metadata, language, version)
+            | Some version ->
+                let content = Xml projectInfo.Content
+                Versioned(metadata, content, language, version)
             | None -> Unversioned(metadata, language)
     }
     
-let tryBump (projectDocument: System.Xml.Linq.XElement) (project: Project) (nextVersion: CalendarVersion) =    
+let tryBump (project: Project) (nextVersion: CalendarVersion) =    
     match project with
-    | Versioned(pm, lang, CalVer _) ->
-        Schema.tryUpdateVersionElement projectDocument (Version.toString nextVersion)
-        |> Option.map (fun updated ->
-            let bumped = Versioned(pm, lang, CalVer nextVersion)
-            (bumped, updated))
+    | Versioned (pm, Xml pc, lang, CalVer _) ->
+        Version.toString nextVersion
+        |> Schema.tryUpdateVersionElement pc
+        |> Option.map (fun upc ->
+            Versioned(pm, upc, lang, CalVer nextVersion))
         |> Option.toResult (XElementUpdateFailure pm.Name)
-    | Versioned   _ -> (project, projectDocument) |> Ok
+    | Versioned   _ -> Ok project
     | Unversioned _ -> UnversionedProject |> Error
         
