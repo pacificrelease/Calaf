@@ -12,7 +12,7 @@ let bump (suite: Suite) (nextVersion: CalendarVersion) =
             |> Array.traverseResultM (fun project -> 
                 match project with
                 | Versioned { Version = CalVer _ } as Versioned p ->
-                    tryBump2 p nextVersion |> Result.map Versioned
+                    tryBump p nextVersion |> Result.map Versioned
                 | project -> Ok project)
                 
         return { 
