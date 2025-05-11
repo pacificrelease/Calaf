@@ -32,14 +32,14 @@ module internal Schema =
 let chooseCalendarVersioned (projects: Project seq) : Project seq =
     projects
     |> Seq.filter (function
-        | Versioned (_, _, _, CalVer _) -> true
+        | Versioned { Version = CalVer _ }  -> true
         | _ -> false)
 
 let chooseCalendarVersions (projects: Project seq) : CalendarVersion seq =
     projects
     |> Seq.choose (function
-        | Versioned (_, _, _, CalVer version) -> Some version
-        | _                                -> None)
+        | Versioned { Version = CalVer version } -> Some version
+        | _ -> None)
 
 let tryCreate (projectInfo: ProjectXmlFileInfo) : Project option =        
     let tryExtractVersion (xml: System.Xml.Linq.XElement) : Version option =
@@ -59,17 +59,17 @@ let tryCreate (projectInfo: ProjectXmlFileInfo) : Project option =
             match version with
             | Some version ->
                 let content = Xml projectInfo.Content
-                Versioned(metadata, content, language, version)
-            | None -> Unversioned(metadata, language)
+                Versioned { Metadata = metadata; Content = content; Language = language; Version = version }
+            | None -> Unversioned { Metadata = metadata; Language = language }
     }
     
 let tryBump (project: Project) (nextVersion: CalendarVersion) =    
     match project with
-    | Versioned (pm, Xml pc, lang, CalVer _) ->
+    | Versioned ({ Metadata = pm; Content = Xml pc; Version = CalVer _ } as versionedProject) ->
         Version.toString nextVersion
         |> Schema.tryUpdateVersionElement pc
         |> Option.map (fun upc ->
-            Versioned(pm, upc, lang, CalVer nextVersion))
+            Versioned { versionedProject with Content = upc; Version = CalVer nextVersion })
         |> Option.toResult (XElementUpdateFailure pm.Name)
     | Versioned   _ -> Ok project
     | Unversioned _ -> UnversionedProject |> Error

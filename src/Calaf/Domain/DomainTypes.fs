@@ -76,6 +76,7 @@ type Language =
     | FSharp
     | CSharp
 
+// TODO: Rename to FileMetadata
 type ProjectMetadata = {
     Name : string
     Extension: string
@@ -86,14 +87,26 @@ type ProjectMetadata = {
 type ProjectContent = 
     | Xml  of System.Xml.Linq.XElement
     | Json of System.Text.Json.JsonDocument
+    
+type UnversionedProject = {
+    Metadata: ProjectMetadata
+    Language: Language
+}
+
+type VersionedProject = {
+    Metadata: ProjectMetadata
+    Language: Language
+    Content: ProjectContent
+    Version: Version
+}
 
 type Project =
-    | Unversioned of metadata: ProjectMetadata * lang: Language
-    | Versioned   of metadata: ProjectMetadata * content: ProjectContent * lang: Language * version: Version
+    | Unversioned of UnversionedProject
+    | Versioned   of VersionedProject
 
 type Suite = {
     Version: CalendarVersion option
-    Projects: Project[]    
+    Projects: Project[]
 }
 
 type Workspace = {
