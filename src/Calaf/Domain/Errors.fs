@@ -16,8 +16,6 @@ type DomainError =
     
     | XElementUpdateFailure of name: string
     | UnversionedProject
-    | AlreadyBumpedProject
-    | SkippedProject
     
     | CannotCreateProject of path: string
     | NoCalendarVersionProject

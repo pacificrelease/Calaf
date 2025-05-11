@@ -2,6 +2,7 @@
     
 open FsToolkit.ErrorHandling
 
+open Calaf.Extensions.InternalExtensions
 open Calaf.Contracts
 open Calaf.Domain.DomainTypes
 
@@ -35,23 +36,10 @@ let choosePending (projects: (Project * System.Xml.Linq.XElement) seq) : (Projec
         | Versioned(_, _, CalVer _) as project -> Some (project, x)
         | _ -> None)
 
-let chooseBumped (projects: Project seq) : Project seq =
-    projects
-    |> Seq.choose (function
-        | Bumped _ as project -> Some project
-        | _                   -> None)
-    
-let chooseSkipped (projects: Project seq) : Project seq =
-    projects
-    |> Seq.choose(function
-        | Skipped _ as project -> Some project
-        | _                    -> None)
-
 let chooseCalendarVersions (projects: Project seq) : CalendarVersion seq =
     projects
     |> Seq.choose (function
         | Versioned (_, _, CalVer version) -> Some version
-        | Bumped (_, _, _, version)        -> Some version
         | _                                -> None)
     
 let tryCreate (projectInfo: ProjectInfo) : Project option =        
@@ -75,23 +63,13 @@ let tryCreate (projectInfo: ProjectInfo) : Project option =
     }
     
 let tryBump (projectDocument: System.Xml.Linq.XElement) (project: Project) (nextVersion: CalendarVersion) =    
-    let tryUpdateVersionElement (projectMetadata: ProjectMetadata) =        
-        match Schema.tryUpdateVersionElement projectDocument (Version.toString nextVersion)  with
-        | Some updated -> updated |> Ok
-        | None -> projectMetadata.Name |> XElementUpdateFailure |> Error
-    
     match project with
-    | Versioned (projectMetadata, lang, CalVer currentVersion) ->        
-        result {
-            let! updatedProjectDocument = tryUpdateVersionElement projectMetadata
-            let bumpedProject = Bumped (projectMetadata, lang, currentVersion, nextVersion) 
-            return (bumpedProject, updatedProjectDocument)            
-        }
-    | Versioned (projectMetadata, lang, currentVersion) ->
-        let skippedProject = Skipped (projectMetadata, lang, currentVersion)
-        (skippedProject, projectDocument)
-        |> Ok
-    | Unversioned _ -> UnversionedProject   |> Error
-    | Bumped _      -> AlreadyBumpedProject |> Error
-    | Skipped _     -> SkippedProject       |> Error
+    | Versioned(pm, lang, CalVer _) ->
+        Schema.tryUpdateVersionElement projectDocument (Version.toString nextVersion)
+        |> Option.map (fun updated ->
+            let bumped = Versioned(pm, lang, CalVer nextVersion)
+            (bumped, updated))
+        |> Option.toResult (XElementUpdateFailure pm.Name)
+    | Versioned   _ -> (project, projectDocument) |> Ok
+    | Unversioned _ -> UnversionedProject |> Error
         
