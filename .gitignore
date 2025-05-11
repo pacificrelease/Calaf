@@ -6,6 +6,10 @@
 # Ignore configuration files with sensitive information
 config/*.json
 
+# Ignore test reports
+tests/coverage-reports/
+tests/coverage-results/
+
 # User-specific files
 *.suo
 *.user
