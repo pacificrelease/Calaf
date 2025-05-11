@@ -17,3 +17,6 @@ type DomainError =
     
     // Project errors
     | NotFoundXmlVersionElement of projectName: string
+    
+    // Suite errors
+    | NoProjectsVersion
