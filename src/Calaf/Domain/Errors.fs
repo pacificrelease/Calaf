@@ -7,6 +7,7 @@ namespace Calaf.Domain
 // 3. Infrastructure errors |> IO errors
 
 type DomainError =
+    // Version errors
     | OutOfRangeYear
     | OutOfRangeMonth
     | WrongInt32Year
@@ -14,16 +15,5 @@ type DomainError =
     | WrongStringYear
     | WrongStringMonth
     
-    | XElementUpdateFailure of name: string
-    | UnversionedProject
-    
-    | CannotCreateProject of path: string
-    | NoCalendarVersionProject
-    
-    
-    
-    | GivenNotBumpedProject of name: string
-    | GivenUnversionedProject of name: string
-    | GivenSkippedProject of name: string
-    | NoPropertyGroupWorkspaceVersion
-    | NoPropertyGroupNextVersion
+    // Project errors
+    | NotFoundXmlVersionElement of projectName: string
