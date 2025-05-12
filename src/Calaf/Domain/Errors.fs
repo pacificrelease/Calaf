@@ -20,3 +20,7 @@ type DomainError =
     
     // Suite errors
     | NoProjectsVersion
+    
+    // Git
+    // Head errors
+    | EmptyBranchName
