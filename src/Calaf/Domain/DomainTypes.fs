@@ -69,7 +69,6 @@ type Repository =
     | Unborn   of directory: string
     | Dirty    of directory: string * head: Head * signature: Signature * currentVersion: CalendarVersion option
     | Ready    of directory: string * head: Head * signature: Signature * currentVersion: CalendarVersion option
-    | Bumped   of directory: string * head: Head * signature: Signature * previousVersion: CalendarVersion * currentVersion: CalendarVersion
 
 // Project
 type Language =
