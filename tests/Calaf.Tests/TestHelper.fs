@@ -296,7 +296,7 @@ module Generator =
                 let! validPrefix = genTagVersionPrefix
                 let! semVer = semanticVersionStr
                 return $"{validPrefix}{semVer}"
-            }
+            }        
             
     module internal DateSteward =
         let inRangeDateTime =
@@ -503,13 +503,16 @@ module Generator =
                 return { Name = validSemVerString; Commit = maybeCommit }                       
             }
             
-        let malformedGitTagInfo =
-            gen {
-                let! unversionedTagName = Gen.frequency [
+        let unversionedTagName =
+            Gen.frequency [
                     3, nonNumericString
                     2, invalidThreePartString
                     1, nullOrWhiteSpaceString
                 ]
+            
+        let malformedGitTagInfo =
+            gen {
+                let! unversionedTagName = unversionedTagName
                 let! maybeCommit = Gen.frequency [
                     1, Gen.constant None
                     3, gitCommitInfo |> Gen.map Some
@@ -562,6 +565,12 @@ module Generator =
                 return Tag.Versioned (stringEquivalent, (SemVer semanticVersion), maybeCommit)
             }
             
+        let unversionedTag : Gen<Tag> =            
+            gen {
+                let! tagName = unversionedTagName
+                return Tag.Unversioned tagName
+            }
+            
         let calendarVersionsTagsArray =
              gen {
                 let! smallCount = Gen.choose(1, 50)
@@ -574,7 +583,31 @@ module Generator =
                 ]
                 return choice
             }
+             
+        let semanticVersionsTagsArray =
+            gen {
+                let! smallCount  = Gen.choose(1, 50)
+                let! middleCount = Gen.choose(51, 100)            
+                let! bigCount    = Gen.choose(101, 1000)            
+                let! choice = Gen.frequency [
+                    7, Gen.arrayOfLength smallCount  sematicVersionTag
+                    2, Gen.arrayOfLength middleCount sematicVersionTag
+                    1, Gen.arrayOfLength bigCount    sematicVersionTag
+                ]
+                return choice
+            }
             
+        let unversionedTagsArray =
+            gen {
+                let! smallCount  = Gen.choose(1, 50)
+                let! middleCount = Gen.choose(51, 100)            
+                let! bigCount    = Gen.choose(101, 1000)            
+                return! Gen.frequency [
+                    7, Gen.arrayOfLength smallCount  unversionedTag
+                    2, Gen.arrayOfLength middleCount unversionedTag
+                    1, Gen.arrayOfLength bigCount    unversionedTag
+                ]
+            }
 
 module Arbitrary =
     type internal validPatchUInt32 =
@@ -750,3 +783,11 @@ module Arbitrary =
         type calendarVersionsTagsArray =
              static member calendarVersionsTagsArray() =
                 Arb.fromGen Generator.Git.calendarVersionsTagsArray
+                
+        type semanticVersionsTagsArray =
+            static member semanticVersionsTagsArray() =
+                Arb.fromGen Generator.Git.semanticVersionsTagsArray
+                
+        type unversionedTagsArray =
+            static member unversionedTagsArray() =
+                Arb.fromGen Generator.Git.unversionedTagsArray
