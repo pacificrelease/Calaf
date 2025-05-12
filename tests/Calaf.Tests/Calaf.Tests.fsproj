@@ -18,6 +18,7 @@
     <Compile Include="Version\VersionTests.fs" />
     <Compile Include="Git\CommitTests.fs" />
     <Compile Include="Git\TagTests.fs" />
+    <Compile Include="Git\HeadTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

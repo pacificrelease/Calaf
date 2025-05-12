@@ -1,13 +1,21 @@
 ﻿module internal Calaf.Domain.Workspace
 
-open System.IO
+open FsToolkit.ErrorHandling
 
 open Calaf.Contracts
 open Calaf.Domain.DomainTypes
 
-let create (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) : Workspace =
-    let projects = 
-        directory.Projects |> Array.map Project.tryCreate
-    { Directory  = directory.Directory
-      Repository = repoInfo |> Option.map Repository.create
-      Suite      = projects |> Array.choose id |> Suite.create}
+let tryCreate (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
+    result {
+        let suite =
+            directory.Projects
+            |> Array.map Project.tryCreate
+            |> Array.choose id
+            |> Suite.create
+        let! repo =
+            repoInfo
+            |> Option.traverseResult Repository.tryCreate        
+        return { Directory  = directory.Directory
+                 Repository = repo 
+                 Suite      = suite }
+    }

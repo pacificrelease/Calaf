@@ -3,8 +3,11 @@
 open Calaf.Contracts
 open Calaf.Domain.DomainTypes
 
-let create (detached: bool) (commitInfo: GitCommitInfo) (branchName: string option) =
-    let commit = Commit.create commitInfo
+let tryCreate (detached: bool) (commitInfo: GitCommitInfo) (branchName: string option) =
+    let commit = Commit.create commitInfo    
     match detached, branchName with
-    | false, Some branchName -> Attached (commit, branchName)
-    | _ -> Detached commit
+    | false, Some branchName when System.String.IsNullOrWhiteSpace branchName    
+        -> EmptyBranchName |> Error
+    | false, Some branchName
+        -> Attached (commit, branchName) |> Ok    
+    | _ -> Detached commit |> Ok

@@ -291,7 +291,7 @@ module Generator =
                 return $"{semanticVersion.Major}.{semanticVersion.Minor}.{semanticVersion.Patch}"
             }
             
-        let semanticVersionTagStr =
+        let semanticVersionWithVersionPrefixStr =
             gen {
                 let! validPrefix = genTagVersionPrefix
                 let! semVer = semanticVersionStr
@@ -452,7 +452,15 @@ module Generator =
             return! Gen.elements [ MonthStampIncrement.Year; MonthStampIncrement.Month; MonthStampIncrement.Both ]
         }
         
-    module Git =        
+    module Git =
+        let branchName =
+            gen {                
+                let! branchName =
+                    Gen.frequency [ 1, SematicVersion.semanticVersionWithVersionPrefixStr
+                                    1, Gen.elements [ "master"; "main"; "develop"; "feature"; "bugfix"; "release" ]]
+                return branchName
+            }
+            
         let commitMessage =
             gen {
                 
@@ -495,7 +503,7 @@ module Generator =
             
         let semVerGitTagInfo =
             gen {
-                let! validSemVerString = SematicVersion.semanticVersionTagStr
+                let! validSemVerString = SematicVersion.semanticVersionWithVersionPrefixStr
                 let! maybeCommit = Gen.frequency [
                     1, Gen.constant None
                     3, gitCommitInfo |> Gen.map Some
@@ -524,7 +532,7 @@ module Generator =
             gen {
                 let! tagName = Gen.frequency [
                     3, validTagCalVerString
-                    1, SematicVersion.semanticVersionTagStr
+                    1, SematicVersion.semanticVersionWithVersionPrefixStr
                 ]
                 let! commit = gitCommitInfo |> Gen.map Some
                 return { Name = tagName; Commit = commit }
@@ -614,7 +622,7 @@ module Generator =
                 let! semanticVersionsTags = semanticVersionsTagsArray
                 let! unversionedTags = unversionedTagsArray
                 return Array.append semanticVersionsTags unversionedTags                
-            }
+            }            
 
 module Arbitrary =
     type internal validPatchUInt32 =
@@ -763,6 +771,10 @@ module Arbitrary =
                 Arb.fromGen Generator.DateSteward.outOfRangeDateTime
     
     module internal Git =
+        type branchName =
+            static member branchName() =
+                Arb.fromGen Generator.Git.branchName
+                
         type gitCommitInfo =
             static member gitCommitInfo() =
                 Arb.fromGen Generator.Git.gitCommitInfo
