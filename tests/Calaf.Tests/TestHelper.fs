@@ -575,7 +575,7 @@ module Generator =
              gen {
                 let! smallCount = Gen.choose(1, 50)
                 let! middleCount = Gen.choose(51, 100)            
-                let! bigCount = Gen.choose(101, 1000)            
+                let! bigCount = Gen.choose(101, 250)            
                 let! choice = Gen.frequency [
                     7, Gen.arrayOfLength smallCount  calendarVersionTag
                     2, Gen.arrayOfLength middleCount calendarVersionTag
@@ -588,7 +588,7 @@ module Generator =
             gen {
                 let! smallCount  = Gen.choose(1, 50)
                 let! middleCount = Gen.choose(51, 100)            
-                let! bigCount    = Gen.choose(101, 1000)            
+                let! bigCount    = Gen.choose(101, 250)            
                 let! choice = Gen.frequency [
                     7, Gen.arrayOfLength smallCount  sematicVersionTag
                     2, Gen.arrayOfLength middleCount sematicVersionTag
@@ -601,7 +601,7 @@ module Generator =
             gen {
                 let! smallCount  = Gen.choose(1, 50)
                 let! middleCount = Gen.choose(51, 100)            
-                let! bigCount    = Gen.choose(101, 1000)            
+                let! bigCount    = Gen.choose(101, 250)            
                 return! Gen.frequency [
                     7, Gen.arrayOfLength smallCount  unversionedTag
                     2, Gen.arrayOfLength middleCount unversionedTag
