@@ -255,6 +255,49 @@ module Generator =
                 return choice
             }
             
+    module internal SematicVersion =
+        let semanticVersion =
+            let genBigSemVer =
+                gen {
+                    let! major = Gen.choose64(1000, int64 System.UInt32.MaxValue)
+                    let! minor = Gen.choose64(100_000, int64 System.UInt32.MaxValue)
+                    let! patch = Gen.choose64(100_000, int64 System.UInt32.MaxValue)
+                    return uint32 major, uint32 minor, uint32 patch
+                }
+            let genSmallSemVer =
+                gen {
+                    let! major = Gen.choose(0, 999)
+                    let! minor = Gen.choose(13, 99999)
+                    let! patch = Gen.choose(1, 99999)
+                    return uint32 major, uint32 minor, uint32 patch
+                }
+            gen {
+                let! major, minor, patch = Gen.frequency [
+                    1, genBigSemVer
+                    1, genSmallSemVer
+                ]
+                return { Major = major; Minor = minor; Patch = patch }
+            }
+            
+        let semanticVersion2 =
+            gen {
+                let! semanticVersion = semanticVersion
+                return semanticVersion, $"{semanticVersion.Major}.{semanticVersion.Minor}.{semanticVersion.Patch}"
+            }
+            
+        let semanticVersionStr =
+            gen {
+                let! semanticVersion = semanticVersion
+                return $"{semanticVersion.Major}.{semanticVersion.Minor}.{semanticVersion.Patch}"
+            }
+            
+        let semanticVersionTagStr =
+            gen {
+                let! validPrefix = genTagVersionPrefix
+                let! semVer = semanticVersionStr
+                return $"{validPrefix}{semVer}"
+            }
+            
     module internal DateSteward =
         let inRangeDateTime =
             gen {
@@ -294,30 +337,7 @@ module Generator =
                 1, validTwoPartCalVerString
             ]
             return choice
-        }
-        
-    let validSemVerString =
-        let genBigSemVer =
-            gen {
-                let! major = Gen.choose64(1000, int64 System.UInt32.MaxValue)
-                let! minor = Gen.choose64(100_000, int64 System.UInt32.MaxValue)
-                let! patch = Gen.choose64(100_000, int64 System.UInt32.MaxValue)
-                return $"{major}.{minor}.{patch}"
-            }
-        let genSmallSemVer =
-            gen {
-                let! major = Gen.choose(0, 999)
-                let! minor = Gen.choose(13, 99999)
-                let! patch = Gen.choose(1, 99999)
-                return $"{major}.{minor}.{patch}"
-            }
-        gen {
-            let! choice = Gen.frequency [
-                1, genBigSemVer
-                1, genSmallSemVer
-            ]
-            return choice
-        }
+        }        
         
     let invalidThreePartString =
         gen {
@@ -339,7 +359,7 @@ module Generator =
             let! calVer = twoSectionCalendarVersion
             let! patch = validPatchUInt32
             return { calVer with Patch = Some patch }
-        }    
+        }
         
     let calendarVersion =
         gen {
@@ -377,13 +397,6 @@ module Generator =
             let! prefix = genTagVersionPrefix
             let! version = validTwoPartCalVerString
             return $"{prefix}{version}"
-        }
-        
-    let validTagSemVerString =
-        gen {
-            let! validPrefix = genTagVersionPrefix
-            let! semVer = validSemVerString
-            return $"{validPrefix}{semVer}"
         }
         
     let whiteSpaceLeadingTrailingValidCalVerString =
@@ -482,7 +495,7 @@ module Generator =
             
         let semVerGitTagInfo =
             gen {
-                let! validSemVerString = validTagSemVerString
+                let! validSemVerString = SematicVersion.semanticVersionTagStr
                 let! maybeCommit = Gen.frequency [
                     1, Gen.constant None
                     3, gitCommitInfo |> Gen.map Some
@@ -508,7 +521,7 @@ module Generator =
             gen {
                 let! tagName = Gen.frequency [
                     3, validTagCalVerString
-                    1, validTagSemVerString
+                    1, SematicVersion.semanticVersionTagStr
                 ]
                 let! commit = gitCommitInfo |> Gen.map Some
                 return { Name = tagName; Commit = commit }
@@ -524,27 +537,40 @@ module Generator =
                 return choice
             }
             
-        let calendarVersionTag : Gen<Tag> =
-            let commitChoice = Gen.frequency [
-                    1, Gen.constant None
-                    3, commit |> Gen.map Some ]
+        let commitOrNone = 
             gen {
+                let! choice = Gen.frequency [
+                    1, Gen.constant None
+                    3, commit |> Gen.map Some
+                ]
+                return choice
+            }        
+            
+        let calendarVersionTag : Gen<Tag> =            
+            gen {                
                 let! calVerVersion = calendarVersion
                 let tagNameSb = System.Text.StringBuilder($"{calVerVersion.Year}.{calVerVersion.Month}")
                 let tagNameSb = if calVerVersion.Patch.IsSome then tagNameSb.Append calVerVersion.Patch.Value else tagNameSb 
-                let! maybeCommit = commitChoice
+                let! maybeCommit = commitOrNone
                 return Tag.Versioned (tagNameSb.ToString(), (calVerVersion |> CalVer), maybeCommit)
             }
             
-        let calendarVersionsTags =
+        let sematicVersionTag : Gen<Tag> =            
+            gen {
+                let! semanticVersion, stringEquivalent = SematicVersion.semanticVersion2
+                let! maybeCommit = commitOrNone
+                return Tag.Versioned (stringEquivalent, (SemVer semanticVersion), maybeCommit)
+            }
+            
+        let calendarVersionsTagsArray =
              gen {
                 let! smallCount = Gen.choose(1, 50)
                 let! middleCount = Gen.choose(51, 100)            
                 let! bigCount = Gen.choose(101, 1000)            
                 let! choice = Gen.frequency [
-                    7, Gen.arrayOfLength smallCount calendarVersionTag
+                    7, Gen.arrayOfLength smallCount  calendarVersionTag
                     2, Gen.arrayOfLength middleCount calendarVersionTag
-                    1, Gen.arrayOfLength bigCount calendarVersionTag
+                    1, Gen.arrayOfLength bigCount    calendarVersionTag
                 ]
                 return choice
             }
@@ -578,10 +604,6 @@ module Arbitrary =
     type internal validTwoPartCalVerString =
         static member validTwoPartCalVerString() =
             Arb.fromGen Generator.validTwoPartCalVerString
-            
-    type internal validSemVerString =
-        static member validSemVerString() =
-            Arb.fromGen Generator.validSemVerString
             
     type internal invalidThreePartString =
         static member invalidThreePartString() =
@@ -630,10 +652,6 @@ module Arbitrary =
     type internal whiteSpaceLeadingTrailingValidTagCalVerString =
         static member whiteSpaceLeadingTrailingValidTagCalVerString() =
             Arb.fromGen Generator.whiteSpaceLeadingTrailingValidTagCalVerString
-            
-    type internal validTagSemVerString =
-        static member validTagSemVerString() =
-            Arb.fromGen Generator.validTagSemVerString
             
     type internal monthStampIncrement =
         static member monthStampIncrement() =
@@ -690,6 +708,11 @@ module Arbitrary =
             static member wrongStringYear() =
                 Arb.fromGen Generator.Year.wrongStringYear
                 
+    module internal SematicVersion =
+        type internal semanticVersionStr =
+            static member semanticVersionStr() =
+                Arb.fromGen Generator.SematicVersion.semanticVersionStr
+                
     module internal DateSteward =
         type inRangeDateTime =
             static member inRangeDateTime() =
@@ -699,7 +722,7 @@ module Arbitrary =
             static member outOfRangeDateTime() =
                 Arb.fromGen Generator.DateSteward.outOfRangeDateTime
     
-    module internal Git =          
+    module internal Git =
         type gitCommitInfo =
             static member gitCommitInfo() =
                 Arb.fromGen Generator.Git.gitCommitInfo
@@ -724,6 +747,6 @@ module Arbitrary =
             static member randomGitTagInfo() =
                 Arb.fromGen Generator.Git.randomGitTagInfo
                 
-        type calendarVersionsTags =
-             static member calendarVersionsTags() =
-                Arb.fromGen Generator.Git.calendarVersionsTags
+        type calendarVersionsTagsArray =
+             static member calendarVersionsTagsArray() =
+                Arb.fromGen Generator.Git.calendarVersionsTagsArray

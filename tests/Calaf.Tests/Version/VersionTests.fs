@@ -34,14 +34,14 @@ module TryParseFromStringPropertiesTests =
             calVer.Patch = None
         | _ -> false
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.validSemVerString> |], MaxTest = 500)>]
-    let ``Valid SemVer string parses to LooksLikeSemVer`` (semVerVersion: string) =
-        let parts = semVerVersion.Split('.')
+    [<Property(Arbitrary = [| typeof<Arbitrary.SematicVersion.semanticVersionStr> |], MaxTest = 500)>]
+    let ``Valid SemVer string parses to LooksLikeSemVer`` (semanticVersionStr: string) =
+        let parts = semanticVersionStr.Split('.')
         let expectedMajor = uint32 parts[0]
         let expectedMinor = uint32 parts[1]
         let expectedPatch = uint32 parts[2]
 
-        match tryParseFromString semVerVersion with
+        match tryParseFromString semanticVersionStr with
         | Some (SemVer semVer) ->
             semVer.Major = expectedMajor &&
             semVer.Minor = expectedMinor &&
@@ -79,9 +79,9 @@ module TryParseFromTagPropertiesTests =
         | Some (CalVer _) -> true
         | _               -> false
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.validTagSemVerString> |], MaxTest = 200)>]
-    let ``Correct prefix + valid SemVer string parses to Some SemVer`` (validTagSemVerString: string) =
-        match tryParseFromTag validTagSemVerString with
+    [<Property(Arbitrary = [| typeof<Arbitrary.SematicVersion.semanticVersionStr> |], MaxTest = 200)>]
+    let ``Correct prefix + valid SemVer string parses to Some SemVer`` (semanticVersionStr: string) =
+        match tryParseFromTag semanticVersionStr with
         | Some (SemVer _) -> true
         | _               -> false
         

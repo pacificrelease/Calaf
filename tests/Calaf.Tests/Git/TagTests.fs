@@ -52,7 +52,7 @@ module ChooseCalendarVersionsPropertiesTests =
     let ``Empty tags yields empty CalendarVersions sequence`` () =
         chooseCalendarVersions Seq.empty |> Seq.isEmpty
     
-    [<Property(Arbitrary = [| typeof<Arbitrary.Git.calendarVersionsTags> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.Git.calendarVersionsTagsArray> |])>]
     let ``Only CalendarVersions tags yields same quantity of the CalendarVersions seq`` (calendarVersionsTags: Tag[]) =
         let calendarVersions = chooseCalendarVersions calendarVersionsTags
         (calendarVersions |> Seq.length) = (calendarVersionsTags |> Seq.length)
