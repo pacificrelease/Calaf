@@ -608,6 +608,13 @@ module Generator =
                     1, Gen.arrayOfLength bigCount    unversionedTag
                 ]
             }
+            
+        let semanticVersionsAndUnversionedTagsArray =
+            gen {
+                let! semanticVersionsTags = semanticVersionsTagsArray
+                let! unversionedTags = unversionedTagsArray
+                return Array.append semanticVersionsTags unversionedTags                
+            }
 
 module Arbitrary =
     type internal validPatchUInt32 =
@@ -791,3 +798,7 @@ module Arbitrary =
         type unversionedTagsArray =
             static member unversionedTagsArray() =
                 Arb.fromGen Generator.Git.unversionedTagsArray
+                
+        type semanticVersionsAndUnversionedTagsArray() =
+            static member semanticVersionsAndUnversionedTagsArray() =
+                Arb.fromGen Generator.Git.semanticVersionsAndUnversionedTagsArray
