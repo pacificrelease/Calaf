@@ -56,8 +56,8 @@ type Commit = {
 }
 
 type Tag =
-    | Unversioned of name: TagName
     | Versioned   of name: TagName * version: Version * commit: Commit option
+    | Unversioned of name: TagName    
 
 type Head =
     | Attached of commit: Commit * branchName: BranchName
@@ -101,8 +101,8 @@ type VersionedProject = {
 }
 
 type Project =
-    | Unversioned of UnversionedProject
     | Versioned   of VersionedProject
+    | Unversioned of UnversionedProject    
 
 type Suite = {
     Version: CalendarVersion option
