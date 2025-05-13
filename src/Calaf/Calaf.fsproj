@@ -15,6 +15,7 @@
     <Compile Include="Contracts.fs" />
     <Compile Include="Domain\Errors.fs" />
     <Compile Include="Domain\DomainTypes.fs" />
+    <Compile Include="Domain\Events.fs" />
     <Compile Include="Domain\Version\Patch.fs" />
     <Compile Include="Domain\Version\Month.fs" />
     <Compile Include="Domain\Version\Year.fs" />    
