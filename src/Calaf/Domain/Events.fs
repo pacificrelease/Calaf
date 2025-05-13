@@ -3,8 +3,14 @@ namespace Calaf.Domain.DomainEvents
 open Calaf.Domain.DomainTypes
 
 type RepositoryCalendarVersionBumped = {
-    Version: CalendarVersion    
+    Version: CalendarVersion
+    Signature: Signature
+}
+
+type RepositoryCalendarVersionSkipped = {
+    Version: CalendarVersion option
 }
 
 type RepositoryEvent =
-    | CalendarVersionBumped of RepositoryCalendarVersionBumped
+    | ReadyRepositoryBumped  of RepositoryCalendarVersionBumped
+    | DirtyRepositorySkipped of RepositoryCalendarVersionSkipped
