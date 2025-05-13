@@ -7,10 +7,6 @@ type RepositoryCalendarVersionBumped = {
     Signature: Signature
 }
 
-type RepositoryCalendarVersionSkipped = {
-    Version: CalendarVersion option
-}
-
 type RepositoryEvent =
-    | ReadyRepositoryBumped  of RepositoryCalendarVersionBumped
-    | DirtyRepositorySkipped of RepositoryCalendarVersionSkipped
+    | ReadyRepositoryBumped of RepositoryCalendarVersionBumped
+    
