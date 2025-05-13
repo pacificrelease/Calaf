@@ -19,27 +19,21 @@ let tryCreate (repoInfo: GitRepositoryInfo) =
                            |> Tag.chooseCalendarVersions        
                            |> Version.tryMax
                 return ctor (repoInfo.Directory, head, signature, version)
-            }
-            
+            }            
         match repoInfo with
         | { Damaged = true } ->
-            return Damaged repoInfo.Directory
-            
+            return Damaged repoInfo.Directory            
         | i when i.Unborn || i.CurrentCommit.IsNone ->
-            return Unborn repoInfo.Directory
-            
+            return Unborn repoInfo.Directory            
         | i when i.Dirty &&
                  i.CurrentCommit.IsSome &&
                  i.Signature.IsSome ->
-            return! tryCreate Repository.Dirty i.Signature.Value i.CurrentCommit.Value i.CurrentBranch
-            
+            return! tryCreate Repository.Dirty i.Signature.Value i.CurrentCommit.Value i.CurrentBranch            
         | i when i.CurrentCommit.IsSome &&
                  i.Signature.IsSome ->
-            return! tryCreate Repository.Ready i.Signature.Value i.CurrentCommit.Value i.CurrentBranch
-            
+            return! tryCreate Repository.Ready i.Signature.Value i.CurrentCommit.Value i.CurrentBranch            
         | i when i.Signature.IsNone ->
-            return Unsigned repoInfo.Directory
-            
+            return Unsigned repoInfo.Directory            
         | _ ->
             return Damaged repoInfo.Directory
     }
@@ -60,12 +54,8 @@ let tryBump (repo: Repository) (nextVersion: CalendarVersion) =
                     Signature = signature
                 }
                 return Ready (dir, head, signature, Some nextVersion), event                
-        | Dirty _ ->
-            return! DirtyRepository |> Error
-        | Unborn _ ->
-            return! UnbornRepository |> Error
-        | Unsigned _ ->
-            return! UnsignedRepository |> Error
-        | Damaged _ ->
-            return! DamagedRepository |> Error
+        | Dirty _    -> return! DirtyRepository    |> Error
+        | Unborn _   -> return! UnbornRepository   |> Error
+        | Unsigned _ -> return! UnsignedRepository |> Error
+        | Damaged _  -> return! DamagedRepository  |> Error
     }
