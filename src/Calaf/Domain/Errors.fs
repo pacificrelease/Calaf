@@ -6,6 +6,7 @@ namespace Calaf.Domain
 // 2. Domain errors |> domain logic errors
 // 3. Infrastructure errors |> IO errors
 
+// Naming rule% <Adjective><Noun>
 type DomainError =
     // Version errors
     | OutOfRangeYear
@@ -15,6 +16,7 @@ type DomainError =
     | WrongStringYear
     | WrongStringMonth
     
+    // FileSystem
     // Project errors
     | NotFoundXmlVersionElement of projectName: string
     
@@ -24,3 +26,6 @@ type DomainError =
     // Git
     // Head errors
     | EmptyBranchName
+    
+    // Repository errors
+    | SameCalendarVersion
