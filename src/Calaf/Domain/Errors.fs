@@ -27,5 +27,9 @@ type DomainError =
     // Head errors
     | EmptyBranchName
     
-    // Repository errors
-    | SameCalendarVersion
+    // Repository errors    
+    | CurrentRepository
+    | DirtyRepository
+    | DamagedRepository
+    | UnbornRepository
+    | UnsignedRepository

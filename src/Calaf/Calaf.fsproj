@@ -14,7 +14,6 @@
     <Compile Include="InternalExtensions.fs" />
     <Compile Include="Contracts.fs" />
     <Compile Include="Domain\Errors.fs" />
-    <Compile Include="Domain\Warnings.fs" />
     <Compile Include="Domain\DomainTypes.fs" />
     <Compile Include="Domain\Events.fs" />
     <Compile Include="Domain\Version\Patch.fs" />
