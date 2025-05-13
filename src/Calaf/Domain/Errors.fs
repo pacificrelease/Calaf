@@ -6,7 +6,7 @@ namespace Calaf.Domain
 // 2. Domain errors |> domain logic errors
 // 3. Infrastructure errors |> IO errors
 
-// Naming rule% <Adjective><Noun>
+// Naming rule: <Adjective><Noun>
 type DomainError =
     // Version errors
     | OutOfRangeYear

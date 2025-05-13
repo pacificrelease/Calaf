@@ -10,11 +10,13 @@ type Minor = uint32
 type Year  = uint16
 type Month = uint8
 
+// Value Object
 type MonthStamp = {
     Year:   Year
     Month:  Month
 }
 
+// Value Object
 // MAJOR.MINOR.PATCH
 type SemanticVersion = {
     Major: Major
@@ -22,6 +24,7 @@ type SemanticVersion = {
     Patch: Patch
 }
 
+// Value Object
 //YYYY.MM.PATCH
 //YYYY.MM
 type CalendarVersion = {
@@ -43,6 +46,7 @@ type CommitHash = string
 type TagName = string
 type BranchName = string
 
+// Value Object
 type Signature = {
     Name: SignatureName
     Email: SignatureEmail
@@ -61,7 +65,7 @@ type Tag =
 
 type Head =
     | Attached of commit: Commit * branchName: BranchName
-    | Detached of commit: Commit    
+    | Detached of commit: Commit
 
 type Repository =
     | Damaged  of directory: string
