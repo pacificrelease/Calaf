@@ -143,6 +143,9 @@ module Generator =
             return choice
         }
         
+    let absoluteOrRelativePathString =
+        Gen.constant (Bogus.Faker().System.DirectoryPath())
+        
     module Month =
         let inRangeByteMonth =
             gen {
@@ -462,8 +465,7 @@ module Generator =
             }
             
         let commitMessage =
-            gen {
-                
+            gen {                
                 let! choice =
                     Gen.frequency [ 3, Gen.constant (Bogus.Faker().Lorem.Sentence())
                                     1, Gen.elements [""; " "]]
@@ -622,7 +624,7 @@ module Generator =
                 let! semanticVersionsTags = semanticVersionsTagsArray
                 let! unversionedTags = unversionedTagsArray
                 return Array.append semanticVersionsTags unversionedTags                
-            }            
+            }
 
 module Arbitrary =
     type internal validPatchUInt32 =
@@ -704,6 +706,10 @@ module Arbitrary =
     type internal monthStampIncrement =
         static member monthStampIncrement() =
             Arb.fromGen Generator.monthStampIncrement
+            
+    type internal absoluteOrRelativePathString =
+        static member absoluteOrRelativePathString() =
+            Arb.fromGen Generator.absoluteOrRelativePathString
             
     module internal Month =
         type inRangeByteMonth =
