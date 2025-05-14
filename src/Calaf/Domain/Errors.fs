@@ -6,7 +6,7 @@ namespace Calaf.Domain
 // 2. Domain errors |> domain logic errors
 // 3. Infrastructure errors |> IO errors
 
-// Naming rule: <Adjective><Noun>
+// Naming rule: <Verb><Adjective><Noun>
 type DomainError =
     // Version errors
     | OutOfRangeYear
@@ -27,7 +27,10 @@ type DomainError =
     // Head errors
     | EmptyBranchName
     
-    // Repository errors    
+    // Repository errors
+    | EmptyRepositoryPath
+    
+    // Repository bump errors
     | CurrentRepository
     | DirtyRepository
     | DamagedRepository

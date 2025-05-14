@@ -7,6 +7,10 @@ open Calaf.Domain.DomainTypes
 open Calaf.Domain.DomainEvents
 
 let tryCreate (repoInfo: GitRepositoryInfo) =
+    let tryValidatePath path =
+        if not (System.String.IsNullOrWhiteSpace path)
+        then Ok path
+        else EmptyRepositoryPath |> Error
     result {
         let tryCreate ctor (signature: GitSignatureInfo) (commit: GitCommitInfo) (branch: string option) =
             result {
@@ -19,12 +23,13 @@ let tryCreate (repoInfo: GitRepositoryInfo) =
                            |> Tag.chooseCalendarVersions        
                            |> Version.tryMax
                 return ctor (repoInfo.Directory, head, signature, version)
-            }            
+            }
+        let! path = tryValidatePath repoInfo.Directory
         match repoInfo with
         | { Damaged = true } ->
-            return Damaged repoInfo.Directory            
+            return Damaged path
         | i when i.Unborn || i.CurrentCommit.IsNone ->
-            return Unborn repoInfo.Directory            
+            return Unborn path
         | i when i.Dirty &&
                  i.CurrentCommit.IsSome &&
                  i.Signature.IsSome ->
@@ -33,9 +38,9 @@ let tryCreate (repoInfo: GitRepositoryInfo) =
                  i.Signature.IsSome ->
             return! tryCreate Repository.Ready i.Signature.Value i.CurrentCommit.Value i.CurrentBranch            
         | i when i.Signature.IsNone ->
-            return Unsigned repoInfo.Directory            
+            return Unsigned path
         | _ ->
-            return Damaged repoInfo.Directory
+            return Damaged path
     }
 
 let tryBump (repo: Repository) (nextVersion: CalendarVersion) =
