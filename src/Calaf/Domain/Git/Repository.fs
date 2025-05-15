@@ -45,30 +45,30 @@ let tryCreate (repoInfo: GitRepositoryInfo) =
         | { Damaged = true } ->
             let repo = Damaged path
             let event = toRepositoryCreated repo
-            return (repo, event)
+            return (repo, [event])
         | i when i.Unborn || i.CurrentCommit.IsNone ->
             let repo = Unborn path
             let event = toRepositoryCreated repo
-            return (repo, event)
+            return (repo, [event])
         | i when i.Dirty &&
                  i.CurrentCommit.IsSome &&
                  i.Signature.IsSome ->
             let! repo = tryCreate Repository.Dirty i.Signature.Value i.CurrentCommit.Value i.CurrentBranch
             let event = toRepositoryCreated repo
-            return (repo, event)
+            return (repo, [event])
         | i when i.CurrentCommit.IsSome &&
                  i.Signature.IsSome ->
             let! repo = tryCreate Repository.Ready i.Signature.Value i.CurrentCommit.Value i.CurrentBranch
             let event = toRepositoryCreated repo
-            return (repo, event)
+            return (repo, [event])
         | i when i.Signature.IsNone ->
             let repo = Unsigned path
             let event = toRepositoryCreated repo
-            return (repo, event)
+            return (repo, [event])
         | _ ->
             let repo = Damaged path
             let event = toRepositoryCreated repo
-            return (repo, event)
+            return (repo, [event])
     }
 
 let tryBump (repo: Repository) (nextVersion: CalendarVersion) =
