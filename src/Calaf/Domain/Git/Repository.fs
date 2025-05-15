@@ -54,7 +54,7 @@ let tryBump (repo: Repository) (nextVersion: CalendarVersion) =
             then
                 return! CurrentRepository |> Error
             else
-                let event = ReadyRepositoryBumped {
+                let event = RepositoryBumped {
                     Version = nextVersion
                     Signature = signature
                 }
