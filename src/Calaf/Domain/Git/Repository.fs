@@ -6,6 +6,13 @@ open Calaf.Contracts
 open Calaf.Domain.DomainTypes
 open Calaf.Domain.DomainEvents
 
+let toState = function
+    | Damaged  _ -> RepositoryState.Damaged
+    | Dirty    _ -> RepositoryState.Dirty
+    | Unborn   _ -> RepositoryState.Unborn
+    | Unsigned _ -> RepositoryState.Unsigned
+    | Ready    _ -> RepositoryState.Ready
+
 let tryCreate (repoInfo: GitRepositoryInfo) =
     let tryValidatePath path =
         if not (System.String.IsNullOrWhiteSpace path)

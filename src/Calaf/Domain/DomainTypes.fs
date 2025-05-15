@@ -67,6 +67,9 @@ type Head =
     | Attached of commit: Commit * branchName: BranchName
     | Detached of commit: Commit
 
+// DU for events     
+type RepositoryState = | Damaged | Unsigned | Unborn | Dirty | Ready
+
 type Repository =
     | Damaged  of directory: string
     | Unsigned of directory: string
