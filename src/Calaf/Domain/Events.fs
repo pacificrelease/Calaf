@@ -4,7 +4,7 @@ open Calaf.Domain.DomainTypes
 
 // Repository
 type RepositoryCreated = {    
-    Version: Version
+    Version: Version option
     State: RepositoryState
 }
 
@@ -16,4 +16,7 @@ type CalendarVersionBumped = {
 
 type RepositoryEvent =
     | RepositoryCreated of RepositoryCreated
-    | RepositoryBumped  of CalendarVersionBumped 
+    | RepositoryBumped  of CalendarVersionBumped
+    
+type DomainEvent =
+    | Repository of RepositoryEvent

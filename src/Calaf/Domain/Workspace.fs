@@ -12,10 +12,13 @@ let tryCreate (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
             |> Array.map Project.tryCreate
             |> Array.choose id
             |> Suite.create
-        let! repo =
-            repoInfo
-            |> Option.traverseResult Repository.tryCreate        
+            
+        let! repoResult = repoInfo |> Option.traverseResult Repository.tryCreate
+        // let repo, event = 
+        //     match repoResult with
+        //     | Some (r, e) -> (Some r, Some e)
+        //     | None -> (None, None)
         return { Directory  = directory.Directory
-                 Repository = repo 
+                 Repository = repoResult |> Option.map fst 
                  Suite      = suite }
     }

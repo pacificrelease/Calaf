@@ -12,6 +12,15 @@ let toState = function
     | Unborn   _ -> RepositoryState.Unborn
     | Unsigned _ -> RepositoryState.Unsigned
     | Ready    _ -> RepositoryState.Ready
+    
+let toRepositoryCreated repo =
+    let state = toState repo
+    let version =
+        match repo with
+        | Dirty (_, _, _, calendarVersion)
+        | Ready (_, _, _, calendarVersion) -> Option.map CalVer calendarVersion
+        | _ -> None
+    RepositoryCreated { Version = version; State = state } |> DomainEvent.Repository
 
 let tryCreate (repoInfo: GitRepositoryInfo) =
     let tryValidatePath path =
@@ -34,20 +43,32 @@ let tryCreate (repoInfo: GitRepositoryInfo) =
         let! path = tryValidatePath repoInfo.Directory
         match repoInfo with
         | { Damaged = true } ->
-            return Damaged path
+            let repo = Damaged path
+            let event = toRepositoryCreated repo
+            return (repo, event)
         | i when i.Unborn || i.CurrentCommit.IsNone ->
-            return Unborn path
+            let repo = Unborn path
+            let event = toRepositoryCreated repo
+            return (repo, event)
         | i when i.Dirty &&
                  i.CurrentCommit.IsSome &&
                  i.Signature.IsSome ->
-            return! tryCreate Repository.Dirty i.Signature.Value i.CurrentCommit.Value i.CurrentBranch            
+            let! repo = tryCreate Repository.Dirty i.Signature.Value i.CurrentCommit.Value i.CurrentBranch
+            let event = toRepositoryCreated repo
+            return (repo, event)
         | i when i.CurrentCommit.IsSome &&
                  i.Signature.IsSome ->
-            return! tryCreate Repository.Ready i.Signature.Value i.CurrentCommit.Value i.CurrentBranch            
+            let! repo = tryCreate Repository.Ready i.Signature.Value i.CurrentCommit.Value i.CurrentBranch
+            let event = toRepositoryCreated repo
+            return (repo, event)
         | i when i.Signature.IsNone ->
-            return Unsigned path
+            let repo = Unsigned path
+            let event = toRepositoryCreated repo
+            return (repo, event)
         | _ ->
-            return Damaged path
+            let repo = Damaged path
+            let event = toRepositoryCreated repo
+            return (repo, event)
     }
 
 let tryBump (repo: Repository) (nextVersion: CalendarVersion) =
@@ -61,11 +82,13 @@ let tryBump (repo: Repository) (nextVersion: CalendarVersion) =
             then
                 return! CurrentRepository |> Error
             else
+                let repo = Ready (dir, head, signature, Some nextVersion)
                 let event = RepositoryBumped {
                     Version = nextVersion
                     Signature = signature
+                    State = toState repo
                 }
-                return Ready (dir, head, signature, Some nextVersion), event                
+                return (event, event)
         | Dirty _    -> return! DirtyRepository    |> Error
         | Unborn _   -> return! UnbornRepository   |> Error
         | Unsigned _ -> return! UnsignedRepository |> Error
