@@ -9,6 +9,9 @@ open Calaf.Domain.DomainTypes
 type MonthStampIncrement = Year | Month | Both
 
 module Generator =
+    let private genBool =
+        Gen.elements [true; false]
+        
     let private genNegative =
         gen {
             let! neg = Gen.choose(System.Int32.MinValue, -1)
@@ -143,7 +146,7 @@ module Generator =
             return choice
         }
         
-    let absoluteOrRelativePathString =
+    let directoryPathString =
         Gen.constant (Bogus.Faker().System.DirectoryPath())
         
     module Month =
@@ -456,21 +459,18 @@ module Generator =
         }
         
     module Git =
-        let branchName =
-            gen {                
-                let! branchName =
-                    Gen.frequency [ 1, SematicVersion.semanticVersionWithVersionPrefixStr
-                                    1, Gen.elements [ "master"; "main"; "develop"; "feature"; "bugfix"; "release" ]]
-                return branchName
-            }
+        let branchName =            
+            Gen.frequency [ 1, SematicVersion.semanticVersionWithVersionPrefixStr
+                            1, Gen.elements [ "master"; "main"; "develop"; "feature"; "bugfix"; "release" ]]            
+        
+        let branchNameOrNone =
+            Gen.frequency [ 1, Gen.constant None
+                            3, branchName |> Gen.map Some ]
+            
             
         let commitMessage =
-            gen {                
-                let! choice =
-                    Gen.frequency [ 3, Gen.constant (Bogus.Faker().Lorem.Sentence())
-                                    1, Gen.elements [""; " "]]
-                return choice
-            }
+            Gen.frequency [ 3, Gen.constant (Bogus.Faker().Lorem.Sentence())
+                            1, Gen.elements [""; " "]]
         
         let commitHash =
             gen {
@@ -484,6 +484,26 @@ module Generator =
                 let! timeStamp = genValidDateTimeOffset
                 return { Message = commitMessage; Hash = commitHash; When = timeStamp }
             }
+            
+        let gitSignatureInfo : Gen<GitSignatureInfo> =
+            gen {
+                let! email = Gen.constant (Bogus.Faker().Person.Email)
+                let! name = Gen.constant (Bogus.Faker().Person.FullName)
+                let! timeStamp = Gen.constant (Bogus.Faker().Date.BetweenOffset(System.DateTimeOffset.MinValue, System.DateTimeOffset.MaxValue))
+                return { Email = email; Name = name; When = timeStamp }
+            }
+            
+        let gitTagInfo =
+            gen {
+                let! commit = gitCommitInfo
+                let name = commit.Message 
+                let! commit = Gen.frequency [
+                    1, Gen.constant None
+                    3, Gen.constant (Some commit)
+                ]
+                return { Name = name; Commit = commit }
+            }
+            
             
         let commit: Gen<Commit> =
             gen {
@@ -550,14 +570,11 @@ module Generator =
                 return choice
             }
             
-        let commitOrNone = 
-            gen {
-                let! choice = Gen.frequency [
-                    1, Gen.constant None
-                    3, commit |> Gen.map Some
-                ]
-                return choice
-            }        
+        let commitOrNone =
+            Gen.frequency [
+                1, Gen.constant None
+                3, commit |> Gen.map Some
+            ]
             
         let calendarVersionTag : Gen<Tag> =            
             gen {                
@@ -625,6 +642,30 @@ module Generator =
                 let! unversionedTags = unversionedTagsArray
                 return Array.append semanticVersionsTags unversionedTags                
             }
+            
+        let baseGitRepositoryInfo =
+            gen {
+                let! dir = directoryPathString
+                let! damaged = genBool
+                let! unborn = genBool
+                let! detached = genBool
+                let! branch = branchNameOrNone
+                let! commit = Gen.frequency [ 1, Gen.constant None; 3, gitCommitInfo |> Gen.map Some ]
+                let! signature = Gen.frequency [1, Gen.constant None; 3, gitSignatureInfo |> Gen.map Some ]
+                let! dirty = genBool
+                let! tags = Gen.arrayOf gitTagInfo
+                return {
+                    Directory = dir
+                    Damaged = damaged
+                    Unborn = unborn
+                    Detached = detached
+                    CurrentBranch = branch
+                    CurrentCommit = commit
+                    Signature = signature
+                    Dirty = dirty
+                    Tags = tags
+                }
+        }
 
 module Arbitrary =
     type internal validPatchUInt32 =
@@ -707,9 +748,9 @@ module Arbitrary =
         static member monthStampIncrement() =
             Arb.fromGen Generator.monthStampIncrement
             
-    type internal absoluteOrRelativePathString =
-        static member absoluteOrRelativePathString() =
-            Arb.fromGen Generator.absoluteOrRelativePathString
+    type internal directoryPathString =
+        static member directoryPathString() =
+            Arb.fromGen Generator.directoryPathString
             
     module internal Month =
         type inRangeByteMonth =
@@ -817,6 +858,10 @@ module Arbitrary =
             static member unversionedTagsArray() =
                 Arb.fromGen Generator.Git.unversionedTagsArray
                 
-        type semanticVersionsAndUnversionedTagsArray() =
+        type semanticVersionsAndUnversionedTagsArray =
             static member semanticVersionsAndUnversionedTagsArray() =
                 Arb.fromGen Generator.Git.semanticVersionsAndUnversionedTagsArray
+                
+        type baseGitRepositoryInfo =
+            static member baseGitRepositoryInfo() =
+                Arb.fromGen Generator.Git.baseGitRepositoryInfo

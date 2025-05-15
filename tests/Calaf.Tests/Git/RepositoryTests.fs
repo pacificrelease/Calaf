@@ -9,7 +9,6 @@ open Calaf.Domain.Repository
 open Calaf.Tests
 
 module TryCreatePropertiesTests =
-    // Empty path GitRepositoryInfo produces EmptyRepositoryPath error    
     [<Property(Arbitrary = [| typeof<Arbitrary.nullOrWhiteSpaceString> |])>]
     let ``Any GitRepositoryInfo with empty, null or whitespace path produces EmptyRepositoryPath error``
         (emptyOrWhitespaceString: string) (gitRepositoryInfo: GitRepositoryInfo) =
@@ -17,11 +16,31 @@ module TryCreatePropertiesTests =
             { gitRepositoryInfo with Directory = emptyOrWhitespaceString }
         tryCreate gitRepositoryInfo = Error EmptyRepositoryPath
         
-    // Damaged GitRepositoryInfo produces DamagedRepository error
-    [<Property(Arbitrary = [| typeof<Arbitrary.absoluteOrRelativePathString> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.directoryPathString> |])>]
     let ``Damaged GitRepositoryInfo produces damaged Repository``
         (directory: string) (gitRepositoryInfo: GitRepositoryInfo)=
         let updatedRepoInfo = { gitRepositoryInfo with Directory = directory; Damaged = true }
         match tryCreate updatedRepoInfo with
         | Ok (Damaged path) -> path = directory
+        | _ -> false
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.directoryPathString> |])>]
+    let ``Unborn GitRepositoryInfo produces unborn Repository``
+        (directory: string) (gitRepositoryInfo: GitRepositoryInfo)=
+        let updatedRepoInfo = { gitRepositoryInfo with Directory = directory; Damaged = false; Unborn = true }
+        match tryCreate updatedRepoInfo with
+        | Ok (Unborn path) -> path = directory
+        | _ -> false
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.directoryPathString> |])>]
+    let ``None commit of GitRepositoryInfo produces unborn Repository``
+        (directory: string) (gitRepositoryInfo: GitRepositoryInfo)=
+        let updatedRepoInfo =
+            { gitRepositoryInfo with
+                Directory = directory
+                Damaged = false
+                Unborn = false
+                CurrentCommit = None }
+        match tryCreate updatedRepoInfo with
+        | Ok (Unborn path) -> path = directory
         | _ -> false
