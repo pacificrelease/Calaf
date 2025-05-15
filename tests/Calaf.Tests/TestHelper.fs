@@ -369,7 +369,7 @@ module Generator =
         
     let calendarVersion =
         gen {
-            let! threeSectionCalVer = Gen.elements [true; false]
+            let! threeSectionCalVer = genBool
             return! if threeSectionCalVer
                 then threeSectionCalendarVersion
                 else twoSectionCalendarVersion
@@ -447,7 +447,7 @@ module Generator =
         
     let calendarVersionWithSameMonthStamp =
         gen {
-            let! threeSectionCalVer = Gen.elements [true; false]
+            let! threeSectionCalVer = genBool
             return! if threeSectionCalVer
                 then threePartCalendarVersionWithSameMonthStamp
                 else twoPartCalendarVersionWithSameMonthStamp                        

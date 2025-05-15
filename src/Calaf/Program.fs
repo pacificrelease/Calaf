@@ -6,7 +6,7 @@ open System
 open Calaf.Application.Workspace
 open Calaf.Infrastructure
 
-let path = null
+let path = "../../../../.."
 let timeStamp = Clock.now()
 let result =
     getWorkspace
