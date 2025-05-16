@@ -110,10 +110,14 @@ type Project =
     | Versioned   of VersionedProject
     | Unversioned of UnversionedProject    
 
-type Suite = {
+type SuiteMetadata = {
     Version: CalendarVersion option
     Projects: Project[]
 }
+
+type Suite =
+    | Empty
+    | Set of SuiteMetadata
 
 type Workspace = {
     Directory: string

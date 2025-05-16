@@ -21,7 +21,9 @@ type DomainError =
     | NotFoundXmlVersionElement of projectName: string
     
     // Suite errors
-    | NoProjectsVersion
+    // bump error
+    | BumpEmptySuite
+    | NotFoundCalendarVersionPrerequisites
     
     // Git
     // Head errors
