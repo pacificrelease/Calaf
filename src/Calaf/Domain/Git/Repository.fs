@@ -6,14 +6,14 @@ open Calaf.Contracts
 open Calaf.Domain.DomainTypes
 open Calaf.Domain.DomainEvents
 
-let toState = function
+let private toState = function
     | Damaged  _ -> RepositoryState.Damaged
     | Dirty    _ -> RepositoryState.Dirty
     | Unborn   _ -> RepositoryState.Unborn
     | Unsigned _ -> RepositoryState.Unsigned
     | Ready    _ -> RepositoryState.Ready
     
-let toRepositoryCreated repo =
+let private toRepositoryCreated repo =
     let state = toState repo
     let version =
         match repo with
