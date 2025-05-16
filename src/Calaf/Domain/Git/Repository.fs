@@ -20,7 +20,7 @@ let toRepositoryCreated repo =
         | Dirty (_, _, _, calendarVersion)
         | Ready (_, _, _, calendarVersion) -> Option.map CalVer calendarVersion
         | _ -> None
-    RepositoryCreated { Version = version; State = state } |> DomainEvent.Repository
+    RepositoryCreated { Version = version; State = state } |> DomainEvent.Repository    
 
 let tryCreate (repoInfo: GitRepositoryInfo) =
     let tryValidatePath path =
@@ -70,7 +70,7 @@ let tryCreate (repoInfo: GitRepositoryInfo) =
             let event = toRepositoryCreated repo
             return (repo, [event])
     }
-
+    
 let tryBump (repo: Repository) (nextVersion: CalendarVersion) =
     result {
         match repo with        
@@ -83,12 +83,9 @@ let tryBump (repo: Repository) (nextVersion: CalendarVersion) =
                 return! CurrentRepository |> Error
             else
                 let repo = Ready (dir, head, signature, Some nextVersion)
-                let event = RepositoryBumped {
-                    Version = nextVersion
-                    Signature = signature
-                    State = toState repo
-                }
-                return (event, event)
+                let event = { Version = nextVersion; Signature = signature; State = toState repo}
+                            |> RepositoryBumped |> DomainEvent.Repository
+                return (event, [event])
         | Dirty _    -> return! DirtyRepository    |> Error
         | Unborn _   -> return! UnbornRepository   |> Error
         | Unsigned _ -> return! UnsignedRepository |> Error

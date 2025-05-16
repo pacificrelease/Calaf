@@ -8,7 +8,7 @@ type RepositoryCreated = {
     State: RepositoryState
 }
 
-type CalendarVersionBumped = {
+type RepositoryCalendarVersionBumped = {
     Version: CalendarVersion
     Signature: Signature
     State: RepositoryState
@@ -16,7 +16,7 @@ type CalendarVersionBumped = {
 
 type RepositoryEvent =
     | RepositoryCreated of RepositoryCreated
-    | RepositoryBumped  of CalendarVersionBumped
+    | RepositoryBumped  of RepositoryCalendarVersionBumped
     
 type DomainEvent =
     | Repository of RepositoryEvent
