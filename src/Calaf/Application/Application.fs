@@ -29,7 +29,7 @@ module Workspace =
             let path = getPathOrCurrentDir path
             let! dir = readDirectory path supportedFilesPattern |> Result.mapError CalafError.Infrastructure
             let! repo = readGit path tenTags timeStamp          |> Result.mapError CalafError.Infrastructure            
-            let! workspace = Workspace.tryCreate (dir, repo)    |> Result.mapError CalafError.Domain
+            let! workspace, _ = Workspace.tryCreate (dir, repo) |> Result.mapError CalafError.Domain
                 
             return workspace            
         }
