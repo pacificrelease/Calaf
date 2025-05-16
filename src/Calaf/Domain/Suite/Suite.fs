@@ -6,7 +6,7 @@ open Calaf.Domain.DomainTypes
 open Calaf.Domain.DomainEvents
 open Calaf.Domain.Project
 
-let toSuiteCreated suite =
+let private toSuiteCreated suite =
     match suite with
     | Empty  ->
         SuiteCreated {
