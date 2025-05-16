@@ -5,6 +5,7 @@ open FsCheck.Xunit
 open Calaf.Contracts
 open Calaf.Domain
 open Calaf.Domain.DomainTypes
+open Calaf.Domain.DomainEvents
 open Calaf.Domain.Repository
 open Calaf.Tests
 
@@ -17,23 +18,29 @@ module TryCreatePropertiesTests =
         tryCreate gitRepositoryInfo = Error EmptyRepositoryPath
         
     [<Property(Arbitrary = [| typeof<Arbitrary.directoryPathString> |])>]
-    let ``Damaged GitRepositoryInfo produces damaged Repository``
+    let ``Damaged GitRepositoryInfo produces damaged Repository with the corresponding event``
         (directory: string) (gitRepositoryInfo: GitRepositoryInfo)=
         let updatedRepoInfo = { gitRepositoryInfo with Directory = directory; Damaged = true }
         match tryCreate updatedRepoInfo with
-        | Ok (Damaged path) -> path = directory
+        | Ok (Damaged path, events) ->
+            path = directory &&
+            events.Length = 1 &&
+            events.Head = (RepositoryCreated { Version = None; State = RepositoryState.Damaged } |> DomainEvent.Repository)
         | _ -> false
         
     [<Property(Arbitrary = [| typeof<Arbitrary.directoryPathString> |])>]
-    let ``Unborn GitRepositoryInfo produces unborn Repository``
+    let ``Unborn GitRepositoryInfo produces unborn Repository with the corresponding event``
         (directory: string) (gitRepositoryInfo: GitRepositoryInfo)=
         let updatedRepoInfo = { gitRepositoryInfo with Directory = directory; Damaged = false; Unborn = true }
         match tryCreate updatedRepoInfo with
-        | Ok (Unborn path) -> path = directory
+        | Ok (Unborn path, events) ->
+            path = directory &&
+            events.Length = 1 &&
+            events.Head = (RepositoryCreated { Version = None; State = RepositoryState.Unborn } |> DomainEvent.Repository)
         | _ -> false
         
     [<Property(Arbitrary = [| typeof<Arbitrary.directoryPathString> |])>]
-    let ``None commit of GitRepositoryInfo produces unborn Repository``
+    let ``None commit of GitRepositoryInfo produces unborn Repository with the corresponding event``
         (directory: string) (gitRepositoryInfo: GitRepositoryInfo)=
         let updatedRepoInfo =
             { gitRepositoryInfo with
@@ -42,5 +49,8 @@ module TryCreatePropertiesTests =
                 Unborn = false
                 CurrentCommit = None }
         match tryCreate updatedRepoInfo with
-        | Ok (Unborn path) -> path = directory
+        | Ok (Unborn path, events) ->
+            path = directory &&
+            events.Length = 1 &&
+            events.Head = (RepositoryCreated { Version = None; State = RepositoryState.Unborn } |> DomainEvent.Repository)
         | _ -> false

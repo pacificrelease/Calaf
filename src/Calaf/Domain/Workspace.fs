@@ -14,10 +14,6 @@ let tryCreate (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
             |> Suite.create
             
         let! repoResult = repoInfo |> Option.traverseResult Repository.tryCreate
-        // let repo, event = 
-        //     match repoResult with
-        //     | Some (r, e) -> (Some r, Some e)
-        //     | None -> (None, None)
         return { Directory  = directory.Directory
                  Repository = repoResult |> Option.map fst 
                  Suite      = suite }
