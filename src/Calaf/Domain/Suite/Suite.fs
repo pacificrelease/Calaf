@@ -20,7 +20,11 @@ let private toSuiteCreated suite =
             CalendarVersionProjectsCount = chooseCalendarVersioned sm.Projects |> Seq.length |> uint16
             TotalProjectsCount = sm.Projects |> Seq.length |> uint16
         } |> DomainEvent.Suite
-    
+        
+let tryGetCalendarVersion suite =
+    match suite with
+    | Set { Version = version } -> version
+    | Empty -> None    
     
 let bump (suite: Suite) (nextVersion: CalendarVersion) =
     result {
