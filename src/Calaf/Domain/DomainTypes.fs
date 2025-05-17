@@ -74,8 +74,8 @@ type Repository =
     | Damaged  of directory: string
     | Unsigned of directory: string
     | Unborn   of directory: string
-    | Dirty    of directory: string * head: Head * signature: Signature * currentVersion: CalendarVersion option
-    | Ready    of directory: string * head: Head * signature: Signature * currentVersion: CalendarVersion option
+    | Dirty    of directory: string * head: Head * signature: Signature * version: CalendarVersion option
+    | Ready    of directory: string * head: Head * signature: Signature * version: CalendarVersion option
 
 // Project
 type Language =
@@ -120,6 +120,7 @@ type Suite =
 
 type Workspace = {
     Directory: string
+    Version: 
     Repository: Repository option
     Suite: Suite
 }
