@@ -6,8 +6,7 @@ open Calaf.Extensions.InternalExtensions
 open Calaf.Contracts
 open Calaf.Domain.DomainTypes
 
-module internal Schema =
-    
+module internal Schema =    
     [<Literal>]
     let private VersionXElementName = "Version"
     [<Literal>]
@@ -27,19 +26,7 @@ module internal Schema =
             |> Seq.tryExactlyOne
             |> Option.bind Seq.tryHead
             |> Option.map (fun versionElement -> versionElement.SetValue(version); Xml content)
-        }
-    
-let chooseCalendarVersioned (projects: Project seq) : Project seq =
-    projects
-    |> Seq.filter (function
-        | Versioned { Version = CalVer _ }  -> true
-        | _ -> false)
-
-let chooseCalendarVersions (projects: Project seq) : CalendarVersion seq =
-    projects
-    |> Seq.choose (function
-        | Versioned { Version = CalVer version } -> Some version
-        | _ -> None)
+        } 
 
 let tryCreate (projectInfo: ProjectXmlFileInfo) : Project option =        
     let tryExtractVersion (xml: System.Xml.Linq.XElement) : Version option =
@@ -62,6 +49,18 @@ let tryCreate (projectInfo: ProjectXmlFileInfo) : Project option =
                 Versioned { Metadata = metadata; Content = content; Language = language; Version = version }
             | None -> Unversioned { Metadata = metadata; Language = language }
     }
+    
+let chooseCalendarVersioned (projects: Project seq) : Project seq =
+    projects
+    |> Seq.filter (function
+        | Versioned { Version = CalVer _ }  -> true
+        | _ -> false)
+
+let chooseCalendarVersions (projects: Project seq) : CalendarVersion seq =
+    projects
+    |> Seq.choose (function
+        | Versioned { Version = CalVer version } -> Some version
+        | _ -> None)
     
 let tryBump (project: VersionedProject) (nextVersion: CalendarVersion) =    
     match project.Content with
