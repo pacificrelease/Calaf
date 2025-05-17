@@ -7,6 +7,16 @@ open Calaf.Contracts
 open Calaf.Domain.DomainTypes
 open Calaf.Domain.DomainEvents
 
+module Events =
+    let toWorkspaceCreated (workspace: Workspace) =
+        WorkspaceCreated {
+            Directory = workspace.Directory
+            Version = workspace.Version
+            RepositoryExist = workspace.Repository |> Option.isSome
+            RepositoryVersion = workspace.Repository |> Option.bind Repository.tryGetCalendarVersion
+            SuiteVersion = Suite.getCalendarVersion workspace.Suite
+        } |> DomainEvent.Workspace    
+
 let private combineVersions suite repoOption =
     [
         yield Suite.getCalendarVersion suite
@@ -35,15 +45,7 @@ let tryCreate (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
             Suite      = suite
         }
         
-        let workspaceEvent =
-            WorkspaceCreated {
-                Directory = directory.Directory
-                Version = version
-                RepositoryExist = repoInfo.IsSome
-                RepositoryVersion = repoResult |> Option.bind (fun (repo, _) -> Repository.tryGetCalendarVersion repo)
-                SuiteVersion = Suite.getCalendarVersion suite
-            }
-            |> DomainEvent.Workspace
-        let events = workspaceEvent :: events
+        let event = Events.toWorkspaceCreated workspace
+        let events = event :: events
         return workspace, events        
     }
