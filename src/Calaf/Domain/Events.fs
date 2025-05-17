@@ -21,7 +21,7 @@ type RepositoryEvent =
     
 // Suite events
 type SuiteCreated = {
-    CalendarVersion: CalendarVersion option
+    CalendarVersion: CalendarVersion
     CalendarVersionProjectsCount: uint16
     TotalProjectsCount: uint16
 }
@@ -34,7 +34,7 @@ type WorkspaceCreated = {
     Directory: string
     RepositoryExist: bool
     RepositoryVersion: CalendarVersion option
-    SuiteVersion: CalendarVersion option
+    SuiteVersion: CalendarVersion
 }
 
 type WorkspaceEvent =

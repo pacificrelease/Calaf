@@ -22,7 +22,7 @@ let tryCreate (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
         
         let workspace = {
             Directory  = directory.Directory
-            Repository = repoResult  |> Option.map fst 
+            Repository = repoResult |> Option.map fst 
             Suite      = suite
         }
         
@@ -31,7 +31,7 @@ let tryCreate (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
                 Directory = directory.Directory
                 RepositoryExist = repoInfo.IsSome
                 RepositoryVersion = repoResult |> Option.bind (fun (repo, _) -> Repository.tryGetCalendarVersion repo)
-                SuiteVersion = Suite.tryGetCalendarVersion suite
+                SuiteVersion = Suite.getCalendarVersion suite
             }
             |> DomainEvent.Workspace
         let events = workspaceEvent :: events

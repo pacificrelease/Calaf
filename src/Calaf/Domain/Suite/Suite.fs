@@ -1,5 +1,6 @@
 module internal Calaf.Domain.Suite
 
+open Calaf.Extensions.InternalExtensions
 open FsToolkit.ErrorHandling
 
 open Calaf.Domain.DomainTypes
@@ -17,34 +18,33 @@ module Events =
             } |> DomainEvent.Suite
 
 let tryCreate (projects: Project[]) =
-    match projects with
-    | [||] ->        
-        EmptyProjectsSuite |> Error
-    | p ->
-        let version = p |> chooseCalendarVersions |> Version.tryMax
-        let suite = { Version = version; Projects = p } |> Suite.StandardSet
-        let event = suite |> Events.toSuiteCreated
-        (suite, [event])  |> Ok
+    result {
+        match projects with
+        | [||] ->
+            return! EmptyProjectsSuite |> Error            
+        | projects ->
+            let! version = projects
+                        |> chooseCalendarVersions
+                        |> Version.tryMax
+                        |> Option.toResult NoCalendarVersion                
+            let suite = { Version = version; Projects = projects } |> Suite.StandardSet
+            let event = suite |> Events.toSuiteCreated
+            return (suite, [event])        
+    }    
         
-let tryGetCalendarVersion suite =
+let getCalendarVersion suite =
     match suite with
     | StandardSet { Version = version } -> version
     
 let tryBump (suite: Suite) (nextVersion: CalendarVersion) =
     result {
         match suite with
-        | StandardSet { Version = Some _; Projects = projects } ->
+        | StandardSet { Version = _; Projects = projects } ->
             let! bumpedProjects =
                 projects
                 |> Array.traverseResultM (function                    
                     | Versioned { Version = CalVer _ } as Versioned p ->
                         tryBump p nextVersion |> Result.map Versioned
                     | project -> Ok project)                    
-            let sm = { 
-                Version = Some nextVersion
-                Projects = bumpedProjects 
-            }
-            return sm |> StandardSet
-        | StandardSet _ ->
-            return! NoCalendarVersion |> Error
+            return { Version  = nextVersion; Projects = bumpedProjects } |> StandardSet
     }

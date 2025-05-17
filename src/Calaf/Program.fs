@@ -23,34 +23,14 @@ match result with
     
 | Ok workspace ->
     match workspace.Repository, workspace.Suite with
-    | Some _, Suite.StandardSet set ->
-        match set.Version with
-        | Some version ->
-            printfn $"Workspace: {workspace.Directory}."
-            printfn "Git repository found. Skipping now..."
-            printfn $"Current Suite version is {version}. 🚀. \n"
-            Environment.Exit(0)
+    | Some _, Suite.StandardSet { Version = version; Projects = _ } ->
+        printfn $"Workspace: {workspace.Directory}."
+        printfn "Git repository found. Skipping now..."
+        printfn $"Current Suite version is {version}. 🚀. \n"
+        Environment.Exit(0)
             
-        | None ->
-            printfn $"Workspace: {workspace.Directory}."
-            printfn "Git repository found. Skipping now..."
-            printfn "Suite calendar version not found."
-            printfn "Please init and add a calendar version's Version element to the PropertyGroup of the every projects."
-            printfn "For example: <Version>2023.10</Version> \n"
-            Environment.Exit(1)
-            
-    | None, Suite.StandardSet set ->
-        match set.Version with
-        | Some version ->
-            printfn $"Workspace: {workspace.Directory}."
-            printfn "Git repository not found."
-            printfn $"Current Suite version is {version}. 🚀. \n"
-            Environment.Exit(0)
-            
-        | None ->
-            printfn $"Workspace: {workspace.Directory}."
-            printfn "Git repository not found."
-            printfn "Suite calendar version not found."
-            printfn "Please init and add a calendar version's Version element to the PropertyGroup of the every projects."
-            printfn "For example: <Version>2023.10</Version> \n"
-            Environment.Exit(1)
+    | None, Suite.StandardSet { Version = version; Projects = _ } ->
+        printfn $"Workspace: {workspace.Directory}."
+        printfn "Git repository not found."
+        printfn $"Current Suite version is {version}. 🚀. \n"
+        Environment.Exit(0)
