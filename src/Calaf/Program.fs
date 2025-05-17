@@ -23,7 +23,7 @@ match result with
     
 | Ok workspace ->
     match workspace.Repository, workspace.Suite with
-    | Some _, Suite.Set set ->
+    | Some _, Suite.StandardSet set ->
         match set.Version with
         | Some version ->
             printfn $"Workspace: {workspace.Directory}."
@@ -39,7 +39,7 @@ match result with
             printfn "For example: <Version>2023.10</Version> \n"
             Environment.Exit(1)
             
-    | None, Suite.Set set ->
+    | None, Suite.StandardSet set ->
         match set.Version with
         | Some version ->
             printfn $"Workspace: {workspace.Directory}."

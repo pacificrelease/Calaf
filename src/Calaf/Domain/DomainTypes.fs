@@ -116,7 +116,7 @@ type SuiteMetadata = {
 }
 
 type Suite =
-    | Set of SuiteMetadata
+    | StandardSet of SuiteMetadata
 
 type Workspace = {
     Directory: string

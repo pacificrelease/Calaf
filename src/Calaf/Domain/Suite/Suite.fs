@@ -9,7 +9,7 @@ open Calaf.Domain.Project
 module Events =
     let toSuiteCreated suite =
         match suite with        
-        | Set sm ->
+        | StandardSet sm ->
             SuiteCreated {
                 CalendarVersion = sm.Version
                 CalendarVersionProjectsCount = chooseCalendarVersioned sm.Projects |> Seq.length |> uint16
@@ -22,18 +22,18 @@ let create (projects: Project[]) =
         EmptyProjectsSuite |> Error
     | p ->
         let version = p |> chooseCalendarVersions |> Version.tryMax
-        let suite = { Version = version; Projects = p } |> Suite.Set
+        let suite = { Version = version; Projects = p } |> Suite.StandardSet
         let event = suite |> Events.toSuiteCreated
         (suite, [event])  |> Ok
         
 let tryGetCalendarVersion suite =
     match suite with
-    | Set { Version = version } -> version
+    | StandardSet { Version = version } -> version
     
 let tryBump (suite: Suite) (nextVersion: CalendarVersion) =
     result {
         match suite with
-        | Set { Version = Some _; Projects = projects } ->
+        | StandardSet { Version = Some _; Projects = projects } ->
             let! bumpedProjects =
                 projects
                 |> Array.traverseResultM (function                    
@@ -44,7 +44,7 @@ let tryBump (suite: Suite) (nextVersion: CalendarVersion) =
                 Version = Some nextVersion
                 Projects = bumpedProjects 
             }
-            return sm |> Set
-        | Set _ ->
+            return sm |> StandardSet
+        | StandardSet _ ->
             return! NotFoundCalendarVersionPrerequisites |> Error
     }
