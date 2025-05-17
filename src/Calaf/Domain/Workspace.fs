@@ -5,20 +5,18 @@ open FsToolkit.ErrorHandling
 open Calaf.Contracts
 open Calaf.Domain.DomainTypes
 open Calaf.Domain.DomainEvents
-open Calaf.Domain.Repository
-open Calaf.Domain.Suite
 
 let tryCreate (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
     result {
-        let suite, suiteEvents =
+        let! suite, suiteEvents =
             directory.Projects
             |> Array.map Project.tryCreate
             |> Array.choose id
-            |> create
+            |> Suite.tryCreate
             
         let! repoResult =
             repoInfo
-            |> Option.traverseResult tryCreate
+            |> Option.traverseResult Repository.tryCreate
             
         let events = match repoResult with | Some (_, repoEvents) -> suiteEvents @ repoEvents | None -> suiteEvents
         
@@ -33,7 +31,7 @@ let tryCreate (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
                 Directory = directory.Directory
                 RepositoryExist = repoInfo.IsSome
                 RepositoryVersion = repoResult |> Option.bind (fun (repo, _) -> Repository.tryGetCalendarVersion repo)
-                SuiteVersion = tryGetCalendarVersion suite
+                SuiteVersion = Suite.tryGetCalendarVersion suite
             }
             |> DomainEvent.Workspace
         let events = workspaceEvent :: events

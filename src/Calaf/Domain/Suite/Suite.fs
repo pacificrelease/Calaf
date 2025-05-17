@@ -16,7 +16,7 @@ module Events =
                 TotalProjectsCount = sm.Projects |> Seq.length |> uint16
             } |> DomainEvent.Suite
 
-let create (projects: Project[]) =
+let tryCreate (projects: Project[]) =
     match projects with
     | [||] ->        
         EmptyProjectsSuite |> Error
