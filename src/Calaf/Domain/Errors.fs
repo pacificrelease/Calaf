@@ -24,7 +24,7 @@ type DomainError =
     // create error
     | EmptyProjectsSuite
     // bump errors
-    | NotFoundCalendarVersionPrerequisites
+    | NoCalendarVersion
     
     // Git
     // Head errors

@@ -46,5 +46,5 @@ let tryBump (suite: Suite) (nextVersion: CalendarVersion) =
             }
             return sm |> StandardSet
         | StandardSet _ ->
-            return! NotFoundCalendarVersionPrerequisites |> Error
+            return! NoCalendarVersion |> Error
     }
