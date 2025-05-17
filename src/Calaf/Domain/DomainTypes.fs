@@ -120,6 +120,7 @@ type Suite =
 
 type Workspace = {
     Directory: string
+    Version: CalendarVersion
     Repository: Repository option
     Suite: Suite
 }

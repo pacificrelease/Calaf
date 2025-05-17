@@ -32,6 +32,7 @@ type SuiteEvent =
 // Workspace events
 type WorkspaceCreated = {
     Directory: string
+    Version: CalendarVersion
     RepositoryExist: bool
     RepositoryVersion: CalendarVersion option
     SuiteVersion: CalendarVersion

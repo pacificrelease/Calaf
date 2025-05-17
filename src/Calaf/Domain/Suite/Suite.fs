@@ -1,8 +1,8 @@
 module internal Calaf.Domain.Suite
 
-open Calaf.Extensions.InternalExtensions
 open FsToolkit.ErrorHandling
 
+open Calaf.Extensions.InternalExtensions
 open Calaf.Domain.DomainTypes
 open Calaf.Domain.DomainEvents
 open Calaf.Domain.Project
