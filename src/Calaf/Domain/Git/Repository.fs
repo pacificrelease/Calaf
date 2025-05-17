@@ -6,21 +6,30 @@ open Calaf.Contracts
 open Calaf.Domain.DomainTypes
 open Calaf.Domain.DomainEvents
 
-let private toState = function
-    | Damaged  _ -> RepositoryState.Damaged
-    | Dirty    _ -> RepositoryState.Dirty
-    | Unborn   _ -> RepositoryState.Unborn
-    | Unsigned _ -> RepositoryState.Unsigned
-    | Ready    _ -> RepositoryState.Ready
-    
-let private toRepositoryCreated repo =
-    let state = toState repo
-    let version =
-        match repo with
-        | Dirty (_, _, _, calendarVersion)
-        | Ready (_, _, _, calendarVersion) -> Option.map CalVer calendarVersion
-        | _ -> None
-    RepositoryCreated { Version = version; State = state } |> DomainEvent.Repository    
+module Events =
+    let private toState = function
+        | Damaged  _ -> RepositoryState.Damaged
+        | Dirty    _ -> RepositoryState.Dirty
+        | Unborn   _ -> RepositoryState.Unborn
+        | Unsigned _ -> RepositoryState.Unsigned
+        | Ready    _ -> RepositoryState.Ready
+        
+    let toRepositoryCreated repo =
+        let state = toState repo
+        let version =
+            match repo with
+            | Dirty (_, _, _, calendarVersion)
+            | Ready (_, _, _, calendarVersion) -> Option.map CalVer calendarVersion
+            | _ -> None
+        RepositoryCreated { Version = version; State = state } |> DomainEvent.Repository
+        
+    let toRepositoryBumped repo version signature =
+        let state = toState repo        
+        RepositoryBumped {
+            Version = version
+            Signature = signature
+            State = state
+        } |> DomainEvent.Repository
 
 let tryCreate (repoInfo: GitRepositoryInfo) =
     let tryValidatePath path =
@@ -44,30 +53,30 @@ let tryCreate (repoInfo: GitRepositoryInfo) =
         match repoInfo with
         | { Damaged = true } ->
             let repo = Damaged path
-            let event = toRepositoryCreated repo
+            let event = Events.toRepositoryCreated repo
             return (repo, [event])
         | i when i.Unborn || i.CurrentCommit.IsNone ->
             let repo = Unborn path
-            let event = toRepositoryCreated repo
+            let event = Events.toRepositoryCreated repo
             return (repo, [event])
         | i when i.Dirty &&
                  i.CurrentCommit.IsSome &&
                  i.Signature.IsSome ->
             let! repo = tryCreate Repository.Dirty i.Signature.Value i.CurrentCommit.Value i.CurrentBranch
-            let event = toRepositoryCreated repo
+            let event = Events.toRepositoryCreated repo
             return (repo, [event])
         | i when i.CurrentCommit.IsSome &&
                  i.Signature.IsSome ->
             let! repo = tryCreate Repository.Ready i.Signature.Value i.CurrentCommit.Value i.CurrentBranch
-            let event = toRepositoryCreated repo
+            let event = Events.toRepositoryCreated repo
             return (repo, [event])
         | i when i.Signature.IsNone ->
             let repo = Unsigned path
-            let event = toRepositoryCreated repo
+            let event = Events.toRepositoryCreated repo
             return (repo, [event])
         | _ ->
             let repo = Damaged path
-            let event = toRepositoryCreated repo
+            let event = Events.toRepositoryCreated repo
             return (repo, [event])
     }
     
@@ -83,8 +92,7 @@ let tryBump (repo: Repository) (nextVersion: CalendarVersion) =
                 return! CurrentRepository |> Error
             else
                 let repo = Ready (dir, head, signature, Some nextVersion)
-                let event = { Version = nextVersion; Signature = signature; State = toState repo}
-                            |> RepositoryBumped |> DomainEvent.Repository
+                let event = Events.toRepositoryBumped repo nextVersion signature
                 return (event, [event])
         | Dirty _    -> return! DirtyRepository    |> Error
         | Unborn _   -> return! UnbornRepository   |> Error
