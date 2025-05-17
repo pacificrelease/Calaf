@@ -23,20 +23,6 @@ match result with
     
 | Ok workspace ->
     match workspace.Repository, workspace.Suite with
-    | Some _, Suite.Empty ->
-        printfn $"Workspace: {workspace.Directory}."
-        printfn "Git repository found. Skipping now..."
-        printfn "Suite is empty. No projects found."
-        printfn "Please add suitable projects to the workspace."
-        Environment.Exit(1)
-        
-    | None, Suite.Empty ->
-        printfn $"Workspace: {workspace.Directory}."
-        printfn "Git repository not found."
-        printfn "Suite is empty. No projects found."
-        printfn "Please add suitable projects to the workspace."
-        Environment.Exit(1)
-        
     | Some _, Suite.Set set ->
         match set.Version with
         | Some version ->

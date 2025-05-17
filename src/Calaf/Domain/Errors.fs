@@ -20,9 +20,10 @@ type DomainError =
     // Project errors
     | NotFoundXmlVersionElement of projectName: string
     
-    // Suite errors
-    // bump error
-    | BumpEmptySuite
+    // Suite
+    // create error
+    | EmptyProjectsSuite
+    // bump errors
     | NotFoundCalendarVersionPrerequisites
     
     // Git

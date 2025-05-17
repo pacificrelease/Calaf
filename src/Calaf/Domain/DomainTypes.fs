@@ -116,7 +116,6 @@ type SuiteMetadata = {
 }
 
 type Suite =
-    | Empty
     | Set of SuiteMetadata
 
 type Workspace = {
