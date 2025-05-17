@@ -22,13 +22,24 @@ module Events =
                 TotalProjectsCount = sm.Projects |> Seq.length |> uint16
             } |> DomainEvent.Suite
 
+let create (projects: Project[]) =
+    match projects with
+    | [||] ->        
+        let suite = Suite.Empty
+        let event = suite |> Events.toSuiteCreated
+        suite, [event]
+    | p ->
+        let version = p |> chooseCalendarVersions |> Version.tryMax
+        let suite = { Version = version; Projects = p } |> Suite.Set
+        let event = suite |> Events.toSuiteCreated
+        suite, [event]
         
 let tryGetCalendarVersion suite =
     match suite with
     | Set { Version = version } -> version
     | Empty -> None    
     
-let bump (suite: Suite) (nextVersion: CalendarVersion) =
+let tryBump (suite: Suite) (nextVersion: CalendarVersion) =
     result {
         match suite with
         | Set { Version = Some _; Projects = projects } ->
@@ -48,15 +59,3 @@ let bump (suite: Suite) (nextVersion: CalendarVersion) =
         | Empty ->
             return! BumpEmptySuite |> Error
     }
-    
-let create (projects: Project[]) =
-    match projects with
-    | [||] ->        
-        let suite = Suite.Empty
-        let event = suite |> Events.toSuiteCreated
-        suite, [event]
-    | p ->
-        let version = p |> chooseCalendarVersions |> Version.tryMax
-        let suite = { Version = version; Projects = p } |> Suite.Set
-        let event = suite |> Events.toSuiteCreated
-        suite, [event]
