@@ -80,6 +80,12 @@ let tryCreate (repoInfo: GitRepositoryInfo) =
             return (repo, [event])
     }
     
+let tryGetCalendarVersion repo =
+    match repo with
+    | Ready (_, _, _, version) -> version
+    | Dirty (_, _, _, version) -> version
+    | _ -> None
+    
 let tryBump (repo: Repository) (nextVersion: CalendarVersion) =
     result {
         match repo with        
@@ -99,9 +105,3 @@ let tryBump (repo: Repository) (nextVersion: CalendarVersion) =
         | Unsigned _ -> return! UnsignedRepository |> Error
         | Damaged _  -> return! DamagedRepository  |> Error
     }
-    
-let tryGetCalendarVersion repo =
-    match repo with
-    | Ready (_, _, _, version) -> version
-    | Dirty (_, _, _, version) -> version
-    | _ -> None
