@@ -6,20 +6,22 @@ open Calaf.Domain.DomainTypes
 open Calaf.Domain.DomainEvents
 open Calaf.Domain.Project
 
-let private toSuiteCreated suite =
-    match suite with
-    | Empty  ->
-        SuiteCreated {
-            CalendarVersion = None
-            CalendarVersionProjectsCount = 0us
-            TotalProjectsCount = 0us
-        } |> DomainEvent.Suite
-    | Set sm ->
-        SuiteCreated {
-            CalendarVersion = sm.Version
-            CalendarVersionProjectsCount = chooseCalendarVersioned sm.Projects |> Seq.length |> uint16
-            TotalProjectsCount = sm.Projects |> Seq.length |> uint16
-        } |> DomainEvent.Suite
+module Events =
+    let toSuiteCreated suite =
+        match suite with
+        | Empty  ->
+            SuiteCreated {
+                CalendarVersion = None
+                CalendarVersionProjectsCount = 0us
+                TotalProjectsCount = 0us
+            } |> DomainEvent.Suite
+        | Set sm ->
+            SuiteCreated {
+                CalendarVersion = sm.Version
+                CalendarVersionProjectsCount = chooseCalendarVersioned sm.Projects |> Seq.length |> uint16
+                TotalProjectsCount = sm.Projects |> Seq.length |> uint16
+            } |> DomainEvent.Suite
+
         
 let tryGetCalendarVersion suite =
     match suite with
@@ -51,10 +53,10 @@ let create (projects: Project[]) =
     match projects with
     | [||] ->        
         let suite = Suite.Empty
-        let event = toSuiteCreated suite
+        let event = suite |> Events.toSuiteCreated
         suite, [event]
     | p ->
         let version = p |> chooseCalendarVersions |> Version.tryMax
         let suite = { Version = version; Projects = p } |> Suite.Set
-        let event = toSuiteCreated suite
+        let event = suite |> Events.toSuiteCreated
         suite, [event]
