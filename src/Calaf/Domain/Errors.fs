@@ -39,3 +39,6 @@ type DomainError =
     | DamagedRepository
     | UnbornRepository
     | UnsignedRepository
+    
+    // Workspace
+    | CurrentWorkspace
