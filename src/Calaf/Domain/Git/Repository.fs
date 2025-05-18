@@ -99,9 +99,9 @@ let tryBump (repo: Repository) (nextVersion: CalendarVersion) =
             else
                 let repo = Ready (dir, head, signature, Some nextVersion)
                 let event = Events.toRepositoryBumped repo nextVersion signature
-                return (event, [event])
-        | Dirty _    -> return! DirtyRepository    |> Error
-        | Unborn _   -> return! UnbornRepository   |> Error
+                return (repo, [event])
+        | Dirty    _ -> return! DirtyRepository    |> Error
+        | Unborn   _ -> return! UnbornRepository   |> Error
         | Unsigned _ -> return! UnsignedRepository |> Error
-        | Damaged _  -> return! DamagedRepository  |> Error
+        | Damaged  _ -> return! DamagedRepository  |> Error
     }
