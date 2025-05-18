@@ -10,11 +10,11 @@ open Calaf.Infrastructure
 let path = String.Empty
 let timeStamp = Clock.now()
 let result =
-    getWorkspace
+    bumpWorkspace
         FileSystem.tryReadWorkspace
         Git.tryReadRepository
+        Clock.now
         path
-        timeStamp
 
 match result with
 | Error error ->
