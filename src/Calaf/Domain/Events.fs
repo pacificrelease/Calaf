@@ -46,8 +46,16 @@ type WorkspaceCreated = {
     SuiteVersion: CalendarVersion
 }
 
+type WorkspaceBumped = {
+    Directory: string
+    PreviousCalendarVersion: CalendarVersion
+    NewCalendarVersion: CalendarVersion
+    RepositoryExist: bool
+}
+
 type WorkspaceEvent =
     | WorkspaceCreated of WorkspaceCreated
+    | WorkspaceBumped  of WorkspaceBumped
     
 type DomainEvent =
     | Repository of RepositoryEvent
