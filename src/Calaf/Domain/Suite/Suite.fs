@@ -16,6 +16,16 @@ module Events =
                 CalendarVersionProjectsCount = chooseCalendarVersioned sm.Projects |> Seq.length |> uint16
                 TotalProjectsCount = sm.Projects |> Seq.length |> uint16
             } |> DomainEvent.Suite
+            
+    let toSuiteBumped suite previousVersion bumpedProjects =
+        match suite with        
+        | StandardSet sm ->
+            SuiteBumped {
+                PreviousCalendarVersion = previousVersion
+                NewCalendarVersion = sm.Version
+                ProjectsBumpedCount = bumpedProjects |> Seq.length |> uint16
+                TotalProjectsCount = sm.Projects |> Seq.length |> uint16
+            } |> DomainEvent.Suite
 
 let tryCreate (projects: Project[]) =
     result {
@@ -39,12 +49,22 @@ let getCalendarVersion suite =
 let tryBump (suite: Suite) (nextVersion: CalendarVersion) =
     result {
         match suite with
-        | StandardSet { Version = _; Projects = projects } ->
-            let! bumpedProjects =
-                projects
-                |> Array.traverseResultM (function                    
-                    | Versioned { Version = CalVer _ } as Versioned p ->
-                        tryBump p nextVersion |> Result.map Versioned
-                    | project -> Ok project)                    
-            return { Version  = nextVersion; Projects = bumpedProjects } |> StandardSet
+        | StandardSet { Version = version; Projects = projects } ->
+            let bump project =
+                match project with
+                | Versioned { Version = CalVer _ } as Versioned p ->
+                    tryBump p nextVersion
+                    |> Result.map (fun p -> let p = Versioned p in (Some p, p))
+                | otherProject ->
+                    Ok (None, otherProject)
+            
+            let! bumpResults = projects |> Array.traverseResultM bump                
+            let bumpedProjects, suiteProjects =
+                bumpResults
+                |> Array.unzip
+                |> fun (bumpedProjectsOptions, allSuiteProjects) -> (Array.choose id bumpedProjectsOptions, allSuiteProjects)
+                
+            let updatedSuite = StandardSet { Version  = nextVersion; Projects = suiteProjects }
+            let event = Events.toSuiteBumped updatedSuite version bumpedProjects            
+            return (updatedSuite , [event])
     }
