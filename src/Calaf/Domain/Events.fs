@@ -26,8 +26,16 @@ type SuiteCreated = {
     TotalProjectsCount: uint16
 }
 
+type SuiteBumped = {
+    PreviousCalendarVersion: CalendarVersion
+    NewCalendarVersion: CalendarVersion
+    ProjectsBumpedCount: uint16
+    TotalProjectsCount: uint16
+}
+
 type SuiteEvent =
     | SuiteCreated of SuiteCreated
+    | SuiteBumped  of SuiteBumped
     
 // Workspace events
 type WorkspaceCreated = {
