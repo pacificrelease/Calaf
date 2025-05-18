@@ -15,8 +15,19 @@ module Events =
             RepositoryExist = workspace.Repository |> Option.isSome
             RepositoryVersion = workspace.Repository |> Option.bind Repository.tryGetCalendarVersion
             SuiteVersion = Suite.getCalendarVersion workspace.Suite
-        } |> DomainEvent.Workspace    
+        } |> DomainEvent.Workspace
+        
+    let toWorkspaceBumped (workspace: Workspace) previousVersion =
+        WorkspaceBumped {
+            Directory = workspace.Directory
+            PreviousCalendarVersion = previousVersion
+            NewCalendarVersion = workspace.Version
+            RepositoryExist = workspace.Repository |> Option.isSome
+        } |> DomainEvent.Workspace
 
+let private getNextVersion (workspace: Workspace) (monthStamp: MonthStamp) =
+    Version.bump workspace.Version monthStamp
+    
 let private combineVersions suite repoOption =
     [
         yield Suite.getCalendarVersion suite
@@ -24,6 +35,13 @@ let private combineVersions suite repoOption =
         | Some version -> yield version
         | None -> ()
     ]
+    
+let private combineEventsO primaryEvents secondaryEventsOption =
+    match secondaryEventsOption with
+    | Some secondaryEvents ->
+        primaryEvents @ secondaryEvents
+    | None ->
+        primaryEvents
 
 let tryCreate (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
     result {
@@ -48,4 +66,28 @@ let tryCreate (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
         let event = Events.toWorkspaceCreated workspace
         let events = event :: events
         return workspace, events        
+    }
+    
+let tryBump (workspace: Workspace) (monthStamp: MonthStamp) =
+    result {
+        let nextVersion = getNextVersion workspace monthStamp
+        if workspace.Version = nextVersion
+        then
+            return! CurrentWorkspace |> Error
+        else
+            let! bumpedSuite, suiteEvents = Suite.tryBump workspace.Suite nextVersion
+            let! bumpedRepoOption =
+                workspace.Repository
+                |> Option.traverseResult (fun repo -> Repository.tryBump repo nextVersion)
+            
+            let events =
+               combineEventsO suiteEvents (bumpedRepoOption |> Option.map snd)
+                
+            let updatedWorkspace =
+                { workspace with
+                    Version = nextVersion
+                    Suite = bumpedSuite
+                    Repository = bumpedRepoOption |> Option.map fst }
+            let event = Events.toWorkspaceBumped updatedWorkspace workspace.Version
+            return updatedWorkspace, events @ [event] 
     }
