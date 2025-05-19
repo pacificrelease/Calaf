@@ -1,6 +1,6 @@
 ﻿module internal Calaf.Domain.Patch
 
-open Calaf.Domain.DomainTypes
+open Calaf.Domain.DomainTypes.Values
     
 let tryParseFromString (patch: string) : Patch option =
     match System.UInt32.TryParse(patch) with

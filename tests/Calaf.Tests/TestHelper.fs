@@ -4,7 +4,8 @@ open FsCheck
 open FsCheck.FSharp
 
 open Calaf.Contracts
-open Calaf.Domain.DomainTypes
+open Calaf.Domain.DomainTypes.Values
+open Calaf.Domain.DomainTypes.Entities
 
 type MonthStampIncrement = Year | Month | Both
 

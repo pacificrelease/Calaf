@@ -24,7 +24,7 @@ module Workspace =
         (readGit: string -> int -> System.DateTimeOffset -> Result<Calaf.Contracts.GitRepositoryInfo option, InfrastructureError>)
         (path: string)
         (timeStamp: System.DateTimeOffset)
-        : Result<Calaf.Domain.DomainTypes.Workspace, CalafError> =
+        : Result<Calaf.Domain.DomainTypes.Entities.Workspace, CalafError> =
         result {
             let path = getPathOrCurrentDir path
             let! dir = readDirectory path supportedFilesPattern |> Result.mapError CalafError.Infrastructure            
@@ -39,7 +39,7 @@ module Workspace =
         (readGit: string -> int -> System.DateTimeOffset -> Result<Calaf.Contracts.GitRepositoryInfo option, InfrastructureError>)
         (clock: unit -> System.DateTimeOffset)
         (path: string)        
-        : Result<Calaf.Domain.DomainTypes.Workspace, CalafError> =
+        : Result<Calaf.Domain.DomainTypes.Entities.Workspace, CalafError> =
         result {
             let timeStamp = clock()
             let path = getPathOrCurrentDir path

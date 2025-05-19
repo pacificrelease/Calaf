@@ -1,6 +1,6 @@
 ﻿module internal Calaf.Domain.Year
 
-open Calaf.Domain.DomainTypes
+open Calaf.Domain.DomainTypes.Values
 
 [<Literal>]
 let lowerYearBoundary = 1970us

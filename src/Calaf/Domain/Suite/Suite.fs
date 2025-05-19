@@ -3,28 +3,29 @@ module internal Calaf.Domain.Suite
 open FsToolkit.ErrorHandling
 
 open Calaf.Extensions.InternalExtensions
-open Calaf.Domain.DomainTypes
+open Calaf.Domain.DomainTypes.Values
+open Calaf.Domain.DomainTypes.Entities
 open Calaf.Domain.DomainEvents
 open Calaf.Domain.Project
 
 module Events =
     let toSuiteCreated suite =
         match suite with        
-        | StandardSet sm ->
+        | StandardSet (version, projects) ->
             SuiteCreated {
-                CalendarVersion = sm.Version
-                CalendarVersionProjectsCount = chooseCalendarVersioned sm.Projects |> Seq.length |> uint16
-                TotalProjectsCount = sm.Projects |> Seq.length |> uint16
+                CalendarVersion = version
+                CalendarVersionProjectsCount = chooseCalendarVersioned projects |> Seq.length |> uint16
+                TotalProjectsCount = projects |> Seq.length |> uint16
             } |> DomainEvent.Suite
             
     let toSuiteBumped suite previousVersion bumpedProjects =
         match suite with        
-        | StandardSet sm ->
+        | StandardSet (version, projects) ->
             SuiteBumped {
                 PreviousCalendarVersion = previousVersion
-                NewCalendarVersion = sm.Version
+                NewCalendarVersion = version
                 ProjectsBumpedCount = bumpedProjects |> Seq.length |> uint16
-                TotalProjectsCount = sm.Projects |> Seq.length |> uint16
+                TotalProjectsCount = projects |> Seq.length |> uint16
             } |> DomainEvent.Suite
 
 let tryCreate (projects: Project[]) =
@@ -37,19 +38,19 @@ let tryCreate (projects: Project[]) =
                         |> chooseCalendarVersions
                         |> Version.tryMax
                         |> Option.toResult NoCalendarVersion                
-            let suite = { Version = version; Projects = projects } |> Suite.StandardSet
+            let suite = (version, projects) |> Suite.StandardSet
             let event = suite |> Events.toSuiteCreated
             return (suite, [event])        
     }    
         
 let getCalendarVersion suite =
     match suite with
-    | StandardSet { Version = version } -> version
+    | StandardSet (version, _) -> version
     
 let tryBump (suite: Suite) (nextVersion: CalendarVersion) =
     result {
         match suite with
-        | StandardSet { Version = version; Projects = projects } ->
+        | StandardSet (version, projects) ->
             let bump project =
                 match project with
                 | Versioned { Version = CalVer _ } as Versioned p ->
@@ -64,7 +65,7 @@ let tryBump (suite: Suite) (nextVersion: CalendarVersion) =
                 |> Array.unzip
                 |> fun (bumpedProjectsOptions, allSuiteProjects) -> (Array.choose id bumpedProjectsOptions, allSuiteProjects)
                 
-            let updatedSuite = StandardSet { Version  = nextVersion; Projects = suiteProjects }
+            let updatedSuite = StandardSet (nextVersion, suiteProjects)
             let event = Events.toSuiteBumped updatedSuite version bumpedProjects            
             return (updatedSuite , [event])
     }

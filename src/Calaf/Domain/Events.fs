@@ -1,6 +1,6 @@
 namespace Calaf.Domain.DomainEvents
 
-open Calaf.Domain.DomainTypes
+open Calaf.Domain.DomainTypes.Values
 
 // Repository events
 type RepositoryCreated = {    

@@ -1,7 +1,8 @@
 ﻿module internal Calaf.Domain.Tag
 
 open Calaf.Contracts
-open Calaf.Domain.DomainTypes
+open Calaf.Domain.DomainTypes.Values
+open Calaf.Domain.DomainTypes.Entities
 
 let create (tagInfo: GitTagInfo) =
     match Version.tryParseFromTag tagInfo.Name with

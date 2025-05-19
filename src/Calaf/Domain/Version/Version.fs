@@ -2,7 +2,7 @@
 
 open FsToolkit.ErrorHandling
 
-open Calaf.Domain.DomainTypes
+open Calaf.Domain.DomainTypes.Values
 
 let internal versionPrefixes =
     [ "version."; "ver."; "v."

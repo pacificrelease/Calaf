@@ -1,6 +1,6 @@
 ﻿module internal Calaf.Domain.Language
 
-open Calaf.Domain.DomainTypes
+open Calaf.Domain.DomainTypes.Values
  
  let tryParse ext : Language option =
     match ext with

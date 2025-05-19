@@ -28,18 +28,18 @@ module TryParseFromStringPropertyTests =
         
 module BumpPropertiesTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.greaterThanZeroBeforeUInt32MinusOne> |], MaxTest = 200)>]
-    let ``Bump Patch with value less than uint32 - 1 increments value by one`` (patch: Calaf.Domain.DomainTypes.Patch) =        
+    let ``Bump Patch with value less than uint32 - 1 increments value by one`` (patch: Calaf.Domain.DomainTypes.Values.Patch) =        
         patch
          |> Some
          |> bump = patch + 1u
          
     [<Property(Arbitrary = [| typeof<Arbitrary.greaterThanZeroBeforeUInt32MinusOne> |], MaxTest = 200)>]
-    let ``Bump Patch always returns a positive value`` (patch: Calaf.Domain.DomainTypes.Patch option) =
+    let ``Bump Patch always returns a positive value`` (patch: Calaf.Domain.DomainTypes.Values.Patch option) =
         patch
         |> bump > 0u
         
     [<Property(Arbitrary = [| typeof<Arbitrary.greaterThanZeroBeforeUInt32MinusOne> |], MaxTest = 200)>]
-    let ``Bump Patch always preserves ordering`` (patch: Calaf.Domain.DomainTypes.Patch) =
+    let ``Bump Patch always preserves ordering`` (patch: Calaf.Domain.DomainTypes.Values.Patch) =
         let bumped1 = patch   |> Some |> bump
         let bumped2 = bumped1 |> Some |> bump
         let bumped3 = bumped2 |> Some |> bump

@@ -4,7 +4,7 @@
 open System
 
 open Calaf.Application.Workspace
-open Calaf.Domain.DomainTypes
+open Calaf.Domain.DomainTypes.Entities
 open Calaf.Infrastructure
 
 let path = String.Empty
@@ -23,13 +23,13 @@ match result with
     
 | Ok workspace ->
     match workspace.Repository, workspace.Suite with
-    | Some _, Suite.StandardSet { Version = version; Projects = _ } ->
+    | Some _, Suite.StandardSet (version, _ ) ->
         printfn $"Workspace: {workspace.Directory}."
         printfn "Git repository found. Skipping now..."
         printfn $"Current Suite version is {version}. 🚀. \n"
         Environment.Exit(0)
             
-    | None, Suite.StandardSet { Version = version; Projects = _ } ->
+    | None, Suite.StandardSet (version, _) ->
         printfn $"Workspace: {workspace.Directory}."
         printfn "Git repository not found."
         printfn $"Current Suite version is {version}. 🚀. \n"
