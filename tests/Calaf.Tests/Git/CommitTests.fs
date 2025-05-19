@@ -3,7 +3,6 @@
 open FsCheck.Xunit
 
 open Calaf.Contracts
-open Calaf.Domain.DomainTypes
 open Calaf.Domain.Commit
 open Calaf.Tests
 

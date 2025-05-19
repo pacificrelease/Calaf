@@ -28,10 +28,10 @@ module Events =
                 TotalProjectsCount = projects |> Seq.length |> uint16
             } |> DomainEvent.Suite
 
-let tryCreate (projects: Project[]) =
+let tryCreate (projects: Project list) =
     result {
         match projects with
-        | [||] ->
+        | projects when Seq.isEmpty projects ->
             return! EmptyProjectsSuite |> Error            
         | projects ->
             let! version = projects
@@ -59,11 +59,11 @@ let tryBump (suite: Suite) (nextVersion: CalendarVersion) =
                 | otherProject ->
                     Ok (None, otherProject)
             
-            let! bumpResults = projects |> Array.traverseResultM bump                
+            let! bumpResults = projects |> List.traverseResultM bump                
             let bumpedProjects, suiteProjects =
                 bumpResults
-                |> Array.unzip
-                |> fun (bumpedProjectsOptions, allSuiteProjects) -> (Array.choose id bumpedProjectsOptions, allSuiteProjects)
+                |> List.unzip
+                |> fun (bumpedProjectsOptions, allSuiteProjects) -> (List.choose id bumpedProjectsOptions, allSuiteProjects)
                 
             let updatedSuite = StandardSet (nextVersion, suiteProjects)
             let event = Events.toSuiteBumped updatedSuite version bumpedProjects            

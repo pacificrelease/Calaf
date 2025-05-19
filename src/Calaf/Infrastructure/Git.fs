@@ -12,7 +12,7 @@ module internal Git =
         repo.Tags        
         |> Seq.filter validTag
         |> Seq.truncate maxTagsToRead
-        |> Seq.toArray
+        |> Seq.toList
         
     let private extractRepositoryContext (repo: Repository)=
         { Head = repo.Head

@@ -654,7 +654,7 @@ module Generator =
                 let! commit = Gen.frequency [ 1, Gen.constant None; 3, gitCommitInfo |> Gen.map Some ]
                 let! signature = Gen.frequency [1, Gen.constant None; 3, gitSignatureInfo |> Gen.map Some ]
                 let! dirty = genBool
-                let! tags = Gen.arrayOf gitTagInfo
+                let! tags = Gen.listOf gitTagInfo
                 return {
                     Directory = dir
                     Damaged = damaged

@@ -34,7 +34,7 @@ module internal Mappings =
           Commit = tag.Target |> extractCommit |> Option.map toGitCommitInfo }
     let toGitRepositoryInfo
         (repoCtx: RepositoryContext)
-        (tags: LibGit2Sharp.Tag[])
+        (tags: LibGit2Sharp.Tag list)
         (signature: LibGit2Sharp.Signature) =    
         let branch =
             if repoCtx.IsHeadUnborn || repoCtx.IsHeadDetached
@@ -56,7 +56,7 @@ module internal Mappings =
           CurrentBranch = branch
           CurrentCommit = commit
           Signature     = signature      
-          Tags          = tags |> Array.map toGitTagInfo }
+          Tags          = tags |> List.map toGitTagInfo }
          
     // FileSystem
     let toProjectXmlFileInfo (file: System.IO.FileInfo) (xml: System.Xml.Linq.XElement) : ProjectXmlFileInfo =
@@ -70,7 +70,7 @@ module internal Mappings =
         let projectsInfos = 
             projectsInfos
             |> Seq.map (fun (fileInfo, xml) -> toProjectXmlFileInfo fileInfo xml)
-            |> Seq.toArray
+            |> Seq.toList
         { Directory = directoryInfo.FullName
           Projects = projectsInfos }
             

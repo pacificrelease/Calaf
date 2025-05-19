@@ -27,7 +27,7 @@ type GitRepositoryInfo = {
     CurrentCommit: GitCommitInfo option
     Signature: GitSignatureInfo option
     Dirty: bool
-    Tags: GitTagInfo[]
+    Tags: GitTagInfo list
 }
 
 type ProjectXmlFileInfo = {
@@ -40,5 +40,5 @@ type ProjectXmlFileInfo = {
 
 type DirectoryInfo = {
     Directory: string
-    Projects: ProjectXmlFileInfo[]
+    Projects: ProjectXmlFileInfo list
 }

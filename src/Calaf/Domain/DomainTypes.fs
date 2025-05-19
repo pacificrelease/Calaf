@@ -114,7 +114,7 @@ module Entities =
         | Unversioned of UnversionedProject    
 
     type Suite =
-        | StandardSet of version: CalendarVersion * projects: Project[]
+        | StandardSet of version: CalendarVersion * projects: Project list
 
     type Workspace = {
         Directory: string

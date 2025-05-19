@@ -48,8 +48,8 @@ let tryCreate (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
     result {
         let! suite, suiteEvents =
             directory.Projects
-            |> Array.map Project.tryCreate
-            |> Array.choose id
+            |> List.map Project.tryCreate
+            |> List.choose id
             |> Suite.tryCreate
             
         let! repoResult = repoInfo |> Option.traverseResult Repository.tryCreate        
