@@ -46,8 +46,8 @@ Write-Host "🧪 Absolute Solution path is: $AbsoluteSolutionPath"
 
 Write-Host "🧪 Absolute Output path is: $AbsoluteOutputPath"
 
-Write-Host "⭐ [1/5] Restoring solution packages $Settings.SolutionRelativePath ..."
-dotnet restore $Settings.SolutionRelativePath
+Write-Host "⭐ [1/5] Restoring solution packages $SolutionPath ..."
+dotnet restore $SolutionPath
 
 Write-Host "⭐ [2/5] Building solution $SolutionPath ..."
 dotnet build $SolutionPath --no-restore --configuration $Configuration --verbosity detailed
