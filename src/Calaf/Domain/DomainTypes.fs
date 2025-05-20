@@ -17,7 +17,6 @@ module Values =
         Month:  Month
     }
 
-    // Value Object
     // MAJOR.MINOR.PATCH
     type SemanticVersion = {
         Major: Major
@@ -25,7 +24,6 @@ module Values =
         Patch: Patch
     }
 
-    // Value Object
     //YYYY.MM.PATCH
     //YYYY.MM
     type CalendarVersion = {
@@ -47,7 +45,6 @@ module Values =
     type TagName = string
     type BranchName = string
 
-    // Value Object
     type Signature = {
         Name: SignatureName
         Email: SignatureEmail
