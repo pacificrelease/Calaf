@@ -9,8 +9,8 @@ open Calaf.Domain.DomainTypes.Entities
 open Calaf.Domain.DomainEvents
 
 module Events =
-    let toWorkspaceCreated (workspace: Workspace) =
-        WorkspaceCreated {
+    let toWorkspaceCaptured (workspace: Workspace) =
+        WorkspaceCaptured {
             Directory = workspace.Directory
             Version = workspace.Version
             RepositoryExist = workspace.Repository |> Option.isSome
@@ -64,7 +64,7 @@ let tryCreate (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
             Suite      = suite
         }
         
-        let event = Events.toWorkspaceCreated workspace
+        let event = Events.toWorkspaceCaptured workspace
         let events = event :: events
         return workspace, events        
     }

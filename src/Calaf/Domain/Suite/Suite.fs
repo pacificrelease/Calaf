@@ -9,10 +9,10 @@ open Calaf.Domain.DomainEvents
 open Calaf.Domain.Project
 
 module Events =
-    let toSuiteCreated suite =
+    let toSuiteCaptured suite =
         match suite with        
         | StandardSet (version, projects) ->
-            SuiteCreated {
+            SuiteCaptured {
                 CalendarVersion = version
                 CalendarVersionProjectsCount = chooseCalendarVersioned projects |> Seq.length |> uint16
                 TotalProjectsCount = projects |> Seq.length |> uint16
@@ -39,7 +39,7 @@ let tryCreate (projects: Project list) =
                         |> Version.tryMax
                         |> Option.toResult NoCalendarVersion                
             let suite = (version, projects) |> Suite.StandardSet
-            let event = suite |> Events.toSuiteCreated
+            let event = suite |> Events.toSuiteCaptured
             return (suite, [event])        
     }    
         

@@ -15,14 +15,14 @@ module Events =
         | Unsigned _ -> RepositoryState.Unsigned
         | Ready    _ -> RepositoryState.Ready
         
-    let toRepositoryCreated repo =
+    let toRepositoryCaptured repo =
         let state = toState repo
         let version =
             match repo with
             | Dirty (_, _, _, calendarVersion)
             | Ready (_, _, _, calendarVersion) -> Option.map CalVer calendarVersion
             | _ -> None
-        RepositoryCreated { Version = version; State = state } |> DomainEvent.Repository
+        RepositoryCaptured { Version = version; State = state } |> DomainEvent.Repository
         
     let toRepositoryBumped repo version signature =
         let state = toState repo        
@@ -54,30 +54,30 @@ let tryCreate (repoInfo: GitRepositoryInfo) =
         match repoInfo with
         | { Damaged = true } ->
             let repo = Damaged path
-            let event = Events.toRepositoryCreated repo
+            let event = Events.toRepositoryCaptured repo
             return (repo, [event])
         | i when i.Unborn || i.CurrentCommit.IsNone ->
             let repo = Unborn path
-            let event = Events.toRepositoryCreated repo
+            let event = Events.toRepositoryCaptured repo
             return (repo, [event])
         | i when i.Dirty &&
                  i.CurrentCommit.IsSome &&
                  i.Signature.IsSome ->
             let! repo = tryCreate Repository.Dirty i.Signature.Value i.CurrentCommit.Value i.CurrentBranch
-            let event = Events.toRepositoryCreated repo
+            let event = Events.toRepositoryCaptured repo
             return (repo, [event])
         | i when i.CurrentCommit.IsSome &&
                  i.Signature.IsSome ->
             let! repo = tryCreate Repository.Ready i.Signature.Value i.CurrentCommit.Value i.CurrentBranch
-            let event = Events.toRepositoryCreated repo
+            let event = Events.toRepositoryCaptured repo
             return (repo, [event])
         | i when i.Signature.IsNone ->
             let repo = Unsigned path
-            let event = Events.toRepositoryCreated repo
+            let event = Events.toRepositoryCaptured repo
             return (repo, [event])
         | _ ->
             let repo = Damaged path
-            let event = Events.toRepositoryCreated repo
+            let event = Events.toRepositoryCaptured repo
             return (repo, [event])
     }
     

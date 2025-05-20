@@ -3,7 +3,7 @@ namespace Calaf.Domain.DomainEvents
 open Calaf.Domain.DomainTypes.Values
 
 // Repository events
-type RepositoryCreated = {    
+type RepositoryCaptured = {    
     Version: Version option
     State: RepositoryState
 }
@@ -15,12 +15,12 @@ type RepositoryCalendarVersionBumped = {
 }
 
 type RepositoryEvent =
-    | RepositoryCreated of RepositoryCreated
-    | RepositoryBumped  of RepositoryCalendarVersionBumped
+    | RepositoryCaptured of RepositoryCaptured
+    | RepositoryBumped   of RepositoryCalendarVersionBumped
 
     
 // Suite events
-type SuiteCreated = {
+type SuiteCaptured = {
     CalendarVersion: CalendarVersion
     CalendarVersionProjectsCount: uint16
     TotalProjectsCount: uint16
@@ -34,11 +34,11 @@ type SuiteBumped = {
 }
 
 type SuiteEvent =
-    | SuiteCreated of SuiteCreated
-    | SuiteBumped  of SuiteBumped
+    | SuiteCaptured of SuiteCaptured
+    | SuiteBumped   of SuiteBumped
     
 // Workspace events
-type WorkspaceCreated = {
+type WorkspaceCaptured = {
     Directory: string
     Version: CalendarVersion
     RepositoryExist: bool
@@ -54,8 +54,8 @@ type WorkspaceBumped = {
 }
 
 type WorkspaceEvent =
-    | WorkspaceCreated of WorkspaceCreated
-    | WorkspaceBumped  of WorkspaceBumped
+    | WorkspaceCaptured of WorkspaceCaptured
+    | WorkspaceBumped   of WorkspaceBumped
     
 type DomainEvent =
     | Repository of RepositoryEvent
