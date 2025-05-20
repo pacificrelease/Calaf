@@ -1,6 +1,6 @@
 ﻿namespace Calaf.Contracts
 
-// Contracts use by Infrastructure layer
+// Contracts used by Infrastructure layer
 type GitSignatureInfo = {
     Email: string
     Name: string

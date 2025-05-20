@@ -41,6 +41,7 @@
     <Compile Include="Application\Ports.fs" />
     <Compile Include="Application\Responses.fs" />
     <Compile Include="Application\Application.fs" />    
+    <Compile Include="Adapters.fs" />    
     <Compile Include="Program.fs" />    
   </ItemGroup>
   <ItemGroup>
