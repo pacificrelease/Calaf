@@ -2,6 +2,7 @@
 
 open LibGit2Sharp
 
+open Calaf.Contracts
 open Calaf.Infrastructure
 
 module internal Git =
@@ -40,37 +41,46 @@ module internal Git =
                 None |> Ok
         with exn ->                     
             exn |> RepoAccessFailed |> Git |> Error
-       
-     // string -> string -> LibGit2Sharp.Signature -> Result<Commit, InfrastructureError>
-    let tryCommit
-    // TODO: Replace to DirectoryInfo?
+            
+    let tryApply
+        // TODO: Combine arguments to command
         (directory: string)
-        (message: string)
-        (signature: Signature)=
+        // Affect only changed projects in the future
+        (commitMessage: string)
+        (tagName: string)
+        (signature: GitSignatureInfo) : Result<unit, InfrastructureError> =
+        let totalPaths = "*"
+        let signature =
+            Signature(signature.Name, signature.Email, signature.When)
+            
+        let unstage repo =
+            Commands.Unstage(repo, totalPaths)
+            repo
+            
+        let stage repo =
+            Commands.Stage(repo, totalPaths)
+            repo
+        
+        let commit (repo: Repository) =
+            repo.Commit(commitMessage, signature, signature) |> ignore
+            repo
+            
+        let tag (repo: Repository) (commit: Commit) =            
+            repo.Tags.Add(tagName, commit) |> ignore
+            repo
+        
         try
             if Repository.IsValid(directory)
             then
                 use repo = new Repository(directory)
-                let commit = repo.Commit(message, signature, signature)
-                commit |> Ok
+                repo
+                |> unstage
+                |> stage
+                |> commit
+                |> tag
+                |> ignore
+                |> Ok
             else
-                RepoNotInitialized |> Git |> Error
-        with exn ->
-            exn |> RepoAccessFailed |> Git |> Error
-    
-    // string -> string -> Commit -> Result<Tag, InfrastructureError>
-    let tryTag
-    // TODO: Replace to DirectoryInfo?
-        (directory: string)
-        (tagName: string)
-        (commit: Commit) =
-        try
-           if Repository.IsValid(directory)
-           then
-            use repo = new Repository(directory)
-            let tag = repo.Tags.Add(tagName, commit)
-            tag |> Ok
-           else
-               RepoNotInitialized |> Git |> Error           
+                RepoNotInitialized |> Git |> Error 
         with exn ->
             exn |> RepoAccessFailed |> Git |> Error
