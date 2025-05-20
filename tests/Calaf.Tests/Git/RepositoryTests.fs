@@ -16,13 +16,13 @@ module TryCreatePropertiesTests =
         (emptyOrWhitespaceString: string) (gitRepositoryInfo: GitRepositoryInfo) =
         let gitRepositoryInfo = 
             { gitRepositoryInfo with Directory = emptyOrWhitespaceString }
-        tryCreate gitRepositoryInfo = Error EmptyRepositoryPath
+        tryCapture gitRepositoryInfo = Error EmptyRepositoryPath
         
     [<Property(Arbitrary = [| typeof<Arbitrary.directoryPathString> |])>]
     let ``Damaged GitRepositoryInfo produces damaged Repository with the corresponding event``
         (directory: string) (gitRepositoryInfo: GitRepositoryInfo)=
         let updatedRepoInfo = { gitRepositoryInfo with Directory = directory; Damaged = true }
-        match tryCreate updatedRepoInfo with
+        match tryCapture updatedRepoInfo with
         | Ok (Damaged path, events) ->
             path = directory &&
             events.Length = 1 &&
@@ -33,7 +33,7 @@ module TryCreatePropertiesTests =
     let ``Unborn GitRepositoryInfo produces unborn Repository with the corresponding event``
         (directory: string) (gitRepositoryInfo: GitRepositoryInfo)=
         let updatedRepoInfo = { gitRepositoryInfo with Directory = directory; Damaged = false; Unborn = true }
-        match tryCreate updatedRepoInfo with
+        match tryCapture updatedRepoInfo with
         | Ok (Unborn path, events) ->
             path = directory &&
             events.Length = 1 &&
@@ -49,7 +49,7 @@ module TryCreatePropertiesTests =
                 Damaged = false
                 Unborn = false
                 CurrentCommit = None }
-        match tryCreate updatedRepoInfo with
+        match tryCapture updatedRepoInfo with
         | Ok (Unborn path, events) ->
             path = directory &&
             events.Length = 1 &&

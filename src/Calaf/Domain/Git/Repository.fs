@@ -32,7 +32,7 @@ module Events =
             State = state
         } |> DomainEvent.Repository
 
-let tryCreate (repoInfo: GitRepositoryInfo) =
+let tryCapture (repoInfo: GitRepositoryInfo) =
     let tryValidatePath path =
         if not (System.String.IsNullOrWhiteSpace path)
         then Ok path

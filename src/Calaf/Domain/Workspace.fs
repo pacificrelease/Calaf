@@ -44,15 +44,15 @@ let private combineEventsO primaryEvents secondaryEventsOption =
     | None ->
         primaryEvents
 
-let tryCreate (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
+let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
     result {
         let! suite, suiteEvents =
             directory.Projects
-            |> List.map Project.tryCreate
+            |> List.map Project.tryCapture
             |> List.choose id
-            |> Suite.tryCreate
+            |> Suite.tryCapture
             
-        let! repoResult = repoInfo |> Option.traverseResult Repository.tryCreate        
+        let! repoResult = repoInfo |> Option.traverseResult Repository.tryCapture        
         let events = match repoResult with | Some (_, repoEvents) -> suiteEvents @ repoEvents | None -> suiteEvents
         let maybeRepo = repoResult |> Option.map fst
         let! version = combineVersions suite maybeRepo |> Version.tryMax |> Option.toResult NoCalendarVersion 

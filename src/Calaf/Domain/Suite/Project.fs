@@ -29,7 +29,7 @@ module internal Schema =
             |> Option.map (fun versionElement -> versionElement.SetValue(version); Xml content)
         } 
 
-let tryCreate (projectInfo: ProjectXmlFileInfo) : Project option =        
+let tryCapture (projectInfo: ProjectXmlFileInfo) : Project option =        
     let tryExtractVersion (xml: System.Xml.Linq.XElement) : Version option =
         xml
         |> Schema.tryExtractVersionElement

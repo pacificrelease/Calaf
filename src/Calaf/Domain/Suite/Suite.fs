@@ -28,7 +28,7 @@ module Events =
                 TotalProjectsCount = projects |> Seq.length |> uint16
             } |> DomainEvent.Suite
 
-let tryCreate (projects: Project list) =
+let tryCapture (projects: Project list) =
     result {
         match projects with
         | projects when Seq.isEmpty projects ->
