@@ -12,7 +12,7 @@ let git = Git()
 let fileSystem = FileSystem()
 let clock = Clock()
 let result =
-    getWorkspace
+    bumpWorkspace
         path
         git
         fileSystem

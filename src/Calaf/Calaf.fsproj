@@ -37,7 +37,7 @@
     <Compile Include="Application\Responses.fs" />
     <Compile Include="Application\Application.fs" />
     <Compile Include="Infrastructure\Mappings.fs" />    
-    <Compile Include="Adapters.fs" />    
+    <Compile Include="Infrastructure\Adapters.fs" />    
     <Compile Include="Program.fs" />    
   </ItemGroup>
   <ItemGroup>

@@ -9,9 +9,13 @@ module internal Repository =
     let read
         (directory: string)
         (maxTagsToRead: int)
+        (tagsPrefixesToFilter: string list)
         (timeStamp: System.DateTimeOffset) =        
         let validTag (tag: Tag) =
-            not (System.String.IsNullOrWhiteSpace tag.FriendlyName)
+            tagsPrefixesToFilter
+            |> List.exists (fun prefix ->
+                not (System.String.IsNullOrEmpty(tag.FriendlyName)) &&
+                tag.FriendlyName.Contains prefix)
             
         let extractTags (repo: Repository) (maxTagsToRead: int) =
             repo.Tags        
@@ -173,8 +177,8 @@ module internal Directory =
 
 type Git() =
     interface IGit with
-        member _.tryRead directory maxTagsToRead timeStamp =
-            Repository.read directory maxTagsToRead timeStamp
+        member _.tryRead directory maxTagsToRead tagsPrefixesToFilter timeStamp =
+            Repository.read directory maxTagsToRead tagsPrefixesToFilter timeStamp
             |> Result.mapError CalafError.Infrastructure
             
         member _.tryApply directory commitMessage tagName signature =

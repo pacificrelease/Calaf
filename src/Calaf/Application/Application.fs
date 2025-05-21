@@ -28,7 +28,7 @@ module Workspace =
             let path = getPathOrCurrentDir path
             let! dir = fileSystem.tryReadDirectory path supportedFilesPattern
             let timeStamp = clock.now()
-            let! repo = git.tryRead path tenTags timeStamp 
+            let! repo = git.tryRead path tenTags Version.versionPrefixes timeStamp 
             let! workspace, _ = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
                 
             return workspace
@@ -45,7 +45,7 @@ module Workspace =
             let timeStamp = clock.now()            
             let! monthStamp = DateSteward.tryCreate timeStamp.DateTime |> Result.mapError CalafError.Domain
             let! dir = fileSystem.tryReadDirectory path supportedFilesPattern
-            let! repo = git.tryRead path tenTags timeStamp
+            let! repo = git.tryRead path tenTags Version.versionPrefixes timeStamp
             let! workspace, createEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain           
             
             let! bumpedWorkspace, bumpEvents = Workspace.tryBump workspace monthStamp |> Result.mapError CalafError.Domain
