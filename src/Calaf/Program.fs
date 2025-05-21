@@ -8,15 +8,16 @@ open Calaf.Domain.DomainTypes.Entities
 open Calaf.Infrastructure
 
 let path = String.Empty
-let git = Calaf.Infrastructure.Git()
-let clock = Calaf.Infrastructure.Clock()
+let git = Git()
+let fileSystem = FileSystem()
+let clock = Clock()
 let result =
     getWorkspace
-        git
-        clock
-        FileSystem.tryReadWorkspace        
         path
-
+        git
+        fileSystem
+        clock
+        
 match result with
 | Error error ->
     printfn $"{error}"

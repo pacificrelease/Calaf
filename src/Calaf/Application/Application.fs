@@ -5,7 +5,6 @@ namespace Calaf.Application
 open FsToolkit.ErrorHandling
 
 open Calaf.Domain
-open Calaf.Infrastructure
 
 module Workspace =    
     [<Literal>]
@@ -20,14 +19,14 @@ module Workspace =
     // WorkspaceResponse/WorspaceResult
     // Use case        
     let getWorkspace
-        (git: IGit)
-        (clock: IClock)
-        (readDirectory: string -> string -> Result<Calaf.Contracts.DirectoryInfo, InfrastructureError>)
         (path: string)
+        (git: IGit)
+        (fileSystem: IFileSystem)
+        (clock: IClock)        
         : Result<Calaf.Domain.DomainTypes.Entities.Workspace, CalafError> =
         result {
             let path = getPathOrCurrentDir path
-            let! dir = readDirectory path supportedFilesPattern |> Result.mapError CalafError.Infrastructure
+            let! dir = fileSystem.tryReadDirectory path supportedFilesPattern
             let timeStamp = clock.now()
             let! repo = git.tryRead path tenTags timeStamp 
             let! workspace, _ = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain

@@ -31,16 +31,12 @@
     <Compile Include="Domain\Suite\Language.fs" />
     <Compile Include="Domain\Suite\Project.fs" />
     <Compile Include="Domain\Suite\Suite.fs" />
-    <Compile Include="Domain\Workspace.fs" />
-    <Compile Include="Infrastructure\Errors.fs" />
-    <Compile Include="Infrastructure\Mappings.fs" />
-    <Compile Include="Infrastructure\Git.fs" />
-    <Compile Include="Infrastructure\FileSystem.fs" />
-    <Compile Include="Infrastructure\Clock.fs" />
+    <Compile Include="Domain\Workspace.fs" />    
     <Compile Include="Application\Errors.fs" />
     <Compile Include="Application\Ports.fs" />
     <Compile Include="Application\Responses.fs" />
-    <Compile Include="Application\Application.fs" />    
+    <Compile Include="Application\Application.fs" />
+    <Compile Include="Infrastructure\Mappings.fs" />    
     <Compile Include="Adapters.fs" />    
     <Compile Include="Program.fs" />    
   </ItemGroup>
