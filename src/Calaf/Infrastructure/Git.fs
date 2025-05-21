@@ -5,7 +5,8 @@ open LibGit2Sharp
 open Calaf.Contracts
 open Calaf.Infrastructure
 
-module internal Git =
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module internal Git =    
     let private validTag (tag: Tag) =
         not (System.String.IsNullOrWhiteSpace tag.FriendlyName)
         

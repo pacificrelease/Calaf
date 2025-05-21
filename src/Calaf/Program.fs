@@ -8,12 +8,13 @@ open Calaf.Domain.DomainTypes.Entities
 open Calaf.Infrastructure
 
 let path = String.Empty
-let timeStamp = Clock.now()
+let git = Calaf.Infrastructure.Git()
+let clock = Calaf.Infrastructure.Clock()
 let result =
-    bumpWorkspace
-        FileSystem.tryReadWorkspace
-        Git.tryReadRepository
-        Clock.now
+    getWorkspace
+        git
+        clock
+        FileSystem.tryReadWorkspace        
         path
 
 match result with

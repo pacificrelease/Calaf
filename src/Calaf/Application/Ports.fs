@@ -3,8 +3,8 @@ namespace Calaf.Application
 open Calaf.Contracts
 
 type IGit =
-    abstract tryReadRepository:
-        directory: string -> maxTagsToRead: int -> timeStamp: System.DateTimeOffset -> Result<GitRepositoryInfo, CalafError>
+    abstract tryRead:
+        directory: string -> maxTagsToRead: int -> timeStamp: System.DateTimeOffset -> Result<GitRepositoryInfo option, CalafError>
         
     abstract tryApply:
         directory: string -> commitMessage: string -> tagName: string -> signature: GitSignatureInfo -> Result<unit, CalafError>
@@ -19,3 +19,7 @@ type IFileSystem =
         
     abstract tryWriteXml:
         absolutePath: string -> content: System.Xml.Linq.XElement -> Result<unit, CalafError>
+        
+type IClock =
+    abstract now:
+        unit -> System.DateTimeOffset

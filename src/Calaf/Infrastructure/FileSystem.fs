@@ -6,6 +6,7 @@ open FsToolkit.ErrorHandling
 
 open Calaf.Extensions.InternalExtensions
 
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module internal Xml =        
     let tryLoadXml (absolutePath: string) : Result<System.Xml.Linq.XElement, InfrastructureError> =
         try
@@ -45,6 +46,7 @@ module internal Xml =
             |> FileSystem
             |> Error
 
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module internal FileSystem =     
     let private tryScanFileInfos (directory: DirectoryInfo) (pattern: string) =
         try

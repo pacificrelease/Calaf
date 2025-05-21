@@ -20,15 +20,16 @@ module Workspace =
     // WorkspaceResponse/WorspaceResult
     // Use case        
     let getWorkspace
+        (git: IGit)
+        (clock: IClock)
         (readDirectory: string -> string -> Result<Calaf.Contracts.DirectoryInfo, InfrastructureError>)
-        (readGit: string -> int -> System.DateTimeOffset -> Result<Calaf.Contracts.GitRepositoryInfo option, InfrastructureError>)
         (path: string)
-        (timeStamp: System.DateTimeOffset)
         : Result<Calaf.Domain.DomainTypes.Entities.Workspace, CalafError> =
         result {
             let path = getPathOrCurrentDir path
-            let! dir = readDirectory path supportedFilesPattern |> Result.mapError CalafError.Infrastructure            
-            let! repo = readGit path tenTags timeStamp          |> Result.mapError CalafError.Infrastructure            
+            let! dir = readDirectory path supportedFilesPattern |> Result.mapError CalafError.Infrastructure
+            let timeStamp = clock.now()
+            let! repo = git.tryRead path tenTags timeStamp 
             let! workspace, _ = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
                 
             return workspace
