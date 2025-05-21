@@ -35,17 +35,17 @@ module Workspace =
         }
         
     let bumpWorkspace
-        (readDirectory: string -> string -> Result<Calaf.Contracts.DirectoryInfo, InfrastructureError>)
-        (readGit: string -> int -> System.DateTimeOffset -> Result<Calaf.Contracts.GitRepositoryInfo option, InfrastructureError>)
-        (clock: unit -> System.DateTimeOffset)
-        (path: string)        
+        (path: string)
+        (git: IGit)
+        (fileSystem: IFileSystem)
+        (clock: IClock)        
         : Result<Calaf.Domain.DomainTypes.Entities.Workspace, CalafError> =
         result {
-            let timeStamp = clock()
             let path = getPathOrCurrentDir path
+            let timeStamp = clock.now()            
             let! monthStamp = DateSteward.tryCreate timeStamp.DateTime |> Result.mapError CalafError.Domain
-            let! dir = readDirectory path supportedFilesPattern |> Result.mapError CalafError.Infrastructure
-            let! repo = readGit path tenTags timeStamp          |> Result.mapError CalafError.Infrastructure
+            let! dir = fileSystem.tryReadDirectory path supportedFilesPattern
+            let! repo = git.tryRead path tenTags timeStamp
             let! workspace, createEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain           
             
             let! bumpedWorkspace, bumpEvents = Workspace.tryBump workspace monthStamp |> Result.mapError CalafError.Domain
