@@ -35,7 +35,6 @@ type DomainError =
     
     // Repository bump errors
     | CurrentRepository
-    | DirtyRepository
     | DamagedRepository
     | UnbornRepository
     | UnsignedRepository

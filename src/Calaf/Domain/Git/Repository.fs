@@ -88,21 +88,23 @@ let tryGetCalendarVersion repo =
     | _ -> None
     
 let tryBump (repo: Repository) (nextVersion: CalendarVersion) =
-    result {
-        match repo with        
-        | Ready (dir, head, signature, currentVersion) ->
-            let sameVersion = currentVersion
-                            |> Option.map (fun v -> v = nextVersion)
-                            |> Option.defaultValue false
-            if sameVersion
-            then
-                return! CurrentRepository |> Error
-            else
-                let repo = Ready (dir, head, signature, Some nextVersion)
-                let event = Events.toRepositoryBumped repo nextVersion signature
-                return (repo, [event])
-        | Dirty    _ -> return! DirtyRepository    |> Error
-        | Unborn   _ -> return! UnbornRepository   |> Error
-        | Unsigned _ -> return! UnsignedRepository |> Error
-        | Damaged  _ -> return! DamagedRepository  |> Error
-    }
+    let performBump (ctor, dir, head, signature, currentVersion) =
+        let sameVersion = currentVersion
+                            |> Option.map ((=) nextVersion)
+                            |> Option.exists id
+        if sameVersion
+        then
+            Error CurrentRepository
+        else
+            let repo = ctor (dir, head, signature, Some nextVersion)
+            let event = Events.toRepositoryBumped repo nextVersion signature
+            Ok (repo, [event])
+    
+    match repo with        
+    | Ready (dir, head, signature, currentVersion) ->
+        performBump (Repository.Ready, dir, head, signature, currentVersion)
+    | Dirty (dir, head, signature, currentVersion) ->
+        performBump (Repository.Dirty, dir, head, signature, currentVersion)
+    | Unborn   _ -> UnbornRepository   |> Error
+    | Unsigned _ -> UnsignedRepository |> Error
+    | Damaged  _ -> DamagedRepository  |> Error
