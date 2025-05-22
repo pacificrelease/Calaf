@@ -15,5 +15,5 @@ module TryCreatePropertiesTests =
         | _ -> false
         
     [<Property(Arbitrary = [| typeof<Arbitrary.DateSteward.outOfRangeDateTime> |], MaxTest = 200)>]
-    let ``Any DateTime with out of lower or upper year's boundaries yields OutOfRangeYear error`` (outOfRangeDateTime: System.DateTime) =        
-        tryCreate outOfRangeDateTime = (OutOfRangeYear |> Error)
+    let ``Any DateTime with out of lower or upper year's boundaries yields YearOutOfRange error`` (outOfRangeDateTime: System.DateTime) =        
+        tryCreate outOfRangeDateTime = (YearOutOfRange |> Error)

@@ -62,7 +62,7 @@ module CreatePropertiesTests =
         | _ -> false
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Git.gitCommitInfo>; typeof<Arbitrary.nullOrWhiteSpaceString> |])>]
-    let ``Non-detached Head creation with empty/null/whitespace branch name provides EmptyBranchName error``
+    let ``Non-detached Head creation with empty/null/whitespace branch name provides BranchNameEmpty error``
         (gitCommitInfo: GitCommitInfo, emptyBranchName: string) =
         let detachedHead = false
-        tryCreate detachedHead gitCommitInfo (Some emptyBranchName) = (DomainError.EmptyBranchName |> Error)
+        tryCreate detachedHead gitCommitInfo (Some emptyBranchName) = (DomainError.BranchNameEmpty |> Error)

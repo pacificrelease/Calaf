@@ -55,7 +55,7 @@ let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
         let! repoResult = repoInfo |> Option.traverseResult Repository.tryCapture        
         let events = match repoResult with | Some (_, repoEvents) -> suiteEvents @ repoEvents | None -> suiteEvents
         let maybeRepo = repoResult |> Option.map fst
-        let! version = combineVersions suite maybeRepo |> Version.tryMax |> Option.toResult NoCalendarVersion 
+        let! version = combineVersions suite maybeRepo |> Version.tryMax |> Option.toResult CalendarVersionMissing 
         
         let workspace = {
             Directory  = directory.Directory
@@ -74,7 +74,7 @@ let tryBump (workspace: Workspace) (monthStamp: MonthStamp) =
         let nextVersion = getNextVersion workspace monthStamp
         if workspace.Version = nextVersion
         then
-            return! CurrentWorkspace |> Error
+            return! WorkspaceAlreadyCurrent |> Error
         else
             let! bumpedSuite, suiteEvents = Suite.tryBump workspace.Suite nextVersion
             let! bumpedRepoOption =

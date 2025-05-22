@@ -11,18 +11,18 @@ let private tryParseMonth (month: System.Byte) : Result<Month, DomainError> =
     match month with
     | month when month >= lowerMonthBoundary &&
                  month <= upperMonthBoundary -> Ok month
-    | _ -> OutOfRangeMonth |> Error
+    | _ -> MonthOutOfRange |> Error
 
 let tryParseFromInt32 (month: System.Int32) : Result<Month, DomainError> =
     try
         month
         |> System.Convert.ToByte
         |> tryParseMonth
-    with _ -> WrongInt32Month |> Error
+    with _ -> MonthInvalidInt |> Error
         
 let tryParseFromString (month: string) : Result<Month, DomainError> =
     match month |> System.Byte.TryParse with
     | true, month ->
         month
         |> tryParseMonth
-    | _ -> WrongStringMonth |> Error
+    | _ -> MonthInvalidString |> Error

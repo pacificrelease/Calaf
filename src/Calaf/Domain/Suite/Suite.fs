@@ -39,12 +39,12 @@ let tryCapture (projects: Project list) =
     result {
         match projects with
         | projects when Seq.isEmpty projects ->
-            return! EmptyProjectsSuite |> Error            
+            return! ProjectSuiteEmpty |> Error            
         | projects ->
             let! version = projects
                         |> chooseCalendarVersions
                         |> Version.tryMax
-                        |> Option.toResult NoCalendarVersion                
+                        |> Option.toResult CalendarVersionMissing                
             let suite = (version, projects) |> Suite.StandardSet
             let event = suite |> Events.toSuiteCaptured
             return (suite, [event])        

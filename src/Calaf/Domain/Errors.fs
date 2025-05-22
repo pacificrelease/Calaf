@@ -1,43 +1,36 @@
 ﻿// Domain Errors
 namespace Calaf.Domain
 
-// TODO: Dedicate 3 main groups of errors:
-// 1. Adapters/validation errors |> create values on domain boundaries
-// 2. Domain errors |> domain logic errors
-// 3. Infrastructure errors |> IO errors
-
-// Naming rule: <Verb><Adjective><Noun>
 type DomainError =
     // Version errors
-    | OutOfRangeYear
-    | OutOfRangeMonth
-    | WrongInt32Year
-    | WrongInt32Month
-    | WrongStringYear
-    | WrongStringMonth
+    | YearOutOfRange
+    | YearInvalidInt
+    | YearInvalidString    
+    | MonthOutOfRange
+    | MonthInvalidInt
+    | MonthInvalidString
     
-    // FileSystem
     // Project errors
-    | NotFoundXmlVersionElement of projectName: string
+    | VersionElementMissing of projectName: string
     
     // Suite
     // create error
-    | EmptyProjectsSuite
+    | ProjectSuiteEmpty
     // bump errors
-    | NoCalendarVersion
+    | CalendarVersionMissing
     
     // Git
     // Head errors
-    | EmptyBranchName
+    | BranchNameEmpty
     
     // Repository errors
-    | EmptyRepositoryPath
+    | RepositoryPathEmpty
     
     // Repository bump errors
-    | CurrentRepository
-    | DamagedRepository
-    | UnbornRepository
-    | UnsignedRepository
+    | RepositoryAlreadyCurrent
+    | RepositoryCorrupted
+    | RepositoryHeadUnborn
+    | RepositoryUnsigned
     
     // Workspace
-    | CurrentWorkspace
+    | WorkspaceAlreadyCurrent

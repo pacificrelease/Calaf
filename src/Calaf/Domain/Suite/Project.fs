@@ -76,5 +76,5 @@ let tryBump (project: VersionedProject) (nextVersion: CalendarVersion) =
         |> Schema.tryUpdateVersionElement xmlContent
         |> Option.map (fun upc ->
             { project with Content = upc; Version = CalVer nextVersion })
-        |> Option.toResult (NotFoundXmlVersionElement project.Metadata.Name)
+        |> Option.toResult (VersionElementMissing project.Metadata.Name)
     | Json _ -> Ok project

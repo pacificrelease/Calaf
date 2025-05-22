@@ -12,11 +12,11 @@ open Calaf.Tests
 
 module TryCreatePropertiesTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.nullOrWhiteSpaceString> |])>]
-    let ``Any GitRepositoryInfo with empty, null or whitespace path produces EmptyRepositoryPath error``
+    let ``Any GitRepositoryInfo with empty, null or whitespace path produces RepositoryPathEmpty error``
         (emptyOrWhitespaceString: string) (gitRepositoryInfo: GitRepositoryInfo) =
         let gitRepositoryInfo = 
             { gitRepositoryInfo with Directory = emptyOrWhitespaceString }
-        tryCapture gitRepositoryInfo = Error EmptyRepositoryPath
+        tryCapture gitRepositoryInfo = Error RepositoryPathEmpty
         
     [<Property(Arbitrary = [| typeof<Arbitrary.directoryPathString> |])>]
     let ``Damaged GitRepositoryInfo produces damaged Repository with the corresponding event``

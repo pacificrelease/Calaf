@@ -36,7 +36,7 @@ let tryCapture (repoInfo: GitRepositoryInfo) =
     let tryValidatePath path =
         if not (System.String.IsNullOrWhiteSpace path)
         then Ok path
-        else EmptyRepositoryPath |> Error
+        else RepositoryPathEmpty |> Error
     result {
         let tryCreate ctor (signature: GitSignatureInfo) (commit: GitCommitInfo) (branch: string option) =
             result {
@@ -94,7 +94,7 @@ let tryBump (repo: Repository) (nextVersion: CalendarVersion) =
                             |> Option.exists id
         if sameVersion
         then
-            Error CurrentRepository
+            Error RepositoryAlreadyCurrent
         else
             let repo = ctor (dir, head, signature, Some nextVersion)
             let event = Events.toRepositoryBumped repo nextVersion signature
@@ -105,6 +105,6 @@ let tryBump (repo: Repository) (nextVersion: CalendarVersion) =
         performBump (Repository.Ready, dir, head, signature, currentVersion)
     | Dirty (dir, head, signature, currentVersion) ->
         performBump (Repository.Dirty, dir, head, signature, currentVersion)
-    | Unborn   _ -> UnbornRepository   |> Error
-    | Unsigned _ -> UnsignedRepository |> Error
-    | Damaged  _ -> DamagedRepository  |> Error
+    | Unborn   _ -> RepositoryHeadUnborn   |> Error
+    | Unsigned _ -> RepositoryUnsigned |> Error
+    | Damaged  _ -> RepositoryCorrupted  |> Error
