@@ -7,7 +7,7 @@ open Calaf.Application.Workspace
 open Calaf.Domain.DomainTypes.Entities
 open Calaf.Infrastructure
 
-let path = "../../../../.."
+let path = String.Empty
 let git = Git()
 let fileSystem = FileSystem()
 let clock = Clock()
