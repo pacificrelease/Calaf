@@ -52,7 +52,7 @@ module Workspace =
             
             do! bumpedWorkspace.Suite
                 |> Suite.chooseXmlProjects
-                |> Seq.traverseResultM (fun p -> fileSystem.tryWriteXml p.AbsolutePath p.Content)
+                |> Seq.traverseResultM (fun p -> fileSystem.tryWriteXml (p.AbsolutePath, p.Content))
                 |> Result.map ignore
                             
             return bumpedWorkspace

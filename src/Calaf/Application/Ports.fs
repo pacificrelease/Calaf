@@ -18,7 +18,7 @@ type IFileSystem =
         absolutePath: string -> Result<System.Xml.Linq.XElement, CalafError>
         
     abstract tryWriteXml:
-        absolutePath: string -> content: System.Xml.Linq.XElement -> Result<unit, CalafError>
+        absolutePath: string * content: System.Xml.Linq.XElement -> Result<unit, CalafError>
         
 type IClock =
     abstract now:

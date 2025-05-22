@@ -195,7 +195,7 @@ type FileSystem() =
             File.load absolutePath
             |> Result.mapError CalafError.Infrastructure
             
-        member _.tryWriteXml absolutePath content =
+        member _.tryWriteXml (absolutePath, content) =
             File.save absolutePath content
             |> Result.mapError CalafError.Infrastructure
             |> Result.map ignore
