@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <PackageId>calaf-tool</PackageId>
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>calver</ToolCommandName>
+    <ToolCommandName>calaf</ToolCommandName>
     
     <Version>2025.5</Version>
     <FileVersion>$(Version)</FileVersion>
