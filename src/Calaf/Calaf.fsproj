@@ -6,7 +6,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>calver</ToolCommandName>
     
-    <Version>2025.4.12</Version>
+    <Version>2025.5</Version>
     <FileVersion>$(Version)</FileVersion>
     
     <Title>Calaf</Title>
