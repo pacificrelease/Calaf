@@ -33,8 +33,9 @@
     <Compile Include="Domain\Suite\Suite.fs" />
     <Compile Include="Domain\Workspace.fs" />    
     <Compile Include="Application\Errors.fs" />
-    <Compile Include="Application\Ports.fs" />
-    <Compile Include="Application\Responses.fs" />
+    <Compile Include="Application\Ports\Git.fs" />
+    <Compile Include="Application\Ports\FileSystem.fs" />
+    <Compile Include="Application\Ports\Clock.fs" />
     <Compile Include="Application\Application.fs" />
     <Compile Include="Infrastructure\Mappings.fs" />    
     <Compile Include="Infrastructure\Adapters.fs" />    

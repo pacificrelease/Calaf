@@ -17,7 +17,7 @@ type FileSystemError =
 type InfrastructureError =
     | Git        of GitError
     | FileSystem of FileSystemError
-
+    
 type CalafError =
     | Domain         of DomainError
     | Infrastructure of InfrastructureError
