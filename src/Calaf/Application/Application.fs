@@ -39,7 +39,7 @@ module Workspace =
         (git: IGit)
         (fileSystem: IFileSystem)
         (clock: IClock)        
-        : Result<Calaf.Domain.DomainTypes.Entities.Workspace, CalafError> =
+        : Result<Calaf.Domain.DomainTypes.Entities.Workspace, CalafError> =          
         result {
             let path = getPathOrCurrentDir path
             let timeStamp = clock.now()            
@@ -49,6 +49,11 @@ module Workspace =
             let! workspace, createEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain           
             
             let! bumpedWorkspace, bumpEvents = Workspace.tryBump workspace monthStamp |> Result.mapError CalafError.Domain
-                
+            
+            do! bumpedWorkspace.Suite
+                |> Suite.chooseXmlProjects
+                |> Seq.traverseResultM (fun p -> fileSystem.tryWriteXml p.AbsolutePath p.Content)
+                |> Result.map ignore
+                            
             return bumpedWorkspace
         }

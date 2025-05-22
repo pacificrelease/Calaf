@@ -33,8 +33,7 @@ let tryCapture (projectInfo: ProjectXmlFileInfo) : Project option =
     let tryExtractVersion (xml: System.Xml.Linq.XElement) : Version option =
         xml
         |> Schema.tryExtractVersionElement
-        |> Option.bind (fun x -> x.Value |> Version.tryParseFromString)
-        
+        |> Option.bind (fun x -> x.Value |> Version.tryParseFromString)        
     option {
         let metadata =
             { Name = projectInfo.Name
@@ -56,6 +55,13 @@ let chooseCalendarVersioned (projects: Project seq) : Project seq =
     |> Seq.filter (function
         | Versioned { Version = CalVer _ }  -> true
         | _ -> false)
+    
+let chooseXmlVCalendarVersionedProjects (projects: Project seq) =
+    projects
+    |> Seq.choose (function
+        | Versioned { Version = CalVer _;  Content = Xml xmlContent; Metadata = m } ->
+            Some {| AbsolutePath = m.AbsolutePath; Content = xmlContent |}
+        | _ -> None)
 
 let chooseCalendarVersions (projects: Project seq) : CalendarVersion seq =
     projects
