@@ -10,6 +10,7 @@ let internal versionPrefixes =
       "version";  "ver";  "v"
       "Version";  "Ver";  "V" ]
     |> List.sortByDescending String.length
+let internal defaultTagVersionPrefix = "v"
     
 type private CleanString = string
 
@@ -80,6 +81,19 @@ let toString (calVer: CalendarVersion) : string =
     match calVer.Patch with
     | Some patch -> $"{calVer.Year}.{calVer.Month}.{patch}"
     | None -> $"{calVer.Year}.{calVer.Month}"
+    
+/// <summary>
+/// Converts a CalendarVersion to a Git tag string.
+/// </summary>
+/// <param name="calVer">Calendar version to convert</param>
+/// <param name="prefix">Optional tag prefix (defaults to "v" if None or whitespace)</param>
+let toTag (calVer: CalendarVersion) (prefix: string option) : string =
+    let effectivePrefix =
+        match prefix with
+        | Some p when not (System.String.IsNullOrWhiteSpace p) -> p
+        | _ -> defaultTagVersionPrefix
+    
+    effectivePrefix + toString calVer
  
 let bump (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : CalendarVersion =    
     let shouldBumpYear = monthStamp.Year > currentVersion.Year            
