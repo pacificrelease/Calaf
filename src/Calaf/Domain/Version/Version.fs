@@ -90,7 +90,7 @@ let toString (calVer: CalendarVersion) : string =
 let toTagName (calVer: CalendarVersion) : string =    
     tagVersionPrefix + toString calVer
     
-let toCommitString (calVer: CalendarVersion) : string =
+let toCommitMessage (calVer: CalendarVersion) : string =
     commitVersionPrefix + toString calVer    
  
 let bump (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : CalendarVersion =    
