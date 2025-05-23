@@ -16,8 +16,8 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="InternalExtensions.fs" />
     <Compile Include="Contracts.fs" />
-    <Compile Include="Domain\Errors.fs" />
     <Compile Include="Domain\DomainTypes.fs" />
+    <Compile Include="Domain\Errors.fs" />
     <Compile Include="Domain\Events.fs" />
     <Compile Include="Domain\Version\Patch.fs" />
     <Compile Include="Domain\Version\Month.fs" />
@@ -37,6 +37,7 @@
     <Compile Include="Application\Ports\FileSystem.fs" />
     <Compile Include="Application\Ports\Clock.fs" />
     <Compile Include="Application\Application.fs" />
+    <Compile Include="Infrastructure\Adapters\Git.fs" />    
     <Compile Include="Infrastructure\Mappings.fs" />    
     <Compile Include="Infrastructure\Adapters.fs" />    
     <Compile Include="Program.fs" />    
