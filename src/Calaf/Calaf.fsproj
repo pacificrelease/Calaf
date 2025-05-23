@@ -11,6 +11,7 @@
     
     <Title>Calaf</Title>
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
@@ -38,7 +39,7 @@
     <Compile Include="Application\Ports\Clock.fs" />
     <Compile Include="Application\Application.fs" />
     <Compile Include="Infrastructure\Adapters\Git.fs" />    
-    <Compile Include="Infrastructure\Mappings.fs" />    
+    <Compile Include="Infrastructure\Adapters\FileSystem.fs" />    
     <Compile Include="Infrastructure\Adapters.fs" />    
     <Compile Include="Program.fs" />    
   </ItemGroup>
