@@ -11,6 +11,7 @@ let internal versionPrefixes =
       "Version";  "Ver";  "V" ]
     |> List.sortByDescending String.length
 let internal defaultTagVersionPrefix = "v"
+let internal commitVersionPrefix = "version"
     
 type private CleanString = string
 
@@ -94,6 +95,9 @@ let toTag (calVer: CalendarVersion) (prefix: string option) : string =
         | _ -> defaultTagVersionPrefix
     
     effectivePrefix + toString calVer
+    
+let toCommitString (calVer: CalendarVersion) : string =
+    commitVersionPrefix + toString calVer    
  
 let bump (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : CalendarVersion =    
     let shouldBumpYear = monthStamp.Year > currentVersion.Year            
