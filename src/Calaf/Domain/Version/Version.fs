@@ -10,7 +10,7 @@ let internal versionPrefixes =
       "version";  "ver";  "v"
       "Version";  "Ver";  "V" ]
     |> List.sortByDescending String.length
-let internal defaultTagVersionPrefix = "v"
+let internal tagVersionPrefix = "v"
 let internal commitVersionPrefix = "version"
     
 type private CleanString = string
@@ -87,14 +87,8 @@ let toString (calVer: CalendarVersion) : string =
 /// Converts a CalendarVersion to a Git tag string.
 /// </summary>
 /// <param name="calVer">Calendar version to convert</param>
-/// <param name="prefix">Optional tag prefix (defaults to "v" if None or whitespace)</param>
-let toTag (calVer: CalendarVersion) (prefix: string option) : string =
-    let effectivePrefix =
-        match prefix with
-        | Some p when not (System.String.IsNullOrWhiteSpace p) -> p
-        | _ -> defaultTagVersionPrefix
-    
-    effectivePrefix + toString calVer
+let toTagName (calVer: CalendarVersion) : string =    
+    tagVersionPrefix + toString calVer
     
 let toCommitString (calVer: CalendarVersion) : string =
     commitVersionPrefix + toString calVer    
