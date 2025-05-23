@@ -40,7 +40,7 @@
     <Compile Include="Application\Application.fs" />
     <Compile Include="Infrastructure\Adapters\Git.fs" />    
     <Compile Include="Infrastructure\Adapters\FileSystem.fs" />    
-    <Compile Include="Infrastructure\Adapters.fs" />    
+    <Compile Include="Infrastructure\Adapters\Clock.fs" />    
     <Compile Include="Program.fs" />    
   </ItemGroup>
   <ItemGroup>
