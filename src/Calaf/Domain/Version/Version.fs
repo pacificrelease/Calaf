@@ -84,12 +84,16 @@ let toString (calVer: CalendarVersion) : string =
     | None -> $"{calVer.Year}.{calVer.Month}"
     
 /// <summary>
-/// Converts a CalendarVersion to a Git tag string.
+/// Converts a CalendarVersion to a Git tag name string.
 /// </summary>
 /// <param name="calVer">Calendar version to convert</param>
 let toTagName (calVer: CalendarVersion) : string =    
     tagVersionPrefix + toString calVer
-    
+
+/// <summary>
+/// Converts a CalendarVersion to a Git commit message string.
+/// </summary>
+/// <param name="calVer">Calendar version to convert</param>
 let toCommitMessage (calVer: CalendarVersion) : string =
     commitVersionPrefix + toString calVer    
  
