@@ -241,3 +241,34 @@ module ToStringPropertiesTests =
         |> toString
         |> System.String.IsNullOrWhiteSpace
         |> not
+        
+module ToTagPropertiesTests =
+    // Prefix Prepending
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
+    let ``Prefix is prepended to the CalendarVersion tag name`` (calVer: CalendarVersion) =
+        let tag = calVer |> toTagName
+        tag.StartsWith(tagVersionPrefix)    
+    
+    // Suffix Format
+    // The part after the prefix should match the output of toString calVer.
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
+    let ``Tag name after prefix matches CalendarVersion string representation`` (calVer: CalendarVersion) =
+        let tag = calVer |> toTagName
+        let versionString = calVer |> toString
+        tag.EndsWith(versionString)
+    
+    // Reversibility
+    // If you strip the prefix from the result and parse it, you should recover the original CalendarVersion (assuming toString and parsing are consistent).
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
+    let ``Tag name can be parsed back to CalendarVersion`` (calVer: CalendarVersion) =
+        let tagName = calVer |> toTagName
+        match tryParseFromTag tagName with
+        | Some (CalVer version) -> version = calVer
+        | _ -> false
+        
+    // No Unexpected Characters    
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
+    let ``Tag name does not contain unexpected empty or whitespace characters`` (calVer: CalendarVersion) =
+        let tagName = calVer |> toTagName
+        not (System.String.IsNullOrWhiteSpace tagName) &&
+        tagName |> Seq.forall (fun c -> not (System.Char.IsWhiteSpace c))
