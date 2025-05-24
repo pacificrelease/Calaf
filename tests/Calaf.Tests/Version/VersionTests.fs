@@ -242,7 +242,7 @@ module ToStringPropertiesTests =
         |> System.String.IsNullOrWhiteSpace
         |> not
         
-module ToTagPropertiesTests =
+module ToTagNamePropertiesTests =
     // Prefix Prepending
     [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
     let ``Prefix is prepended to the CalendarVersion tag name`` (calVer: CalendarVersion) =
