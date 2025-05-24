@@ -10,8 +10,8 @@ let internal versionPrefixes =
       "version";  "ver";  "v"
       "Version";  "Ver";  "V" ]
     |> List.sortByDescending String.length
-let internal tagVersionPrefix = "v"
-let internal commitVersionPrefix = "version"
+let internal tagVersionPrefix = versionPrefixes[10]
+let internal commitVersionPrefix = versionPrefixes[2]
     
 type private CleanString = string
 
