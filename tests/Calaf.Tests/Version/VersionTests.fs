@@ -266,9 +266,29 @@ module ToTagNamePropertiesTests =
         | Some (CalVer version) -> version = calVer
         | _ -> false
         
-    // No Unexpected Characters    
+    // No Unexpected Characters
     [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
     let ``Tag name does not contain unexpected empty or whitespace characters`` (calVer: CalendarVersion) =
         let tagName = calVer |> toTagName
         not (System.String.IsNullOrWhiteSpace tagName) &&
         tagName |> Seq.forall (fun c -> not (System.Char.IsWhiteSpace c))
+        
+module ToCommitMessagePropertiesTests =
+    // Prefix Prepending
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
+    let ``Commit message starts with commitVersionPrefix`` (calVer: CalendarVersion) =
+        let commitMsg = calVer |> toCommitMessage
+        commitMsg.StartsWith(commitVersionPrefix)
+    
+    // Suffix Format
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
+    let ``Commit message ends with string representation of version`` (calVer: CalendarVersion) =
+        let commitMsg = calVer |> toCommitMessage
+        commitMsg.EndsWith(toString calVer)
+
+    // No Unexpected Characters    
+    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
+    let ``Commit message does not contain unexpected empty or whitespace characters`` (calVer: CalendarVersion) =
+        let commitMsg = calVer |> toCommitMessage
+        not (System.String.IsNullOrWhiteSpace commitMsg) &&
+        commitMsg |> Seq.forall (fun c -> not (System.Char.IsWhiteSpace c))
