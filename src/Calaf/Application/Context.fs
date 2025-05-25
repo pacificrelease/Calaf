@@ -35,8 +35,8 @@ module internal Settings =
     
     let tryCreate (dotNetXmlFilePattern: string) (tagsToLoadCount: byte) =
         result {
-            let! filePattern = dotNetXmlFilePattern |> tryCreateDotNetXmlFilePattern
-            let! tagsToLoadCount = tagsToLoadCount  |> tryCreateTagCount
+            let! filePattern = dotNetXmlFilePattern |> tryCreateDotNetXmlFilePattern |> Result.mapError CalafError.Validation
+            let! tagsToLoadCount = tagsToLoadCount |> tryCreateTagCount |> Result.mapError CalafError.Validation
             return {
                 ProjectsFindPattern = filePattern
                 TagsToLoad = tagsToLoadCount
