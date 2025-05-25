@@ -1,10 +1,10 @@
 namespace Calaf.Application
 
 type DotNetXmlFilePattern = private DotNetXmlFilePattern of string
-type TagCount             = private TagCount of byte
+type TagCount = private TagCount of byte
 
-type BumpConfig = {
-    DotNetXmlFilePattern: DotNetXmlFilePattern
+type BumpSettings = {
+    ProjectsFindPattern: DotNetXmlFilePattern
     TagsToLoad: TagCount
 }
 
@@ -24,16 +24,21 @@ module internal Validation =
         if count = 0uy then Error ZeroTagCount
         else Ok <| TagCount count
 
-module internal Config =
+module internal Settings =
     open FsToolkit.ErrorHandling
     
-    let create (filePattern: string) (tagsToLoadCount: byte) =
+    let tryCreateDotNetXmlFilePattern (filePattern: string) =
+        filePattern |> DotNetXmlFilePattern |> Validation.checkDotNetXmlFilePattern
+        
+    let tryCreateTagCount tagsToLoadCount =
+        tagsToLoadCount |> TagCount |> Validation.checkTagsToLoad        
+    
+    let tryCreate (dotNetXmlFilePattern: string) (tagsToLoadCount: byte) =
         result {
-            let! filePattern = filePattern |> DotNetXmlFilePattern |> Validation.checkDotNetXmlFilePattern
-            let! tagsToLoadCount = tagsToLoadCount |> TagCount |> Validation.checkTagsToLoad
+            let! filePattern = dotNetXmlFilePattern |> tryCreateDotNetXmlFilePattern
+            let! tagsToLoadCount = tagsToLoadCount  |> tryCreateTagCount
             return {
-                DotNetXmlFilePattern = filePattern
+                ProjectsFindPattern = filePattern
                 TagsToLoad = tagsToLoadCount
             }
         }
-        
