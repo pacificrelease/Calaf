@@ -19,7 +19,7 @@ module internal Validation =
         else Ok <| TagQuantity count
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module internal BumpSettings =
+module BumpSettings =
     open FsToolkit.ErrorHandling
     
     let tryCreateDotNetXmlFilePattern (filePattern: string) =

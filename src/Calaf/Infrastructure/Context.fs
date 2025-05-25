@@ -2,7 +2,7 @@ namespace Calaf.Infrastructure
 
 open Calaf.Application
 
-module internal BumpContext =
+module BumpContext =
     let create fileSystem git clock=
         { FileSystem = fileSystem
           Git = git

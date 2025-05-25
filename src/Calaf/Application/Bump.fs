@@ -1,4 +1,4 @@
-module internal Calaf.Application.Bump
+module Calaf.Application.Bump
 
 open FsToolkit.ErrorHandling
 
