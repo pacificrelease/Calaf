@@ -22,7 +22,7 @@ module internal BumpWorkspace =
         result {
             let path = String.Empty |> getPathOrCurrentDir
             let context = BumpContext.createDefault
-            let! settings = Settings.tryCreate supportedFilesPattern loadTenTags
+            let! settings = BumpSettings.tryCreate supportedFilesPattern loadTenTags
             let! result = Bump.run path context settings
             return result
         }
