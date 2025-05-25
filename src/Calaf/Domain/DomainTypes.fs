@@ -61,10 +61,12 @@ module Values =
         | Attached of commit: Commit * branchName: BranchName
         | Detached of commit: Commit
 
-    // DU for events     
+    // DU for events
+    [<Struct>] 
     type RepositoryState = | Damaged | Unsigned | Unborn | Dirty | Ready
     
     // File System
+    [<Struct>]
     type Language =
         | FSharp
         | CSharp
