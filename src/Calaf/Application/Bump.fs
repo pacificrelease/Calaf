@@ -12,7 +12,7 @@ let run (path: string) (context: BumpContext) (settings: BumpSettings) =
             let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
             let! dir = context.FileSystem.tryReadDirectory path searchPatternStr
             
-            let (TagCount tagCount) = settings.TagsToLoad
+            let (TagQuantity tagCount) = settings.TagsToLoad
             let! repo = context.Git.tryRead path tagCount Version.versionPrefixes timeStamp
             
             let! workspace, createEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain           

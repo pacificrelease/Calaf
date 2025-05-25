@@ -20,7 +20,7 @@ type InfrastructureError =
     
 type ValidationError =
     | EmptyDotNetXmlFilePattern
-    | ZeroTagCount
+    | ZeroTagQuantity
     
 type CalafError =
     | Validation     of ValidationError

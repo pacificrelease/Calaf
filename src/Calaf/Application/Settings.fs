@@ -2,9 +2,9 @@ namespace Calaf.Application
 
 type DotNetXmlFilePattern = private DotNetXmlFilePattern of string
 
-type TagCount = private TagCount of byte
+type TagQuantity = private TagQuantity of byte
 
 type BumpSettings = {
     ProjectsSearchPattern: DotNetXmlFilePattern
-    TagsToLoad: TagCount
+    TagsToLoad: TagQuantity
 }

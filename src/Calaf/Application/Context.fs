@@ -13,9 +13,9 @@ module internal Validation =
         if System.String.IsNullOrWhiteSpace pattern then Error EmptyDotNetXmlFilePattern
         else Ok <| DotNetXmlFilePattern pattern
         
-    let checkTagsToLoad (TagCount count) =
-        if count = 0uy then Error ZeroTagCount
-        else Ok <| TagCount count
+    let checkTagsToLoad (TagQuantity count) =
+        if count = 0uy then Error ZeroTagQuantity
+        else Ok <| TagQuantity count
 
 module internal Settings =
     open FsToolkit.ErrorHandling
@@ -24,7 +24,7 @@ module internal Settings =
         filePattern |> DotNetXmlFilePattern |> Validation.checkDotNetXmlFilePattern
         
     let tryCreateTagCount tagsToLoadCount =
-        tagsToLoadCount |> TagCount |> Validation.checkTagsToLoad        
+        tagsToLoadCount |> TagQuantity |> Validation.checkTagsToLoad        
     
     let tryCreate (dotNetXmlFilePattern: string) (tagsToLoadCount: byte) =
         result {
