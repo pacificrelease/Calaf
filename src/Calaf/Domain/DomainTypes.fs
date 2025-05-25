@@ -93,6 +93,17 @@ module Values =
         Content: ProjectContent
         Version: Version
     }
+    
+    type GitRelease = {
+        Signature: Signature
+        TagName: TagName
+        CommitMessage: CommitMessage
+    }
+    
+    type WorkspaceVersioning = {
+        CalendarVersionProjectsPaths: string Set
+        GitRelease: GitRelease option
+    }
 
 module Entities =
     open Values
