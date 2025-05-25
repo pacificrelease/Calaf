@@ -1,13 +1,5 @@
 namespace Calaf.Application
 
-type DotNetXmlFilePattern = private DotNetXmlFilePattern of string
-type TagCount = private TagCount of byte
-
-type BumpSettings = {
-    ProjectsFindPattern: DotNetXmlFilePattern
-    TagsToLoad: TagCount
-}
-
 type BumpContext = {
     FileSystem: IFileSystem
     Git: IGit
@@ -15,6 +7,7 @@ type BumpContext = {
 }
 
 module internal Validation =
+    open Calaf.Contracts
     
     let checkDotNetXmlFilePattern (DotNetXmlFilePattern pattern) =
         if System.String.IsNullOrWhiteSpace pattern then Error EmptyDotNetXmlFilePattern
@@ -38,7 +31,7 @@ module internal Settings =
             let! filePattern = dotNetXmlFilePattern |> tryCreateDotNetXmlFilePattern |> Result.mapError CalafError.Validation
             let! tagsToLoadCount = tagsToLoadCount |> tryCreateTagCount |> Result.mapError CalafError.Validation
             return {
-                ProjectsFindPattern = filePattern
+                ProjectsSearchPattern = filePattern
                 TagsToLoad = tagsToLoadCount
             }
         }

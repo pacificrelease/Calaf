@@ -63,7 +63,7 @@ module internal GitRepository =
     
     let read
         (directory: string)
-        (maxTagsToRead: int)
+        (maxTagsToRead: byte)
         (tagsPrefixesToFilter: string list)
         (timeStamp: System.DateTimeOffset) =        
         let validTag (tag: Tag) =
@@ -90,7 +90,7 @@ module internal GitRepository =
             then
                 use repo = new Repository(directory)
                 let ctx = extractContext repo
-                let tags = extractTags repo maxTagsToRead
+                let tags = maxTagsToRead |> int |> extractTags repo 
                 let signature = repo.Config.BuildSignature timeStamp
                 let gitRepoInfo = GitGateway.toGitRepositoryInfo ctx tags signature
                 gitRepoInfo |> Some |> Ok
