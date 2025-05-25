@@ -8,15 +8,9 @@ open Calaf.Domain.DomainTypes.Entities
 open Calaf.Infrastructure
 
 let path = String.Empty
-let git = Git()
-let fileSystem = FileSystem()
-let clock = Clock()
+let context = BumpContext.createDefault
 let result =
-    bumpWorkspace
-        path
-        git
-        fileSystem
-        clock
+    bumpWorkspace path context
         
 match result with
 | Error error ->

@@ -23,6 +23,6 @@ type ValidationError =
     | ZeroTagCount
     
 type CalafError =
-    | Domain         of DomainError
     | Validation     of ValidationError
+    | Domain         of DomainError    
     | Infrastructure of InfrastructureError
