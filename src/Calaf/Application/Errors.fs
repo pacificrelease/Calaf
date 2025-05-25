@@ -18,6 +18,11 @@ type InfrastructureError =
     | Git        of GitError
     | FileSystem of FileSystemError
     
+type ValidationError =
+    | EmptyDotNetXmlFilePattern
+    | ZeroTagCount
+    
 type CalafError =
     | Domain         of DomainError
+    | Validation     of ValidationError
     | Infrastructure of InfrastructureError
