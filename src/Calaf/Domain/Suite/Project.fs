@@ -69,6 +69,12 @@ let chooseCalendarVersions (projects: Project seq) : CalendarVersion seq =
         | Versioned { Version = CalVer version } -> Some version
         | _ -> None)
     
+let tryProfile (project: Project) =
+    match project with    
+    | Versioned { Version = CalVer _;  Content = Xml xmlContent; Metadata = m } ->
+        Some { AbsolutePath = m.AbsolutePath; Content = xmlContent }
+    | _ -> None
+    
 let tryBump (project: VersionedProject) (nextVersion: CalendarVersion) =    
     match project.Content with
     | Xml xmlContent ->
