@@ -94,15 +94,20 @@ module Values =
         Version: Version
     }
     
-    type GitRelease = {
+    type XmlProjectActionProfile = {
+        AbsolutePath: string
+        Content: System.Xml.Linq.XElement
+    }
+    
+    type RepositoryActionProfile = {
         Signature: Signature
         TagName: TagName
         CommitMessage: CommitMessage
-    }
+    }   
     
-    type WorkspaceVersioning = {
-        CalendarVersionProjectsPaths: string Set
-        GitRelease: GitRelease option
+    type WorkspaceActionProfile = {
+        XmlProjects: XmlProjectActionProfile list
+        Repository: RepositoryActionProfile option
     }
 
 module Entities =
