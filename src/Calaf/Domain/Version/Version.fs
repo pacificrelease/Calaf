@@ -11,7 +11,9 @@ let internal versionPrefixes =
       "Version";  "Ver";  "V" ]
     |> List.sortByDescending String.length
 let internal tagVersionPrefix = versionPrefixes[10]
-let internal commitVersionPrefix = versionPrefixes[2]
+let internal commitVersionPrefix =
+    let chore = "chore"
+    $"{chore}: {versionPrefixes[2]}"
     
 type private CleanString = string
 
@@ -95,7 +97,7 @@ let toTagName (calVer: CalendarVersion) : string =
 /// </summary>
 /// <param name="calVer">Calendar version to convert</param>
 let toCommitMessage (calVer: CalendarVersion) : string =
-    commitVersionPrefix + toString calVer    
+    $"{commitVersionPrefix} {calVer |> toString}"    
  
 let bump (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : CalendarVersion =    
     let shouldBumpYear = monthStamp.Year > currentVersion.Year            
