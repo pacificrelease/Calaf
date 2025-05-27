@@ -27,7 +27,7 @@ module internal BumpWorkspace =
             return result
         }    
 
-let path = "../../../../.."
+let path = String.Empty
 match BumpWorkspace.run path with
 | Error error ->
     printfn $"{error}"
