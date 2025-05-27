@@ -27,7 +27,17 @@ module internal Schema =
             |> Seq.tryExactlyOne
             |> Option.bind Seq.tryHead
             |> Option.map (fun versionElement -> versionElement.SetValue(version); Xml content)
-        } 
+        }
+        
+let private isCalendarVersion (project: Project) : bool =
+    match project with
+    | Versioned { Version = CalVer _ } -> true
+    | _ -> false
+    
+let private getCalendarVersion (project: Project) : CalendarVersion option =
+    match project with
+    | Versioned { Version = CalVer version } -> Some version
+    | _ -> None
 
 let tryCapture (projectInfo: ProjectXmlFileInfo) : Project option =        
     let tryExtractVersion (xml: System.Xml.Linq.XElement) : Version option =
@@ -52,22 +62,11 @@ let tryCapture (projectInfo: ProjectXmlFileInfo) : Project option =
     
 let chooseCalendarVersioned (projects: Project seq) : Project seq =
     projects
-    |> Seq.filter (function
-        | Versioned { Version = CalVer _ }  -> true
-        | _ -> false)
+    |> Seq.filter isCalendarVersion
     
-let chooseXmlVCalendarVersionedProjects (projects: Project seq) =
-    projects
-    |> Seq.choose (function
-        | Versioned { Version = CalVer _;  Content = Xml xmlContent; Metadata = m } ->
-            Some {| AbsolutePath = m.AbsolutePath; Content = xmlContent |}
-        | _ -> None)
-
 let chooseCalendarVersions (projects: Project seq) : CalendarVersion seq =
     projects
-    |> Seq.choose (function
-        | Versioned { Version = CalVer version } -> Some version
-        | _ -> None)
+    |> Seq.choose getCalendarVersion
     
 let tryProfile (project: Project) =
     match project with    

@@ -20,7 +20,7 @@ let run (path: string) (context: BumpContext) (settings: BumpSettings) =
             let! bumpedWorkspace, bumpEvents = Workspace.tryBump workspace monthStamp |> Result.mapError CalafError.Domain
             
             do! bumpedWorkspace.Suite
-                |> Suite.chooseXmlProjects
+                |> Suite.tryProfile
                 |> Seq.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
                 |> Result.map ignore
                             

@@ -54,11 +54,10 @@ let getCalendarVersion suite =
     match suite with
     | StandardSet (version, _) -> version
     
-let chooseXmlProjects suite =
+let tryProfile suite =
     match suite with
     | StandardSet (_, projects) ->
-        projects
-        |> chooseXmlVCalendarVersionedProjects
+        projects |> Seq.map tryProfile |> Seq.choose id |> Seq.toList        
     
 let tryBump (suite: Suite) (nextVersion: CalendarVersion) =
     result {
