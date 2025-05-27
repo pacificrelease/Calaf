@@ -120,11 +120,11 @@ module internal GitRepository =
             repo
         
         let commit (repo: Repository) =
-            repo.Commit(commitMessage, signature, signature) |> ignore
-            repo
+            let commit = repo.Commit(commitMessage, signature, signature)
+            (repo, commit)
             
-        let tag (repo: Repository) (commit: Commit) =       
-            repo.ApplyTag(tagName, commit.Sha) |> ignore
+        let tag (repo: Repository, commit: Commit) =
+            repo.Tags.Add(tagName, commit) |> ignore
             repo
         
         try
