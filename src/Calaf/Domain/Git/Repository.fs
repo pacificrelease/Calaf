@@ -79,13 +79,22 @@ let tryCapture (repoInfo: GitRepositoryInfo) =
             let repo = Damaged path
             let event = Events.toRepositoryCaptured repo
             return (repo, [event])
-    }
+    }    
     
 let tryGetCalendarVersion repo =
     match repo with
     | Ready (_, _, _, version) -> version
     | Dirty (_, _, _, version) -> version
     | _ -> None
+    
+let tryProfile (repo: Repository) =    
+    match repo with        
+    | Ready (_, _, signature, Some currentVersion)        
+    | Dirty (_, _, signature, Some currentVersion) ->
+        let tagName = Version.toTagName currentVersion
+        let commitMessage = Version.toCommitMessage currentVersion
+        Some { Signature = signature; TagName = tagName; CommitMessage = commitMessage }
+    | _ -> None    
     
 let tryBump (repo: Repository) (nextVersion: CalendarVersion) =
     let performBump (ctor, dir, head, signature, currentVersion) =
@@ -105,6 +114,6 @@ let tryBump (repo: Repository) (nextVersion: CalendarVersion) =
         performBump (Repository.Ready, dir, head, signature, currentVersion)
     | Dirty (dir, head, signature, currentVersion) ->
         performBump (Repository.Dirty, dir, head, signature, currentVersion)
-    | Unborn   _ -> RepositoryHeadUnborn   |> Error
-    | Unsigned _ -> RepositoryUnsigned |> Error
+    | Unborn   _ -> RepositoryHeadUnborn |> Error
+    | Unsigned _ -> RepositoryUnsigned   |> Error
     | Damaged  _ -> RepositoryCorrupted  |> Error
