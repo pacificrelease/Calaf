@@ -71,7 +71,7 @@ let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
     
 let profile (workspace: Workspace) =
     let projectsProfiles = Suite.tryProfile workspace.Suite
-    let repositoryProfile = workspace.Repository |> Option.bind Repository.tryProfile
+    let repositoryProfile = workspace.Repository |> Option.bind (fun p ->Repository.tryProfile p (projectsProfiles |> List.map _.AbsolutePath))
     { Projects = projectsProfiles
       Repository = repositoryProfile }
     

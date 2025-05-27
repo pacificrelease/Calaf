@@ -12,4 +12,5 @@ type IGit =
     abstract tryApply:
         directory: string * files: string list ->
         commitMessage: string ->
-        tagName: string -> signature: GitSignatureInfo -> Result<unit, CalafError>
+        tagName: string ->
+        signature: GitSignatureInfo -> Result<unit, CalafError>

@@ -87,13 +87,17 @@ let tryGetCalendarVersion repo =
     | Dirty (_, _, _, version) -> version
     | _ -> None
     
-let tryProfile (repo: Repository) =    
+let tryProfile (repo: Repository) (pendingFilesPaths: string list) =    
     match repo with        
-    | Ready (_, _, signature, Some currentVersion)        
-    | Dirty (_, _, signature, Some currentVersion) ->
+    | Ready (dir, _, signature, Some currentVersion)        
+    | Dirty (dir, _, signature, Some currentVersion) ->
         let tagName = Version.toTagName currentVersion
         let commitMessage = Version.toCommitMessage currentVersion
-        Some { Signature = signature; TagName = tagName; CommitMessage = commitMessage }
+        Some { Directory = dir
+               Files = pendingFilesPaths
+               Signature = signature
+               TagName = tagName
+               CommitMessage = commitMessage }
     | _ -> None    
     
 let tryBump (repo: Repository) (nextVersion: CalendarVersion) =

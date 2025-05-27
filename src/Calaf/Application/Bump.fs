@@ -2,6 +2,7 @@ module Calaf.Application.Bump
 
 open FsToolkit.ErrorHandling
 
+open Calaf.Contracts
 open Calaf.Domain
 
 let run (path: string) (context: BumpContext) (settings: BumpSettings) =
@@ -17,12 +18,19 @@ let run (path: string) (context: BumpContext) (settings: BumpSettings) =
             
             let! workspace, createEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain           
             
-            let! bumpedWorkspace, bumpEvents = Workspace.tryBump workspace monthStamp |> Result.mapError CalafError.Domain
+            let! workspace', bumpEvents = Workspace.tryBump workspace monthStamp |> Result.mapError CalafError.Domain
             
-            do! bumpedWorkspace.Suite
-                |> Suite.tryProfile
-                |> Seq.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
-                |> Result.map ignore
+            let profile = Workspace.profile workspace'
+            do! profile.Projects
+                |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
+                |> Result.map ignore                
+            do! profile.Repository
+                |> Option.map (fun p ->
+                    let signature = { Name = p.Signature.Name; Email = p.Signature.Email; When = p.Signature.When }
+                    context.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName signature
+                    |> Result.map ignore
+                    |> Result.mapError id)
+                |> Option.defaultValue (Ok ())
                             
-            return bumpedWorkspace
+            return workspace'
         }

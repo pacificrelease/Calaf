@@ -100,12 +100,14 @@ module Values =
     }
     
     type RepositoryActionProfile = {
+        Directory: string
+        Files: string list
         Signature: Signature
         TagName: TagName
         CommitMessage: CommitMessage
     }   
     
-    type WorkspaceActionProfile = {
+    type WorkspaceActionProfile = {        
         Projects: ProjectActionProfile list
         Repository: RepositoryActionProfile option
     }
