@@ -69,6 +69,12 @@ let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
         return workspace, events        
     }
     
+let profile (workspace: Workspace) =
+    let projectsProfiles = Suite.tryProfile workspace.Suite
+    let repositoryProfile = workspace.Repository |> Option.bind Repository.tryProfile
+    { Projects = projectsProfiles
+      Repository = repositoryProfile }
+    
 let tryBump (workspace: Workspace) (monthStamp: MonthStamp) =
     result {
         let nextVersion = getNextVersion workspace monthStamp
