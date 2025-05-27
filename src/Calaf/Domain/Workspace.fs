@@ -37,7 +37,7 @@ let private combineVersions suite repoOption =
         | None -> ()
     ]
     
-let private combineEventsO primaryEvents secondaryEventsOption =
+let private combineEvents primaryEvents secondaryEventsOption =
     match secondaryEventsOption with
     | Some secondaryEvents ->
         primaryEvents @ secondaryEvents
@@ -82,7 +82,7 @@ let tryBump (workspace: Workspace) (monthStamp: MonthStamp) =
                 |> Option.traverseResult (fun repo -> Repository.tryBump repo nextVersion)
             
             let events =
-               combineEventsO suiteEvents (bumpedRepoOption |> Option.map snd)
+               combineEvents suiteEvents (bumpedRepoOption |> Option.map snd)
                 
             let updatedWorkspace =
                 { workspace with
