@@ -102,7 +102,8 @@ module internal GitRepository =
     let apply
         // TODO: Combine arguments to command
         // TODO: Accept as an argument only changed projects instead of all
-        (directory: string)        
+        (directory: string)
+        (files: string list)
         (commitMessage: string)
         (tagName: string)
         (signature: GitSignatureInfo) : Result<unit, InfrastructureError> =            
@@ -114,8 +115,8 @@ module internal GitRepository =
             Commands.Unstage(repo, all)
             repo
             
-        let stage repo =
-            Commands.Stage(repo, all)
+        let stage (files: string list) repo =
+            Commands.Stage(repo, files)
             repo
         
         let commit (repo: Repository) =
@@ -132,7 +133,7 @@ module internal GitRepository =
                 use repo = new Repository(directory)
                 repo
                 |> unstage
-                |> stage
+                |> stage files
                 |> commit
                 |> tag
                 |> ignore
@@ -148,6 +149,6 @@ type Git() =
             GitRepository.read directory maxTagsToRead tagsPrefixesToFilter timeStamp
             |> Result.mapError CalafError.Infrastructure
             
-        member _.tryApply directory commitMessage tagName signature =
-            GitRepository.apply directory commitMessage tagName signature
+        member _.tryApply (directory, files) commitMessage tagName signature =
+            GitRepository.apply directory files commitMessage tagName signature
             |> Result.mapError CalafError.Infrastructure
