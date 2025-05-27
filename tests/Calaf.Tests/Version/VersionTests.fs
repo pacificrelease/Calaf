@@ -286,9 +286,9 @@ module ToCommitMessagePropertiesTests =
         let commitMsg = calVer |> toCommitMessage
         commitMsg.EndsWith(toString calVer)
 
-    // No Unexpected Characters    
+    // Contains commit version prefix
     [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
-    let ``Commit message does not contain unexpected empty or whitespace characters`` (calVer: CalendarVersion) =
+    let ``Commit message does not contain unexpected empty or whitespace and contains commit version prefix`` (calVer: CalendarVersion) =
         let commitMsg = calVer |> toCommitMessage
         not (System.String.IsNullOrWhiteSpace commitMsg) &&
-        commitMsg |> Seq.forall (fun c -> not (System.Char.IsWhiteSpace c))
+        commitMsg.Contains commitVersionPrefix
