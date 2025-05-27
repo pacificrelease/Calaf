@@ -94,7 +94,7 @@ module Values =
         Version: Version
     }
     
-    type XmlProjectActionProfile = {
+    type ProjectActionProfile = {
         AbsolutePath: string
         Content: System.Xml.Linq.XElement
     }
@@ -106,7 +106,7 @@ module Values =
     }   
     
     type WorkspaceActionProfile = {
-        XmlProjects: XmlProjectActionProfile list
+        Projects: ProjectActionProfile list
         Repository: RepositoryActionProfile option
     }
 
