@@ -18,17 +18,17 @@ module internal BumpWorkspace =
     let private getPathOrCurrentDir path =        
         if String.IsNullOrWhiteSpace path then "." else path
         
-    let run () =
+    let run path =
         result {
-            let path = String.Empty |> getPathOrCurrentDir
+            let path = path |> getPathOrCurrentDir
             let context = BumpContext.createDefault
             let! settings = BumpSettings.tryCreate supportedFilesPattern loadTenTags
             let! result = Bump.run path context settings
             return result
-        }
-    
-            
-match BumpWorkspace.run() with
+        }    
+
+let path = "../../../../.."
+match BumpWorkspace.run path with
 | Error error ->
     printfn $"{error}"
     Environment.Exit(1)
