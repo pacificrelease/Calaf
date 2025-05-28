@@ -5,3 +5,7 @@ type BumpContext = {
     Git: IGit
     Clock: IClock
 }
+
+type OutputContext = {
+    Console: IConsole
+}
