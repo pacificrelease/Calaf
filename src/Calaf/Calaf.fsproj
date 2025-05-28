@@ -38,6 +38,7 @@
     <Compile Include="Application\Ports\Git.fs" />
     <Compile Include="Application\Ports\FileSystem.fs" />
     <Compile Include="Application\Ports\Clock.fs" />
+    <Compile Include="Application\Ports\Console.fs" />
     <Compile Include="Application\Context.fs" />
     <Compile Include="Application\Bump.fs" />
     <Compile Include="Infrastructure\Adapters\Git.fs" />    
