@@ -3,13 +3,11 @@
 
 open System
 
-open Calaf.Domain.DomainTypes.Entities
+open Calaf.Application
+open Calaf.Infrastructure
 
 module internal BumpWorkspace =
     open FsToolkit.ErrorHandling
-    
-    open Calaf.Application
-    open Calaf.Infrastructure
     
     [<Literal>]
     let private supportedFilesPattern = "*.?sproj"
@@ -25,24 +23,14 @@ module internal BumpWorkspace =
             let! settings = BumpSettings.tryCreate supportedFilesPattern loadTenTags
             let! result = Bump.run path context settings
             return result
-        }    
-
-let path = String.Empty
-match BumpWorkspace.run path with
-| Error error ->
-    printfn $"{error}"
-    Environment.Exit(1)
-    
-| Ok workspace ->
-    match workspace.Repository, workspace.Suite with
-    | Some _, Suite.StandardSet (version, _ ) ->
-        printfn $"Workspace: {workspace.Directory}."
-        printfn "Git repository found. Skipping now..."
-        printfn $"Current Suite version is {version}. 🚀. \n"
-        Environment.Exit(0)
-            
-    | None, Suite.StandardSet (version, _) ->
-        printfn $"Workspace: {workspace.Directory}."
-        printfn "Git repository not found."
-        printfn $"Current Suite version is {version}. 🚀. \n"
-        Environment.Exit(0)
+        }
+        
+module internal OutputWorkspace =
+    let run result =
+        let context = OutputContext.createDefault
+        Output.run result context
+        
+String.Empty
+|> BumpWorkspace.run
+|> OutputWorkspace.run
+|> Environment.Exit

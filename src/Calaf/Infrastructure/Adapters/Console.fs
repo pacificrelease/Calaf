@@ -25,10 +25,10 @@ module internal Console =
 
 type Console() =
     interface IConsole with
-        member _.write (message: string) =
-            message |> Console.writeLine
+        member _.write (message: string) =            
+            message |> Console.writeLine           
             
-        member _.success (message: string) =
+        member _.success (message: string) =            
             message |> Console.writeSuccess
 
         member _.error (message: string) =
