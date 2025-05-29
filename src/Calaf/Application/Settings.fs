@@ -11,12 +11,14 @@ type BumpSettings = {
 
 module internal Validation =    
     let checkDotNetXmlFilePattern (DotNetXmlFilePattern pattern) =
-        if System.String.IsNullOrWhiteSpace pattern then Error EmptyDotNetXmlFilePattern
-        else Ok <| DotNetXmlFilePattern pattern
+        if System.String.IsNullOrWhiteSpace pattern then
+            EmptyDotNetXmlFilePattern |> CalafError.Validation |> Error
+        else pattern |> DotNetXmlFilePattern |> Ok
         
     let checkTagsToLoad (TagQuantity count) =
-        if count = 0uy then Error ZeroTagQuantity
-        else Ok <| TagQuantity count
+        if count = 0uy then
+            ZeroTagQuantity |> CalafError.Validation |> Error
+        else count |> TagQuantity |> Ok
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module BumpSettings =
@@ -30,8 +32,8 @@ module BumpSettings =
     
     let tryCreate (dotNetXmlFilePattern: string) (tagsToLoadCount: byte) =
         result {
-            let! filePattern = dotNetXmlFilePattern |> tryCreateDotNetXmlFilePattern |> Result.mapError CalafError.Validation
-            let! tagsToLoadCount = tagsToLoadCount |> tryCreateTagCount |> Result.mapError CalafError.Validation
+            let! filePattern = dotNetXmlFilePattern |> tryCreateDotNetXmlFilePattern
+            let! tagsToLoadCount = tagsToLoadCount  |> tryCreateTagCount
             return {
                 ProjectsSearchPattern = filePattern
                 TagsToLoad = tagsToLoadCount
