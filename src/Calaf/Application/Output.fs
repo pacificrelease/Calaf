@@ -7,7 +7,7 @@ let run (result: Result<Workspace, CalafError>) (context: OutputContext) =
     match result with
     | Error error ->
         context.Console.error $"{error}"
-        1
+        result
         
     | Ok workspace ->
         match workspace.Repository, workspace.Suite with
@@ -15,10 +15,10 @@ let run (result: Result<Workspace, CalafError>) (context: OutputContext) =
             context.Console.write $"Workspace: {workspace.Directory}."
             context.Console.write "Git repository found. Skipping now..."
             context.Console.success $"Current Suite version is {version}. 🚀. \n"
-            0
+            result
                 
         | None, Suite.StandardSet (version, _) ->
             context.Console.write $"Workspace: {workspace.Directory}."
             context.Console.write "Git repository not found."
             context.Console.success $"Current Suite version is {version}. 🚀. \n"
-            0
+            result

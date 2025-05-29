@@ -30,7 +30,15 @@ module internal OutputWorkspace =
         let context = OutputContext.createDefault
         Output.run result context
         
-String.Empty
+module internal ExitCode =
+    let map result =
+        match result with
+        | Ok _ -> 0
+        | Error _ -> 1
+
+let path = String.Empty        
+path
 |> BumpWorkspace.run
 |> OutputWorkspace.run
+|> ExitCode.map
 |> Environment.Exit
