@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <PackageId>calaf-tool</PackageId>
+    <PackageId>Calaf</PackageId>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>calaf</ToolCommandName>
     
