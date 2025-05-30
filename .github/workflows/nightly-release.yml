@@ -4,7 +4,11 @@ on:
     workflow_dispatch:
       
     schedule:
-        - cron: '5 0 * * *' # Every day at 00:05 AM UTC
+        - cron: '5 0 * * *'
+          
+permissions:
+    contents: read
+    packages: write
           
 concurrency:
     group: nightly
