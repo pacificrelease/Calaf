@@ -23,6 +23,8 @@ jobs:
         runs-on: ubuntu-latest
         strategy: 
             fail-fast: true
+            matrix:
+                configuration: [ ${{ vars.CONFIGURATION }} ]
   
         steps:
             - name: Checkout
