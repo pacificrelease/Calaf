@@ -36,8 +36,12 @@ jobs:
             - name: Build
               run: dotnet build ${{ vars.SOLUTION }} --no-restore --configuration ${{ vars.CONFIGURATION }}
   
+            - name: Hash
+              run: |
+                echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+  
             - name: Pack
-              run: dotnet pack ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }}
+              run: dotnet pack ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} /p:VersionSuffix=nightly-${{ env.hash }}
                 
             - name: Source
               run: |
