@@ -17,13 +17,24 @@ concurrency:
 env:
     DOTNET_VERSION: '9.0.x'
 
-jobs:
-    release:
+jobs:    
+    nightly-release:
+        name: Nightly Release
         runs-on: ubuntu-latest
+        strategy: 
+            fail-fast: true
   
         steps:
             - name: Checkout
               uses: actions/checkout@v4
+              
+            - name: Cache
+              uses: actions/cache@v4
+              with:
+                path: ~/.nuget/packages
+                key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+                restore-keys: |
+                  ${{ runner.os }}-nuget-
   
             - name: Setup
               uses: actions/setup-dotnet@v4
@@ -41,7 +52,8 @@ jobs:
                 echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
   
             - name: Pack
-              run: dotnet pack ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} /p:VersionSuffix=nightly-${{ env.hash }}
+              run: |
+                dotnet pack ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --version-suffix nightly-${{ env.hash }} --output ./nupkgs
                 
             - name: Source
               run: |
@@ -53,7 +65,7 @@ jobs:
   
             - name: Publish
               run: |
-                dotnet nuget push **/bin/Release/*.nupkg \
+                dotnet nuget push ./nupkgs/*.nupkg \
                   --source github \
                   --api-key "${{ secrets.GITHUB_TOKEN }}" \
                   --skip-duplicate
