@@ -1,6 +1,5 @@
 // For more information see https://aka.ms/fsharp-console-apps
 // Composition Root
-
 open System
 
 open Calaf.Application
@@ -27,8 +26,8 @@ module internal BumpWorkspace =
         
 module internal OutputWorkspace =
     let run result =
-        let context = OutputContext.createDefault
-        Output.run result context
+        let console = Console()
+        Output.run result console
         
 module internal ExitCode =
     let map result =
@@ -36,9 +35,11 @@ module internal ExitCode =
         | Ok _ -> 0
         | Error _ -> 1
 
-let path = String.Empty        
-path
-|> BumpWorkspace.run
-|> OutputWorkspace.run
-|> ExitCode.map
-|> Environment.Exit
+[<EntryPoint>]
+let main args =
+    
+    let path = String.Empty        
+    path
+    |> BumpWorkspace.run
+    |> OutputWorkspace.run
+    |> ExitCode.map

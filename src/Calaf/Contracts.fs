@@ -1,5 +1,14 @@
 ﻿namespace Calaf.Contracts
 
+// Incoming commands
+type BuildType =
+    | Release
+    | Nightly
+    
+type Command =
+    | Build of BuildType
+ 
+
 // Contracts used by Infrastructure layer
 type GitSignatureInfo = {
     Email: string

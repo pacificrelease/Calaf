@@ -47,6 +47,8 @@
     <Compile Include="Application\Context.fs" />
     <Compile Include="Application\Bump.fs" />
     <Compile Include="Application\Output.fs" />
+    <Compile Include="Application\Commands\Commands.fs" />
+    <Compile Include="Infrastructure\Arguments.fs" />
     <Compile Include="Infrastructure\Adapters\Git.fs" />    
     <Compile Include="Infrastructure\Adapters\FileSystem.fs" />    
     <Compile Include="Infrastructure\Adapters\Clock.fs" />    
@@ -55,6 +57,7 @@
     <Compile Include="Program.fs" />    
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Argu" Version="6.2.5" />
     <PackageReference Include="FsToolkit.ErrorHandling" Version="4.18.0" />
     <PackageReference Include="LibGit2Sharp" Version="0.31.0" />
   </ItemGroup>

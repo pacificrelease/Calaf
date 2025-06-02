@@ -2,7 +2,7 @@ namespace Calaf.Application
 
 open Calaf.Domain
 
-type ArgumentError =
+type InputError =
     | CommandNotRecognized   of command: string
     | BuildFlagNotRecognized of flag: string    
     
@@ -25,12 +25,12 @@ type FileSystemError =
     | XmlSaveFailed         of absolutePath: string * ex: exn
     
 type InfrastructureError =
+    | Input      of InputError
     | Git        of GitError
     | FileSystem of FileSystemError
 
     
 type CalafError =
-    | Argument
     | Validation     of ValidationError
     | Domain         of DomainError    
     | Infrastructure of InfrastructureError

@@ -13,11 +13,3 @@ module BumpContext =
         let git = Calaf.Infrastructure.Git() :> IGit
         let clock = Clock() :> IClock
         create fileSystem git clock
-        
-module OutputContext =
-    let create console =
-        { Console = console }
-        
-    let createDefault =
-        let console = Console() :> IConsole
-        create console
