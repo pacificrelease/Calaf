@@ -2,6 +2,16 @@ namespace Calaf.Application
 
 open Calaf.Domain
 
+type ArgumentError =
+    | CommandNotRecognized   of command: string
+    | BuildFlagNotRecognized of flag: string    
+    
+
+type ValidationError =
+    | EmptyDotNetXmlFilePattern
+    | ZeroTagQuantity
+
+    
 type GitError =
     | RepoNotInitialized
     | RepoAccessFailed of ex: exn    
@@ -17,12 +27,10 @@ type FileSystemError =
 type InfrastructureError =
     | Git        of GitError
     | FileSystem of FileSystemError
-    
-type ValidationError =
-    | EmptyDotNetXmlFilePattern
-    | ZeroTagQuantity
+
     
 type CalafError =
+    | Argument
     | Validation     of ValidationError
     | Domain         of DomainError    
     | Infrastructure of InfrastructureError
