@@ -38,8 +38,8 @@ module internal Space =
                 let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
                 let (TagQuantity tagCount) = settings.TagsToLoad
                 let! repo = context.Git.tryRead path tagCount Version.versionPrefixes timeStamp                
-                let! workspace, createEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
-                let! workspace', bumpEvents = Workspace.tryBump workspace monthStamp |> Result.mapError CalafError.Domain                
+                let! workspace, _ = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
+                let! workspace', _ = Workspace.tryBump workspace monthStamp |> Result.mapError CalafError.Domain                
                 let profile = Workspace.profile workspace'
                 do! profile.Projects
                     |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
@@ -94,9 +94,10 @@ module internal Space =
                 | Build strategy ->
                     match strategy with
                     | BuildType.Nightly ->
-                        return! Build.nightly (directory path) context settings
+                        return! Build.nightly path context settings
                     | BuildType.Release ->
-                        return! Build.release (directory path) context settings
+                        return! Build.release path context settings
             }
+        let path = directory path
         let result = apply path arguments context settings
         result |> output context.Console |> exit
