@@ -7,7 +7,6 @@ type BuildType =
     
 type Command =
     | Build of BuildType
- 
 
 // Contracts used by Infrastructure layer
 type GitSignatureInfo = {

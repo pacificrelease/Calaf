@@ -1,7 +1,8 @@
 namespace Calaf.Application
 
-type BumpContext = {
+type SpaceApplyContext = {
     FileSystem: IFileSystem
     Git: IGit
     Clock: IClock
+    Console: IConsole
 }
