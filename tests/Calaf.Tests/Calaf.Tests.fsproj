@@ -5,9 +5,8 @@
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>false</GenerateProgramFile>
     <IsTestProject>true</IsTestProject>
-    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-    <VersionPrefix>2025.5.5</VersionPrefix>
-    <!--<Version>2025.5.5</Version>-->
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>    
+    <Version>2025.5.5</Version>
     <FileVersion>$(Version)</FileVersion>
   </PropertyGroup>
   <ItemGroup>
