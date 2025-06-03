@@ -4,6 +4,8 @@ namespace Calaf.Domain.DomainTypes
 module Values =
     // Common
     type Patch = uint32
+    type Build =
+        | Nightly
     // SemVer
     type Major = uint32
     type Minor = uint32
@@ -16,15 +18,16 @@ module Values =
         Year:   Year
         Month:  Month
     }
+    
 
-    // MAJOR.MINOR.PATCH
+    // MAJOR.MINOR.PATCH-SUFFIX
     type SemanticVersion = {
         Major: Major
         Minor: Minor
         Patch: Patch
     }
 
-    //YYYY.MM.PATCH
+    //YYYY.MM.PATCH-SUFFIX
     //YYYY.MM
     type CalendarVersion = {
         Year:   Year
