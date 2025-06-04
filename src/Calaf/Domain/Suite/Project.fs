@@ -20,13 +20,13 @@ module internal Schema =
         |> Seq.tryExactlyOne
         
     let tryUpdateVersionElement (content: System.Xml.Linq.XElement) (version: string)=
-        option {            
-            // TODO: Maybe better to divide variables, then update and return projectDocument
-            return! content.Elements(PropertyGroupXElementName)
-            |> Seq.map _.Elements(VersionXElementName)
-            |> Seq.tryExactlyOne
-            |> Option.bind Seq.tryHead
-            |> Option.map (fun versionElement -> versionElement.SetValue(version); Xml content)
+        option {
+            // TODO: Refactor to return error if version element not found
+            // TODO: Return new content with updated version
+            tryExtractVersionElement content
+            |> Option.map _.SetValue(version)
+            |> ignore
+            return Xml content
         }
         
 let private isCalendarVersion (project: Project) : bool =
