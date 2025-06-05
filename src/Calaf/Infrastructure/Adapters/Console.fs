@@ -1,32 +1,27 @@
 namespace Calaf.Infrastructure
 
+open Argu
+
 open Calaf.Application
 open Calaf.Contracts
 
-module internal Arguments =
-    open Argu
+type MakeFlag =    
+    | [<CliPrefix(CliPrefix.None)>] Release
+    | [<CliPrefix(CliPrefix.None)>] Nightly
+    interface IArgParserTemplate with
+        member flag.Usage =
+            match flag with
+            | Release -> "Make a Release version"
+            | Nightly -> "Make a Nightly version"
 
-    type BuildFlag =    
-        | [<CliPrefix(CliPrefix.None)>] Release
-        | [<CliPrefix(CliPrefix.None)>] Nightly
-        | [<CliPrefix(CliPrefix.None)>] Preview
-        interface IArgParserTemplate with
-            member flag.Usage =
-                match flag with
-                | Release -> "Build a Release version"
-                | Nightly -> "Build a Nightly version"
-                | Preview -> "Build a Preview version"
-
-    type CommandArg = 
-        | [<SubCommand; CliPrefix(CliPrefix.None)>] Build of ParseResults<BuildFlag>
-        interface IArgParserTemplate with
-            member command.Usage =
-                match command with
-                | Build _ -> "Build a workspace version."
+type InputCommand = 
+    | [<SubCommand; CliPrefix(CliPrefix.None)>] Make of ParseResults<MakeFlag>
+    interface IArgParserTemplate with
+        member command.Usage =
+            match command with
+            | Make _ -> "Make a workspace version."
                 
-module internal ConsoleInputGateway =    
-    open Calaf.Infrastructure
-    
+module internal ConsoleInputGateway =     
     let toMakeType (flags: MakeFlag list) =
         match flags with
             | [ Nightly ] -> Ok MakeType.Nightly
@@ -38,11 +33,7 @@ module internal ConsoleInputGateway =
                 |> Input
                 |> Error    
                 
-module internal ConsoleInput =    
-    open Argu
-    
-    open Calaf.Infrastructure
-    
+module internal ConsoleInput =      
     let parse (args: string[]) =
         let parser = ArgumentParser.Create<InputCommand>()
         parser.ParseCommandLine(args)

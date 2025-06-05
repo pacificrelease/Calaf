@@ -9,6 +9,7 @@ type DomainError =
     | MonthOutOfRange
     | MonthInvalidInt
     | MonthInvalidString
+    | BuildInvalidString
     
     // Project errors
     | VersionElementMissing

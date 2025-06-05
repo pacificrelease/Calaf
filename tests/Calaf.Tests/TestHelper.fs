@@ -150,6 +150,41 @@ module Generator =
     let directoryPathString =
         Gen.constant (Bogus.Faker().System.DirectoryPath())
         
+    module Build =
+        let nightlyString =
+            Gen.elements ["nightly"; "NIGHTLY"; "Nightly"; "NiGhTlY"; "nIgHtLy"; "NIGHTly"; "nightLY"]
+            
+        let wrongString =
+            gen {
+                let! choice = Gen.frequency [
+                    1, genNegative |> Gen.map string
+                    1, nonNumericString
+                    1, genFloat
+                ]
+                return choice
+            }
+            
+        let containingNightlyBadString =
+            gen {
+                let! nightlyString = nightlyString
+                let! wrongString = wrongString
+                let! leadingWhiteSpaces = genWhiteSpacesString
+                let! choice = Gen.frequency [
+                    1, Gen.constant $"{nightlyString}{wrongString}{nightlyString}"
+                    1, Gen.constant $"{wrongString}{nightlyString}{wrongString}"
+                    1, Gen.constant $"{wrongString}{nightlyString}"
+                    1, Gen.constant $"{nightlyString}{wrongString}"
+                    1, Gen.constant $"{nightlyString}{leadingWhiteSpaces}"
+                    1, Gen.constant $"{leadingWhiteSpaces}{nightlyString}"
+                    1, Gen.constant $"{leadingWhiteSpaces}{nightlyString}{leadingWhiteSpaces}"
+                    1, Gen.constant $"{nightlyString}{nightlyString}"
+                    1, Gen.constant $"{nightlyString}{nightlyString}{nightlyString}"
+                    
+                ]
+                return choice
+            }
+            
+        
     module Month =
         let inRangeByteMonth =
             gen {
@@ -752,6 +787,19 @@ module Arbitrary =
     type internal directoryPathString =
         static member directoryPathString() =
             Arb.fromGen Generator.directoryPathString
+            
+    module internal Build =
+        type nightlyString =
+            static member nightlyString() =
+                Arb.fromGen Generator.Build.nightlyString
+                
+        type wrongString =
+            static member wrongStringYear() =
+                Arb.fromGen Generator.Build.wrongString
+                
+        type containingNightlyBadString =
+            static member containingNightlyBadString() =
+                Arb.fromGen Generator.Build.containingNightlyBadString
             
     module internal Month =
         type inRangeByteMonth =

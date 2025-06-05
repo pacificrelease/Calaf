@@ -12,6 +12,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="TestHelper.fs" />
+    <Compile Include="Version\BuildTests.fs" />
     <Compile Include="Version\PatchTests.fs" />
     <Compile Include="Version\MonthTests.fs" />
     <Compile Include="Version\YearTests.fs" />
