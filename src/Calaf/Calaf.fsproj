@@ -45,7 +45,7 @@
     <Compile Include="Application\Ports\Clock.fs" />
     <Compile Include="Application\Ports\Console.fs" />
     <Compile Include="Application\Context.fs" />
-    <Compile Include="Application\Space.fs" />
+    <Compile Include="Application\Make.fs" />
     <Compile Include="Infrastructure\Input.fs" />
     <Compile Include="Infrastructure\Adapters\Git.fs" />    
     <Compile Include="Infrastructure\Adapters\FileSystem.fs" />    

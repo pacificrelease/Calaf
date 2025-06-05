@@ -27,11 +27,11 @@ module internal Arguments =
 module internal ConsoleInputGateway =    
     open Calaf.Infrastructure
     
-    let toBuildType (flags: BuildFlag list) =
+    let toMakeType (flags: MakeFlag list) =
         match flags with
-            | [ Nightly ] -> Ok BuildType.Nightly
-            | [ Release ] -> Ok BuildType.Release
-            | [] -> Ok BuildType.Release
+            | [ Nightly ] -> Ok MakeType.Nightly
+            | [ Release ] -> Ok MakeType.Release
+            | [] -> Ok MakeType.Release
             | _  ->
                 $"{flags.Head}"
                 |> BuildFlagNotRecognized
@@ -49,10 +49,10 @@ module internal ConsoleInput =
 
     let read (results: ParseResults<InputCommand>) =
         match results.GetAllResults() with
-        | [ Build buildFlagsResults ] ->
-            buildFlagsResults.GetAllResults()
-            |> ConsoleInputGateway.toBuildType |> Result.map Command.Build
-        | [] -> BuildType.Release |> Command.Build |> Ok
+        | [ Make makeFlagsResults ] ->
+            makeFlagsResults.GetAllResults()
+            |> ConsoleInputGateway.toMakeType |> Result.map Command.Make
+        | [] -> MakeType.Release |> Command.Make |> Ok
         | commands ->
             $"{commands.Head}"
             |> CommandNotRecognized

@@ -14,4 +14,4 @@ let main args =
     let path = String.Empty
     let ctx = SpaceApplyContext.create
     let settings = BumpSettings.tryCreate supportedFilesPattern loadTenTags
-    Space.apply path args ctx settings
+    Make.run path args ctx settings

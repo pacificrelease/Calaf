@@ -1,12 +1,12 @@
 ﻿namespace Calaf.Contracts
 
 // Incoming commands
-type BuildType =
+type MakeType =
     | Release
     | Nightly
     
 type Command =
-    | Build of BuildType
+    | Make of MakeType
 
 // Contracts used by Infrastructure layer
 type GitSignatureInfo = {

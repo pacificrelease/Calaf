@@ -6,7 +6,7 @@ open Calaf.Contracts
 open Calaf.Domain
 open Calaf.Domain.DomainTypes.Entities
 
-module internal Space =
+module internal Make =
     module private Arguments =
         let read (console: IConsole) (arguments: string[]) =
             console.read arguments
@@ -29,7 +29,7 @@ module internal Space =
         let error (console: IConsole) e =            
             console.error $"{e}"                
     
-    module private Build =        
+    module private Make =        
         let private bump path context settings =
             result {
                 let timeStamp = context.Clock.now()            
@@ -63,10 +63,10 @@ module internal Space =
     let private directory path =        
         if String.IsNullOrWhiteSpace path then "." else path       
         
-    let private build (path, strategy) context settings =
+    let private make (path, strategy) context settings =
         match strategy with
-        | BuildType.Nightly -> Build.nightly path context settings
-        | BuildType.Release -> Build.release path context settings
+        | MakeType.Nightly -> Make.nightly path context settings
+        | MakeType.Release -> Make.release path context settings
         
     let private input (console: IConsole) (arguments: string[]) =
         Arguments.read console arguments
@@ -85,18 +85,18 @@ module internal Space =
         | Ok    _ -> 0
         | Error _ -> 1
         
-    let apply path arguments context settings  =
+    let run path arguments context settings  =
         let apply path arguments context settings =
             result {
                 let! settings = settings
                 let! cmd = input context.Console arguments
                 match cmd with
-                | Build strategy ->
+                | Make strategy ->
                     match strategy with
-                    | BuildType.Nightly ->
-                        return! Build.nightly path context settings
-                    | BuildType.Release ->
-                        return! Build.release path context settings
+                    | MakeType.Nightly ->
+                        return! Make.nightly path context settings
+                    | MakeType.Release ->
+                        return! Make.release path context settings
             }
         let path = directory path
         let result = apply path arguments context settings
