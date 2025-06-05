@@ -7,7 +7,7 @@ open Calaf.Contracts
 open Calaf.Domain.DomainTypes.Values
 open Calaf.Domain.DomainTypes.Entities
 
-module internal Schema =    
+module private XmlSchema =    
     [<Literal>]
     let private VersionXElementName = "Version"
     [<Literal>]
@@ -20,14 +20,14 @@ module internal Schema =
         |> Seq.tryExactlyOne
         
     let tryUpdateVersionElement (content: System.Xml.Linq.XElement) (version: string)=
-        option {
-            // TODO: Refactor to return error if version element not found
-            // TODO: Return new content with updated version
+        try
             tryExtractVersionElement content
-            |> Option.map _.SetValue(version)
-            |> ignore
-            return Xml content
-        }
+            |> Option.map (fun versionElement ->
+                versionElement.SetValue(version)
+                content)
+            |> Option.toResult VersionElementMissing
+        with
+        | _ -> VersionElementUpdateFailed |> Error
         
 let private isCalendarVersion (project: Project) : bool =
     match project with
@@ -42,7 +42,7 @@ let private getCalendarVersion (project: Project) : CalendarVersion option =
 let tryCapture (projectInfo: ProjectXmlFileInfo) : Project option =        
     let tryExtractVersion (xml: System.Xml.Linq.XElement) : Version option =
         xml
-        |> Schema.tryExtractVersionElement
+        |> XmlSchema.tryExtractVersionElement
         |> Option.bind (fun x -> x.Value |> Version.tryParseFromString)        
     option {
         let metadata =
@@ -78,8 +78,7 @@ let tryBump (project: VersionedProject) (nextVersion: CalendarVersion) =
     match project.Content with
     | Xml xmlContent ->
         Version.toString nextVersion
-        |> Schema.tryUpdateVersionElement xmlContent
-        |> Option.map (fun upc ->
-            { project with Content = upc; Version = CalVer nextVersion })
-        |> Option.toResult (VersionElementMissing project.Metadata.Name)
+        |> XmlSchema.tryUpdateVersionElement xmlContent
+        |> Result.map (fun upc ->
+            { project with Content = Xml upc; Version = CalVer nextVersion })
     | Json _ -> Ok project

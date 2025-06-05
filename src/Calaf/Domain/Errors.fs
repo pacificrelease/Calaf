@@ -11,7 +11,8 @@ type DomainError =
     | MonthInvalidString
     
     // Project errors
-    | VersionElementMissing of projectName: string
+    | VersionElementMissing
+    | VersionElementUpdateFailed
     
     // Suite
     // create error
