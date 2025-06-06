@@ -1,6 +1,6 @@
 namespace Calaf.Application
 
-type SpaceApplyContext = {
+type MakeContext = {
     FileSystem: IFileSystem
     Git: IGit
     Clock: IClock

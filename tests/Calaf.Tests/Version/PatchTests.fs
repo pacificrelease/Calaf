@@ -26,40 +26,40 @@ module TryParseFromStringPropertyTests =
         overflowPatch
         |> tryParseFromString = None
         
-module BumpPropertiesTests =
+module ReleasePropertiesTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.greaterThanZeroBeforeUInt32MinusOne> |], MaxTest = 200)>]
-    let ``Bump Patch with value less than uint32 - 1 increments value by one`` (patch: Calaf.Domain.DomainTypes.Values.Patch) =        
+    let ``Release Patch with value less than uint32 - 1 increments value by one`` (patch: Calaf.Domain.DomainTypes.Values.Patch) =        
         patch
          |> Some
-         |> bump = patch + 1u
+         |> release = patch + 1u
          
     [<Property(Arbitrary = [| typeof<Arbitrary.greaterThanZeroBeforeUInt32MinusOne> |], MaxTest = 200)>]
-    let ``Bump Patch always returns a positive value`` (patch: Calaf.Domain.DomainTypes.Values.Patch option) =
+    let ``Release Patch always returns a positive value`` (patch: Calaf.Domain.DomainTypes.Values.Patch option) =
         patch
-        |> bump > 0u
+        |> release > 0u
         
     [<Property(Arbitrary = [| typeof<Arbitrary.greaterThanZeroBeforeUInt32MinusOne> |], MaxTest = 200)>]
-    let ``Bump Patch always preserves ordering`` (patch: Calaf.Domain.DomainTypes.Values.Patch) =
-        let bumped1 = patch   |> Some |> bump
-        let bumped2 = bumped1 |> Some |> bump
-        let bumped3 = bumped2 |> Some |> bump
-        bumped2 > bumped1 && bumped3 > bumped2
+    let ``Release Patch always preserves ordering`` (patch: Calaf.Domain.DomainTypes.Values.Patch) =
+        let release   = patch    |> Some |> Calaf.Domain.Patch.release
+        let release'  = release  |> Some |> Calaf.Domain.Patch.release
+        let release'' = release' |> Some |> Calaf.Domain.Patch.release
+        release' > release && release'' > release'
         
 module BumpTests =
     [<Fact>]
-    let ``Maximum uint32 bumps to 1`` () =
+    let ``Maximum uint32 release to 1`` () =
         System.UInt32.MaxValue
         |> Some
-        |> bump = 1u
+        |> release = 1u
         
     [<Fact>]
-    let ``None bumps to 1`` () =
+    let ``None release to 1`` () =
         None
-        |> bump = 1u
+        |> release = 1u
         
     [<Fact>]
-    let ``Maximum uint32 - 1 bumps to Maximum uint32 - 1`` () =
+    let ``Maximum uint32 - 1 release to Maximum uint32 - 1`` () =
         System.UInt32.MaxValue - 1u
         |> Some
-        |> bump = System.UInt32.MaxValue    
+        |> release = System.UInt32.MaxValue    
     

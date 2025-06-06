@@ -30,9 +30,9 @@ module Values =
     //YYYY.MM.PATCH-SUFFIX
     //YYYY.MM
     type CalendarVersion = {
-        Year:   Year
-        Month:  Month
-        Patch:  Patch option
+        Year:  Year
+        Month: Month
+        Patch: Patch option
     }
 
     type Version =

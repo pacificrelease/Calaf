@@ -26,7 +26,7 @@ type SuiteCaptured = {
     TotalProjectsCount: uint16
 }
 
-type SuiteBumped = {
+type SuiteReleased = {
     PreviousCalendarVersion: CalendarVersion
     NewCalendarVersion: CalendarVersion
     ProjectsBumpedCount: uint16
@@ -35,7 +35,7 @@ type SuiteBumped = {
 
 type SuiteEvent =
     | SuiteCaptured of SuiteCaptured
-    | SuiteBumped   of SuiteBumped
+    | SuiteReleased of SuiteReleased
     
 // Workspace events
 type WorkspaceCaptured = {
@@ -46,7 +46,7 @@ type WorkspaceCaptured = {
     SuiteVersion: CalendarVersion
 }
 
-type WorkspaceBumped = {
+type WorkspaceReleased = {
     Directory: string
     PreviousCalendarVersion: CalendarVersion
     NewCalendarVersion: CalendarVersion
@@ -55,7 +55,7 @@ type WorkspaceBumped = {
 
 type WorkspaceEvent =
     | WorkspaceCaptured of WorkspaceCaptured
-    | WorkspaceBumped   of WorkspaceBumped
+    | WorkspaceReleased of WorkspaceReleased
     
 type DomainEvent =
     | Repository of RepositoryEvent

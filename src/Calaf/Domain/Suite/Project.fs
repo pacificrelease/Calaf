@@ -74,7 +74,7 @@ let tryProfile (project: Project) =
         Some { AbsolutePath = m.AbsolutePath; Content = xmlContent }
     | _ -> None
     
-let tryBump (project: VersionedProject) (nextVersion: CalendarVersion) =    
+let tryRelease (project: VersionedProject) (nextVersion: CalendarVersion) =    
     match project.Content with
     | Xml xmlContent ->
         Version.toString nextVersion

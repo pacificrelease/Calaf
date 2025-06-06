@@ -28,13 +28,13 @@ module TryParseFromStringPropertyTests =
         containingNightlyBadString
         |> tryParseFromString = Error BuildInvalidString
         
-module BumpPropertyTests =
+module NightlyPropertyTests =
     [<Property>]
-    let ``Bumping a Nightly build does not change it`` () =
+    let ``Make Nightly on a Nightly build does not change it`` () =
         let build = Some Build.Nightly
-        bump build = Build.Nightly
+        nightly build = Build.Nightly
         
     [<Property>]
-    let ``Bump empty Build returns Nightly`` () =
+    let ``Make Nightly on an empty Build returns Nightly`` () =
         let build = None
-        bump build = Build.Nightly
+        nightly build = Build.Nightly

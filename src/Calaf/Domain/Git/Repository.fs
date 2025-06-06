@@ -100,7 +100,7 @@ let tryProfile (repo: Repository) (pendingFilesPaths: string list) =
                CommitMessage = commitMessage }
     | _ -> None    
     
-let tryBump (repo: Repository) (nextVersion: CalendarVersion) =
+let tryRelease (repo: Repository) (nextVersion: CalendarVersion) =
     let performBump (ctor, dir, head, signature, currentVersion) =
         let sameVersion = currentVersion
                             |> Option.map ((=) nextVersion)

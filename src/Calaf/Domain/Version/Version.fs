@@ -97,9 +97,9 @@ let toTagName (calVer: CalendarVersion) : string =
 /// </summary>
 /// <param name="calVer">Calendar version to convert</param>
 let toCommitMessage (calVer: CalendarVersion) : string =
-    $"{commitVersionPrefix} {calVer |> toString}"    
- 
-let bump (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : CalendarVersion =    
+    $"{commitVersionPrefix} {calVer |> toString}" 
+
+let release (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : CalendarVersion =    
     let shouldBumpYear = monthStamp.Year > currentVersion.Year            
     if shouldBumpYear then
         { Year = monthStamp.Year
@@ -112,10 +112,10 @@ let bump (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : CalendarVe
               Month = monthStamp.Month
               Patch = None }
         else
-            let patch = currentVersion.Patch |> Patch.bump |> Some
+            let patch = currentVersion.Patch |> Patch.release |> Some
             { Year = currentVersion.Year
               Month = currentVersion.Month
-              Patch = patch }
+              Patch = patch }           
     
 let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
     match versions with

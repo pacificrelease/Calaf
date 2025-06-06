@@ -18,16 +18,16 @@ module Events =
             SuiteVersion = Suite.getCalendarVersion workspace.Suite
         } |> DomainEvent.Workspace
         
-    let toWorkspaceBumped (workspace: Workspace) previousVersion =
-        WorkspaceBumped {
+    let toWorkspaceReleased (workspace: Workspace) previousVersion =
+        WorkspaceReleased {
             Directory = workspace.Directory
             PreviousCalendarVersion = previousVersion
             NewCalendarVersion = workspace.Version
             RepositoryExist = workspace.Repository |> Option.isSome
         } |> DomainEvent.Workspace
 
-let private getNextVersion (workspace: Workspace) (monthStamp: MonthStamp) =
-    Version.bump workspace.Version monthStamp
+let private getNextReleaseVersion (workspace: Workspace) (monthStamp: MonthStamp) =
+    Version.release workspace.Version monthStamp
     
 let private combineVersions suite repoOption =
     [
@@ -75,26 +75,26 @@ let profile (workspace: Workspace) =
     { Projects = projectsProfiles
       Repository = repositoryProfile }
     
-let tryBump (workspace: Workspace) (monthStamp: MonthStamp) =
+let tryRelease (workspace: Workspace) (monthStamp: MonthStamp) =
     result {
-        let nextVersion = getNextVersion workspace monthStamp
+        let nextVersion = getNextReleaseVersion workspace monthStamp
         if workspace.Version = nextVersion
         then
             return! WorkspaceAlreadyCurrent |> Error
         else
-            let! bumpedSuite, suiteEvents = Suite.tryBump workspace.Suite nextVersion
-            let! bumpedRepoOption =
+            let! suite', suiteEvents = Suite.tryRelease workspace.Suite nextVersion
+            let! repo' =
                 workspace.Repository
-                |> Option.traverseResult (fun repo -> Repository.tryBump repo nextVersion)
+                |> Option.traverseResult (fun repo -> Repository.tryRelease repo nextVersion)
             
             let events =
-               combineEvents suiteEvents (bumpedRepoOption |> Option.map snd)
+               combineEvents suiteEvents (repo' |> Option.map snd)
                 
-            let updatedWorkspace =
+            let workspace' =
                 { workspace with
                     Version = nextVersion
-                    Suite = bumpedSuite
-                    Repository = bumpedRepoOption |> Option.map fst }
-            let event = Events.toWorkspaceBumped updatedWorkspace workspace.Version
-            return updatedWorkspace, events @ [event] 
+                    Suite = suite'
+                    Repository = repo' |> Option.map fst }
+            let event = Events.toWorkspaceReleased workspace' workspace.Version
+            return workspace', events @ [event] 
     }

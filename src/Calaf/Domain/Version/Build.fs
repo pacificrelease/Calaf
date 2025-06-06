@@ -3,10 +3,10 @@ module internal Calaf.Domain.Build
 open Calaf.Domain.DomainTypes.Values
 
 [<Literal>]
-let internal nightly = "nightly"
+let internal nightlyBuild = "nightly"
 
 let private isNightlyString (build: string) =
-    System.String.Equals(build, nightly, System.StringComparison.OrdinalIgnoreCase)
+    System.String.Equals(build, nightlyBuild, System.StringComparison.OrdinalIgnoreCase)
     
 let private isEmptyString (build: string) =
     System.String.IsNullOrWhiteSpace(build)
@@ -19,7 +19,7 @@ let tryParseFromString (build: string) =
     | b when b |> isEmptyString -> None |> Ok
     | _ -> BuildInvalidString |> Error        
 
-let bump (build: Build option) : Build =
+let nightly (build: Build option) : Build =
     match build with
     | Some Build.Nightly -> Build.Nightly
     | _ -> Build.Nightly

@@ -18,10 +18,10 @@ module Events =
                 TotalProjectsCount = projects |> Seq.length |> uint16
             } |> DomainEvent.Suite
             
-    let toSuiteBumped suite previousVersion bumpedProjects =
+    let toSuiteReleased suite previousVersion bumpedProjects =
         match suite with        
         | StandardSet (version, projects) ->
-            SuiteBumped {
+            SuiteReleased {
                 PreviousCalendarVersion = previousVersion
                 NewCalendarVersion = version
                 ProjectsBumpedCount = bumpedProjects |> Seq.length |> uint16
@@ -59,25 +59,25 @@ let tryProfile suite =
     | StandardSet (_, projects) ->
         projects |> Seq.map tryProfile |> Seq.choose id |> Seq.toList        
     
-let tryBump (suite: Suite) (nextVersion: CalendarVersion) =
+let tryRelease (suite: Suite) (nextVersion: CalendarVersion) =
     result {
         match suite with
         | StandardSet (version, projects) ->
-            let bump project =
+            let release project =
                 match project with
                 | Versioned { Version = CalVer _ } as Versioned p ->
-                    tryBump p nextVersion
+                    tryRelease p nextVersion
                     |> Result.map (fun p -> let p = Versioned p in (Some p, p))
                 | otherProject ->
                     Ok (None, otherProject)
             
-            let! bumpResults = projects |> List.traverseResultM bump                
-            let bumpedProjects, suiteProjects =
-                bumpResults
+            let! result = projects |> List.traverseResultM release
+            let releasedProjects, suiteProjects =
+                result
                 |> List.unzip
-                |> fun (bumpedProjectsOptions, allSuiteProjects) -> (List.choose id bumpedProjectsOptions, allSuiteProjects)
+                |> fun (releasedSuiteProjects, allSuiteProjects) -> (List.choose id releasedSuiteProjects, allSuiteProjects)
                 
-            let updatedSuite = StandardSet (nextVersion, suiteProjects)
-            let event = Events.toSuiteBumped updatedSuite version bumpedProjects            
-            return (updatedSuite , [event])
+            let suite' = StandardSet (nextVersion, suiteProjects)
+            let event  = Events.toSuiteReleased suite' version releasedProjects            
+            return (suite' , [event])
     }

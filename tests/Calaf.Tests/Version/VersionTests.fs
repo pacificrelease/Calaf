@@ -152,7 +152,7 @@ module TryMaxPropertiesTests =
         versions
         |> Array.forall (fun v -> compare v max.Value <= 0)
         
-module BumpPropertiesTests =
+module ReleasePropertiesTests =
     let private increment (monthStamp: MonthStamp, incr: MonthStampIncrement ) =
         match incr with
         | Year -> { monthStamp with Year = monthStamp.Year + 1us }
@@ -160,41 +160,41 @@ module BumpPropertiesTests =
         | Both -> { Year = monthStamp.Year + 1us; Month = monthStamp.Month + byte 1 }
     
     [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersionWithSameMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
-    let ``CalendarVersion bumps Year when the MonthStamp Year is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement) =
+    let ``CalendarVersion release Year when the MonthStamp Year is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement) =
         let monthStamp = increment (monthStamp, incr)
-        let bumped = bump calVer monthStamp
-        bumped.Year = uint16 monthStamp.Year
+        let release = release calVer monthStamp
+        release.Year = uint16 monthStamp.Year
         
     [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersionWithSameMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
-    let ``CalendarVersion bumps Month when the MonthStamp Month is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement) =
+    let ``CalendarVersion release Month when the MonthStamp Month is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement) =
         let monthStamp = increment (monthStamp, incr)
-        let bumped = bump calVer monthStamp
-        bumped.Month = byte monthStamp.Month
+        let release = release calVer monthStamp
+        release.Month = byte monthStamp.Month
         
     [<Property(Arbitrary = [| typeof<Arbitrary.threePartCalendarVersionWithSameMonthStamp> |])>]
-    let ``Three-part CalendarVersion bumps only Patch when the MonthStamp has the same Year and Month`` (calVer: CalendarVersion, monthStamp: MonthStamp) =
-        let bumped = bump calVer monthStamp
-        bumped.Patch > calVer.Patch &&
-        bumped.Month = calVer.Month &&
-        bumped.Year = calVer.Year
+    let ``Three-part CalendarVersion release only Patch when the MonthStamp has the same Year and Month`` (calVer: CalendarVersion, monthStamp: MonthStamp) =
+        let release = release calVer monthStamp
+        release.Patch > calVer.Patch &&
+        release.Month = calVer.Month &&
+        release.Year = calVer.Year
         
     [<Property(Arbitrary = [| typeof<Arbitrary.threePartCalendarVersionWithSameMonthStamp> |])>]
     let ``CalendarVersion preserves Year and Month when the MonthStamp has the same Year and Month`` (calVer: CalendarVersion, monthStamp: MonthStamp)=
-        let bumped = bump calVer monthStamp
-        bumped.Year = calVer.Year &&
-        bumped.Month = calVer.Month
+        let release = release calVer monthStamp
+        release.Year = calVer.Year &&
+        release.Month = calVer.Month
         
     [<Property(Arbitrary = [| typeof<Arbitrary.threePartCalendarVersionWithSameMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
     let ``Three-part CalendarVersion reset Patch when the MonthStamp Year and/or Month is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement)=
         let timeStamp = increment (monthStamp, incr)
-        let bumped = bump calVer timeStamp
-        bumped.Patch = None
+        let release = release calVer timeStamp
+        release.Patch = None
         
     [<Property(Arbitrary = [| typeof<Arbitrary.twoPartCalendarVersionWithSameMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
     let ``Two-part CalendarVersion still has None Patch when the MonthStamp Year and/or Month is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement) =
         let monthStamp = increment (monthStamp, incr)
-        let bumped = bump calVer monthStamp
-        bumped.Patch = None
+        let release = release calVer monthStamp
+        release.Patch = None
         
 module ToStringPropertiesTests =
     let private dotSegments (s:string) = s.Split '.'

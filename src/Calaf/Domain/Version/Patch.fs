@@ -7,7 +7,7 @@ let tryParseFromString (patch: string) : Patch option =
     | true, patch when patch > 0u -> Some patch
     | _ -> None
     
-let bump (patch: Patch option) : Patch =
+let release (patch: Patch option) : Patch =
     let incrementStep = 1u
     match patch with
     | Some p when p < Patch.MaxValue -> p + incrementStep

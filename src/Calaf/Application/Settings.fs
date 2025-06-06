@@ -4,7 +4,7 @@ type DotNetXmlFilePattern = private DotNetXmlFilePattern of string
 
 type TagQuantity = private TagQuantity of byte
 
-type BumpSettings = {
+type MakeSettings = {
     ProjectsSearchPattern: DotNetXmlFilePattern
     TagsToLoad: TagQuantity
 }
@@ -21,7 +21,7 @@ module internal Validation =
         else count |> TagQuantity |> Ok
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module BumpSettings =
+module MakeSettings =
     open FsToolkit.ErrorHandling
     
     let tryCreateDotNetXmlFilePattern (filePattern: string) =
