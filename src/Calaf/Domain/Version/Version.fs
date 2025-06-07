@@ -4,6 +4,10 @@ open FsToolkit.ErrorHandling
 
 open Calaf.Domain.DomainTypes.Values
 
+[<Literal>]
+let internal versionDivider = '.'
+[<Literal>]
+let internal buildDivider = '-'
 let internal versionPrefixes =
     [ "version."; "ver."; "v."
       "Version."; "Ver."; "V."
@@ -35,10 +39,23 @@ let private tryCleanString (bareString: string) =
         None
     else
         bareString.Trim() |> String.filter (asciiWs.Contains >> not) |> Some
+        
+let private dedicateBuild (cleanString: CleanString) =
+    cleanString.Split(buildDivider, System.StringSplitOptions.RemoveEmptyEntries)    
+        
+let private dedicateParts (cleanString: CleanString)=    
+    let parts = cleanString.Split(versionDivider, System.StringSplitOptions.RemoveEmptyEntries)
+    match parts with
+    | [||] -> [||]
+    | _ ->
+        let head = parts |> Array.take (parts.Length - 1)
+        let tail = parts |> Array.last |> dedicateBuild
+        Array.concat [ head; tail ]
 
 // TODO: Refactor to return Error instead of Option  
 let private tryParse (cleanVersion: CleanString) : Version option =
-    option {        
+    option {
+        //let parts = dedicateParts cleanVersion
         let parts = cleanVersion.Split('.')
         match parts with
         | [| first; second; third |] ->
@@ -61,11 +78,13 @@ let private tryParse (cleanVersion: CleanString) : Version option =
             
             match year, month, patch with
             | Ok year, Ok month, patch ->
-                return CalVer({ Year = year; Month = month; Patch = patch })            
+                let calendarVersion = { Year = year; Month = month; Patch = patch }
+                return CalVer(calendarVersion)
             | _ ->
             match major, minor, patch with
                 | Some major, Some minor, Some patch ->
-                    return SemVer({ Major = major; Minor = minor; Patch = patch })
+                    let semanticVersion = { Major = major; Minor = minor; Patch = patch }
+                    return SemVer(semanticVersion)
                 | _ ->
                     return Unsupported
         | [| year; month |] ->
