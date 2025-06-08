@@ -44,57 +44,95 @@ let private dedicateBuild (cleanString: CleanString) =
     cleanString.Split(buildDivider, System.StringSplitOptions.RemoveEmptyEntries)    
         
 let private dedicateParts (cleanString: CleanString)=    
+    cleanString.Split(versionDivider, System.StringSplitOptions.RemoveEmptyEntries)
+        
+let private dedicate (cleanString: CleanString) =
     let parts = cleanString.Split(versionDivider, System.StringSplitOptions.RemoveEmptyEntries)
     match parts with
     | [||] -> [||]
+    | [| single |] -> [| single |]
     | _ ->
-        let head = parts |> Array.take (parts.Length - 1)
-        let tail = parts |> Array.last |> dedicateBuild
-        Array.concat [ head; tail ]
+        let tail = parts |> Array.last
+        let buildDividerIndex = tail.IndexOf(buildDivider, System.StringComparison.OrdinalIgnoreCase)
+        if buildDividerIndex < 0
+        then
+            // No hyphen in the last segment, so return the dot-split parts as is.
+            parts
+        else
+            // Hyphen found in the last segment.
+            let beforeBuildDivider = tail.Substring(0, buildDividerIndex)
+            let afterBuildDivider = tail.Substring(buildDividerIndex + 1)            
+            let head = parts |> Array.take (parts.Length - 1)
+            Array.append head [| beforeBuildDivider; afterBuildDivider |]    
 
 // TODO: Refactor to return Error instead of Option  
 let private tryParse (cleanVersion: CleanString) : Version option =
+    let createVersionFromThreeParts first second third build =
+        let major = tryToUInt32 first
+        let minor = tryToUInt32 second
+        let patch = tryToUInt32 third
+        
+        let year =
+            match major with
+            | Some major -> major |> int32 |> Year.tryParseFromInt32
+            | _ -> Year.tryParseFromString first
+        let month =
+            match minor with
+            | Some minor -> minor |> int32 |> Month.tryParseFromInt32
+            | _ -> second |> Month.tryParseFromString 
+        let patch =
+            match patch with
+            | Some patch -> Some patch
+            | _ -> third |> Patch.tryParseFromString 
+        
+        match year, month, patch with
+        | Ok year, Ok month, patch ->
+            let calendarVersion = { Year = year; Month = month; Patch = patch }
+            CalVer(calendarVersion)
+        | _ ->
+        match major, minor, patch with
+            | Some major, Some minor, Some patch ->
+                let semanticVersion = { Major = major; Minor = minor; Patch = patch }
+                SemVer(semanticVersion)
+            | _ ->
+                Unsupported
+                
+    let createVersionFromTwoParts first second build =
+        let year = Year.tryParseFromString first
+        let month = Month.tryParseFromString second        
+        match year, month with
+        | Ok year, Ok month ->
+            CalVer({ Year = year; Month = month; Patch = None })
+        | _ ->
+            Unsupported
+        
     option {
-        //let parts = dedicateParts cleanVersion
-        let parts = cleanVersion.Split('.')
+        let parts = dedicate cleanVersion
         match parts with
-        | [| first; second; third |] ->
-            let major = tryToUInt32 first
-            let minor = tryToUInt32 second
-            let patch = tryToUInt32 third
-            
-            let year    =
-                match major with
-                | Some major -> major |> int32 |> Year.tryParseFromInt32
-                | _ -> Year.tryParseFromString first
-            let month =
-                match minor with
-                | Some minor -> minor |> int32 |> Month.tryParseFromInt32
-                | _ -> second |> Month.tryParseFromString 
-            let patch  =
-                match patch with
-                | Some patch -> Some patch
-                | _ -> third |> Patch.tryParseFromString 
-            
-            match year, month, patch with
-            | Ok year, Ok month, patch ->
-                let calendarVersion = { Year = year; Month = month; Patch = patch }
-                return CalVer(calendarVersion)
-            | _ ->
-            match major, minor, patch with
-                | Some major, Some minor, Some patch ->
-                    let semanticVersion = { Major = major; Minor = minor; Patch = patch }
-                    return SemVer(semanticVersion)
-                | _ ->
-                    return Unsupported
-        | [| year; month |] ->
-            let year  = Year.tryParseFromString year
-            let month = Month.tryParseFromString month
-            match year, month with
-            | Ok year, Ok month ->
-                return CalVer({ Year = year; Month = month; Patch = None })
-            | _ ->
+        | [| major; minor; patch; build |] ->            
+            let build = Build.tryParseFromString build
+            match build with
+            | Ok build ->
+                return createVersionFromThreeParts major minor patch build
+            | Error _ ->
                 return Unsupported
+        
+        | [| major; minor; patchOrBuild |] ->
+            match tryToUInt32 patchOrBuild with
+            | Some _ ->
+                let patch = patchOrBuild
+                return createVersionFromThreeParts major minor patch None
+            | None ->
+                let build = Build.tryParseFromString patchOrBuild
+                match build with
+                | Ok build ->
+                    let version = createVersionFromTwoParts major minor build
+                    return version
+                | Error _ ->
+                    return Unsupported
+            
+        | [| year; month |] ->
+            return createVersionFromTwoParts year month None
         | _ ->
             return Unsupported
     }
