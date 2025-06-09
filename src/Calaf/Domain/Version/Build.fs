@@ -10,12 +10,9 @@ let private NightlyBuildType =
     "nightly"
 [<Literal>]
 let internal AllowedBuildRegexString =
-    //@"^(?i)(nightly)\.([0-9]{1,3})\+([A-Za-z0-9]+)$"
-    @"^(?i:(nightly))\.([0-9]{1,3})\+([A-Za-z0-9]{1,128})$"
+    @"^(?i:(nightly))\.([0-9]{1,3})\+([A-Za-z0-9]+)$"
 let private buildRegex =
-    System.Text.RegularExpressions.Regex(
-        AllowedBuildRegexString,
-        System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+    System.Text.RegularExpressions.Regex(AllowedBuildRegexString)
     
 type private BuildSegments = {
     BuildType: string

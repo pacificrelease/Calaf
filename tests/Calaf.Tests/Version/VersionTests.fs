@@ -11,8 +11,9 @@ open Calaf.Tests
 module TryParseFromStringPropertiesTests =
     [<Fact>]
     let ``Valid three-part + build CalVer string parses to their corresponding values`` () =
-        //let version = "2023.10"
-        let version = "2023.10-nightly.06+0fefe3f"
+        let version = "2023.10"
+        //let version = "2023.10-nightly.06+0fefe3f"
+        //let version = "2023.10-nightly.06+0fefe3fnightly.06+0fefe3f"
         //let version = "2023.10.1-nightly.06+0fefe3f"
         
         //let version = "2023.10.1"
@@ -23,7 +24,6 @@ module TryParseFromStringPropertiesTests =
         
         let version = version |> tryParseFromString
         test <@ version |> Option.map _.IsCalVer |> Option.defaultValue false @>
-        
         
     [<Property(Arbitrary = [| typeof<Arbitrary.validThreePartCalVerString> |], MaxTest = 200)>]
     let ``Valid three-part CalVer string parses to their corresponding values`` (validVersion: string) =

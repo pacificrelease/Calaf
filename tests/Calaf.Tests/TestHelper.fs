@@ -153,10 +153,7 @@ module Generator =
     let directoryPathString =
         Gen.constant (Bogus.Faker().System.DirectoryPath())
         
-    module Build =
-        // let nightlyString =
-        //     Gen.elements ["nightly"; "NIGHTLY"; "Nightly"; "NiGhTlY"; "nIgHtLy"; "NIGHTly"; "nightLY"]
-            
+    module Build =            
         let nightlyString =
             gen {
                 let! nightly = Gen.elements ["nightly"; "NIGHTLY"; "Nightly"; "NiGhTlY"; "nIgHtLy"; "NIGHTly"; "nightLY"]
@@ -168,14 +165,12 @@ module Generator =
         let wrongBuildString =
             let letterChars = ['a'..'z'] @ ['A'..'Z']
             let specialChars = ['!'; '@'; '#'; '$'; '%'; '^'; '&'; '*'; '('; ')'; '-'; '_'; '+'; '='; '~'; '?'; '/'; '\\'; '['; ']'; '{'; '}'; '|'; '<'; '>'; ','; '.'; ':']
-            // Mix to arrays into output string generator
             gen {
-                let! r = Gen.shuffle (letterChars @ specialChars)
+                let! shuffle = Gen.shuffle (letterChars @ specialChars)
                 let! length = Gen.choose(64, 512)
-                let! chars = Gen.arrayOfLength length (Gen.elements r)
+                let! chars = Gen.arrayOfLength length (Gen.elements shuffle)
                 return System.String(chars)
-            }
-             
+            }             
             
         let containingNightlyBadString =
             gen {
@@ -187,9 +182,9 @@ module Generator =
                     1, Gen.constant $"{wrongString}{nightlyString}{wrongString}"
                     1, Gen.constant $"{wrongString}{nightlyString}"
                     1, Gen.constant $"{nightlyString}{wrongString}"
-                    //1, Gen.constant $"{nightlyString}{leadingWhiteSpaces}"
-                    //1, Gen.constant $"{leadingWhiteSpaces}{nightlyString}"
-                    //1, Gen.constant $"{leadingWhiteSpaces}{nightlyString}{leadingWhiteSpaces}"
+                    1, Gen.constant $"{nightlyString}{leadingWhiteSpaces}"
+                    1, Gen.constant $"{leadingWhiteSpaces}{nightlyString}"
+                    1, Gen.constant $"{leadingWhiteSpaces}{nightlyString}{leadingWhiteSpaces}"
                     1, Gen.constant $"{nightlyString}{nightlyString}"
                     1, Gen.constant $"{nightlyString}{nightlyString}{nightlyString}"
                     
