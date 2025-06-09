@@ -4,8 +4,10 @@ namespace Calaf.Domain.DomainTypes
 module Values =
     // Common
     type Patch = uint32
+    type BuildNumber = uint8
+    type BuildHash = string
     type Build =
-        | Nightly
+        | Nightly of number: BuildNumber * hash: BuildHash
     // SemVer
     type Major = uint32
     type Minor = uint32
@@ -36,8 +38,8 @@ module Values =
     }
 
     type Version =
-        | CalVer of CalendarVersion
-        | SemVer of SemanticVersion
+        | CalVer of calendarVersion: CalendarVersion
+        | SemVer of semanticVersion: SemanticVersion
         | Unsupported
 
     // Repository

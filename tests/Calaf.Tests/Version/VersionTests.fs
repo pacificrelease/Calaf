@@ -1,12 +1,29 @@
 ﻿namespace Calaf.Tests.VersionTests
 
 open FsCheck.Xunit
+open Xunit
+open Swensen.Unquote
 
 open Calaf.Domain.DomainTypes.Values
 open Calaf.Domain.Version
 open Calaf.Tests
 
 module TryParseFromStringPropertiesTests =
+    [<Fact>]
+    let ``Valid three-part + build CalVer string parses to their corresponding values`` () =
+        let version = "2023.10-nightly.06+0fefe3f"
+        //let version = "2023.10.1-nightly.06-0fefe3f"
+        
+        //let version = "2023.10.1"
+        //let version = "2023.10.1-nightly"        
+        
+        //let version = "2023.10.1--nightly--."
+        //let version = "2023.10.1--nightly--.2023.10.1--nightly--"
+        
+        let version = version |> tryParseFromString
+        test <@ version |> Option.map _.IsCalVer |> Option.defaultValue false @>
+        
+        
     [<Property(Arbitrary = [| typeof<Arbitrary.validThreePartCalVerString> |], MaxTest = 200)>]
     let ``Valid three-part CalVer string parses to their corresponding values`` (validVersion: string) =
         let parts = validVersion.Split('.')
@@ -14,12 +31,14 @@ module TryParseFromStringPropertiesTests =
         let expectedMonth = byte parts[1]
         let expectedPatch = uint32 parts[2]
 
-        match tryParseFromString validVersion with
-        | Some (CalVer calVer) ->
-            calVer.Year = expectedYear &&
-            calVer.Month = expectedMonth &&
-            calVer.Patch = Some expectedPatch
-        | _ -> false
+        test <@
+            match tryParseFromString validVersion with
+            | Some (CalVer calVer) ->
+                calVer.Year = expectedYear &&
+                calVer.Month = expectedMonth &&
+                calVer.Patch = Some expectedPatch
+            | _ -> false
+        @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.validTwoPartCalVerString> |], MaxTest = 200)>]
     let ``Valid two-part CalVer string parses to their corresponding values`` (validVersion: string) =

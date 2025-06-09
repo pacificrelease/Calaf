@@ -8,6 +8,11 @@ open Calaf.Domain.DomainTypes.Values
 let internal versionDivider = '.'
 [<Literal>]
 let internal buildDivider = '-'
+
+// [<Literal>]
+// let internal versionStringRegex = @"^(\d+)\.(\d+)(?:\.(\d+))?(-.*)?$"
+[<Literal>]
+let internal versionStringRegex = @"^(\d+)\.(\d+)(?:\.(\d+))?(?:-(.*))?$"
 let internal versionPrefixes =
     [ "version."; "ver."; "v."
       "Version."; "Ver."; "V."
@@ -63,7 +68,44 @@ let private dedicate (cleanString: CleanString) =
             let beforeBuildDivider = tail.Substring(0, buildDividerIndex)
             let afterBuildDivider = tail.Substring(buildDividerIndex + 1)            
             let head = parts |> Array.take (parts.Length - 1)
-            Array.append head [| beforeBuildDivider; afterBuildDivider |]    
+            Array.append head [| beforeBuildDivider; afterBuildDivider |]
+            
+let private versionRegex =
+    System.Text.RegularExpressions.Regex(
+        versionStringRegex, // Uses the existing 'versionStringRegex' literal
+        System.Text.RegularExpressions.RegexOptions.Compiled |||
+        System.Text.RegularExpressions.RegexOptions.IgnoreCase
+    )
+            
+let private dedicate2 (cleanString: CleanString) =
+    let m = versionRegex.Match(cleanString)
+    if m.Success then
+        [|
+            yield m.Groups.[1].Value
+            yield m.Groups.[2].Value
+            if m.Groups.[3].Success &&
+               not (System.String.IsNullOrWhiteSpace m.Groups.[3].Value) then
+                yield m.Groups.[3].Value
+            if m.Groups.[4].Success &&
+               not (System.String.IsNullOrWhiteSpace m.Groups.[4].Value) then
+                yield m.Groups.[4].Value
+        |]
+        // let required = [|
+        //     yield m.Groups.[1].Value
+        //     yield m.Groups.[2].Value
+        // |]
+        // let optional =
+        //     [| 3; 4 |]
+        //     |> Array.choose (fun i ->
+        //         let v = m.Groups.[i].Value
+        //         if not (System.String.IsNullOrWhiteSpace v)
+        //         then Some v
+        //         else None)
+        //
+        // Array.append required optional
+    else
+        dedicateParts cleanString
+        
 
 // TODO: Refactor to return Error instead of Option  
 let private tryParse (cleanVersion: CleanString) : Version option =
@@ -107,7 +149,7 @@ let private tryParse (cleanVersion: CleanString) : Version option =
             Unsupported
         
     option {
-        let parts = dedicate cleanVersion
+        let parts = dedicate2 cleanVersion
         match parts with
         | [| major; minor; patch; build |] ->            
             let build = Build.tryParseFromString build

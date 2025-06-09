@@ -10,6 +10,7 @@ type DomainError =
     | MonthInvalidInt
     | MonthInvalidString
     | BuildInvalidString
+    | BuildAlreadyCurrent
     
     // Project errors
     | VersionElementMissing
