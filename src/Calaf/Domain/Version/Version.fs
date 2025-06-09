@@ -89,15 +89,12 @@ let private tryParse (cleanVersion: CleanString) : Version option =
         
         match year, month, patch with
         | Ok year, Ok month, patch ->
-            let calendarVersion = { Year = year; Month = month; Patch = patch }
-            CalVer(calendarVersion)
+            CalVer({ Year = year; Month = month; Patch = patch })
         | _ ->
-        match major, minor, patch with
+            match major, minor, patch with
             | Some major, Some minor, Some patch ->
-                let semanticVersion = { Major = major; Minor = minor; Patch = patch }
-                SemVer(semanticVersion)
-            | _ ->
-                Unsupported
+                SemVer({ Major = major; Minor = minor; Patch = patch })
+            | _ -> Unsupported
                 
     let fromThreeSegments first second build =
         let year = Year.tryParseFromString first
@@ -105,8 +102,7 @@ let private tryParse (cleanVersion: CleanString) : Version option =
         match year, month with
         | Ok year, Ok month ->
             CalVer({ Year = year; Month = month; Patch = None })
-        | _ ->
-            Unsupported
+        | _ -> Unsupported
         
     option {
         let segments = cleanVersion |> tryCreateVersionSegments
