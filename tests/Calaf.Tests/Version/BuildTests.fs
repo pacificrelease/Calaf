@@ -21,19 +21,19 @@ module TryParseFromStringPropertyTests =
         badString
         |> tryParseFromString = Ok None
     
-    [<Property(Arbitrary = [| typeof<Arbitrary.Build.wrongString> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.wrongBuildString> |])>]
     let ``Arbitrary string parses to BuildInvalidString error`` (wrongStringBuild: string) =
         wrongStringBuild
         |> tryParseFromString = Error BuildInvalidString
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.containingNightlyBadString> |])>]
     let ``String containing Nightly parses to BuildInvalidString error`` (containingNightlyBadString: string) =
-        containingNightlyBadString
-        |> tryParseFromString = Error BuildInvalidString
+        let result = containingNightlyBadString |> tryParseFromString
+        result = Error BuildInvalidString
     
 // TODO: Update tests to use generators
 module NightlyPropertyTests =
-    [<Property(Arbitrary = [| typeof<Arbitrary.Build.wrongString> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.wrongBuildString> |])>]
     let ``Make new Nightly on a Nightly build returns a new Nightly`` () =
         let build = Some (Build.Nightly (1uy, "hash1"))
         let newBuildMetadata = (2uy, "hash2")

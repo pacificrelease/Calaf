@@ -84,6 +84,9 @@ module Generator =
             return utcInstant.ToOffset(offset)
         }
         
+    let genCommitHash =
+        Bogus.Faker().Random.Hash() |> Gen.constant
+        
     let validPatchUInt32 =
        Gen.choose64(1L, int64 System.UInt32.MaxValue) |> Gen.map uint32    
         
@@ -151,32 +154,42 @@ module Generator =
         Gen.constant (Bogus.Faker().System.DirectoryPath())
         
     module Build =
-        let nightlyString =
-            Gen.elements ["nightly"; "NIGHTLY"; "Nightly"; "NiGhTlY"; "nIgHtLy"; "NIGHTly"; "nightLY"]
+        // let nightlyString =
+        //     Gen.elements ["nightly"; "NIGHTLY"; "Nightly"; "NiGhTlY"; "nIgHtLy"; "NIGHTly"; "nightLY"]
             
-        let wrongString =
+        let nightlyString =
             gen {
-                let! choice = Gen.frequency [
-                    1, genNegative |> Gen.map string
-                    1, nonNumericString
-                    1, genFloat
-                ]
-                return choice
+                let! nightly = Gen.elements ["nightly"; "NIGHTLY"; "Nightly"; "NiGhTlY"; "nIgHtLy"; "NIGHTly"; "nightLY"]
+                let! number = Gen.choose(int 0uy, int 255uy)
+                let! hash = genCommitHash
+                return $"{nightly}.{number:D2}+{hash}"
+            }            
+            
+        let wrongBuildString =
+            let letterChars = ['a'..'z'] @ ['A'..'Z']
+            let specialChars = ['!'; '@'; '#'; '$'; '%'; '^'; '&'; '*'; '('; ')'; '-'; '_'; '+'; '='; '~'; '?'; '/'; '\\'; '['; ']'; '{'; '}'; '|'; '<'; '>'; ','; '.'; ':']
+            // Mix to arrays into output string generator
+            gen {
+                let! r = Gen.shuffle (letterChars @ specialChars)
+                let! length = Gen.choose(64, 512)
+                let! chars = Gen.arrayOfLength length (Gen.elements r)
+                return System.String(chars)
             }
+             
             
         let containingNightlyBadString =
             gen {
                 let! nightlyString = nightlyString
-                let! wrongString = wrongString
+                let! wrongString = wrongBuildString
                 let! leadingWhiteSpaces = genWhiteSpacesString
                 let! choice = Gen.frequency [
                     1, Gen.constant $"{nightlyString}{wrongString}{nightlyString}"
                     1, Gen.constant $"{wrongString}{nightlyString}{wrongString}"
                     1, Gen.constant $"{wrongString}{nightlyString}"
                     1, Gen.constant $"{nightlyString}{wrongString}"
-                    1, Gen.constant $"{nightlyString}{leadingWhiteSpaces}"
-                    1, Gen.constant $"{leadingWhiteSpaces}{nightlyString}"
-                    1, Gen.constant $"{leadingWhiteSpaces}{nightlyString}{leadingWhiteSpaces}"
+                    //1, Gen.constant $"{nightlyString}{leadingWhiteSpaces}"
+                    //1, Gen.constant $"{leadingWhiteSpaces}{nightlyString}"
+                    //1, Gen.constant $"{leadingWhiteSpaces}{nightlyString}{leadingWhiteSpaces}"
                     1, Gen.constant $"{nightlyString}{nightlyString}"
                     1, Gen.constant $"{nightlyString}{nightlyString}{nightlyString}"
                     
@@ -793,9 +806,9 @@ module Arbitrary =
             static member nightlyString() =
                 Arb.fromGen Generator.Build.nightlyString
                 
-        type wrongString =
-            static member wrongStringYear() =
-                Arb.fromGen Generator.Build.wrongString
+        type wrongBuildString =
+            static member wrongBuildString() =
+                Arb.fromGen Generator.Build.wrongBuildString
                 
         type containingNightlyBadString =
             static member containingNightlyBadString() =

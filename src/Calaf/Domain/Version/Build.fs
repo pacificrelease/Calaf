@@ -10,11 +10,11 @@ let private NightlyBuildType =
     "nightly"
 [<Literal>]
 let internal AllowedBuildRegexString =
-    @"^(?i:(nightly))\.(0*(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]\d|\d))\+([A-Za-z0-9]+)$"
+    //@"^(?i)(nightly)\.([0-9]{1,3})\+([A-Za-z0-9]+)$"
+    @"^(?i:(nightly))\.([0-9]{1,3})\+([A-Za-z0-9]{1,128})$"
 let private buildRegex =
     System.Text.RegularExpressions.Regex(
         AllowedBuildRegexString,
-        System.Text.RegularExpressions.RegexOptions.Compiled |||
         System.Text.RegularExpressions.RegexOptions.IgnoreCase)
     
 type private BuildSegments = {
@@ -27,20 +27,22 @@ let private isEmptyString (build: string) =
     String.IsNullOrWhiteSpace(build)
     
 let private tryCreateBuildSegments (buildString: string) =
-    if buildString |> isEmptyString
-    then
-        Ok None
-    else        
-        let m = buildRegex.Match(buildString)
-        if m.Success
-        then        
-            {                 
-                BuildType = m.Groups[1].Value
-                BuildNumber = m.Groups[2].Value
-                BuildHash = m.Groups[3].Value
-            } |> Some |> Ok
+    result {
+        if isEmptyString buildString
+        then
+            return None
         else
-            BuildInvalidString |> Error
+            let m = buildRegex.Match buildString
+            if m.Success
+            then
+                let segments =
+                    { BuildType   = m.Groups[1].Value
+                      BuildNumber = m.Groups[2].Value
+                      BuildHash   = m.Groups[3].Value }
+                return Some segments                
+            else        
+                return! Error BuildInvalidString
+    }
 
 let private tryParseFromBuildSegments = function
     | None -> Ok None
