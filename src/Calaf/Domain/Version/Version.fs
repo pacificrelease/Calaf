@@ -5,7 +5,16 @@ open FsToolkit.ErrorHandling
 open Calaf.Domain.DomainTypes.Values
 
 [<Literal>]
-let internal versionStringRegex = @"^(\d+)\.(\d+)(?:\.(\d+))?(?:-(.*))?$"
+let private AllowedVersionRegexString =
+    @"^(\d+)\.(\d+)(?:\.(\d+))?(?:-(.*))?$"
+[<Literal>]
+let private ChoreCommitPrefix =
+    "chore: "
+let private versionRegex =
+    System.Text.RegularExpressions.Regex(
+        AllowedVersionRegexString,
+        System.Text.RegularExpressions.RegexOptions.Compiled |||
+        System.Text.RegularExpressions.RegexOptions.IgnoreCase)    
 let internal versionPrefixes =
     [ "version."; "ver."; "v."
       "Version."; "Ver."; "V."
@@ -13,15 +22,14 @@ let internal versionPrefixes =
       "Version";  "Ver";  "V" ]
     |> List.sortByDescending String.length
 let internal tagVersionPrefix = versionPrefixes[10]
-let internal commitVersionPrefix =
-    let chore = "chore"
-    $"{chore}: {versionPrefixes[2]}"
+let internal commitVersionPrefix =    
+    $"{ChoreCommitPrefix}: {versionPrefixes[2]}"
     
 type private CleanString = string
 type private VersionSegments = {
     YearOrMajor: string
     MonthOrMinor: string
-    PatchOrBuild: string option
+    Patch: string option
     Build: string option
 }
 
@@ -43,12 +51,6 @@ let private tryCleanString (bareString: string) =
         None
     else
         bareString.Trim() |> String.filter (asciiWs.Contains >> not) |> Some
-            
-let private versionRegex =
-    System.Text.RegularExpressions.Regex(
-        versionStringRegex,
-        System.Text.RegularExpressions.RegexOptions.Compiled |||
-        System.Text.RegularExpressions.RegexOptions.IgnoreCase)
     
 let private isValidGroupValue (group: System.Text.RegularExpressions.Group) =
     group.Success && not (System.String.IsNullOrWhiteSpace group.Value)
@@ -60,7 +62,7 @@ let private tryCreateVersionSegments (cleanString: CleanString) =
         {
             YearOrMajor = m.Groups[1].Value
             MonthOrMinor = m.Groups[2].Value
-            PatchOrBuild = if isValidGroupValue m.Groups[3] then Some m.Groups[3].Value else None
+            Patch = if isValidGroupValue m.Groups[3] then Some m.Groups[3].Value else None
             Build = if isValidGroupValue m.Groups[4] then Some m.Groups[4].Value else None
         } |> Some
     else None
@@ -109,7 +111,7 @@ let private tryParse (cleanVersion: CleanString) : Version option =
     option {
         let segments = cleanVersion |> tryCreateVersionSegments
         match segments with
-        | Some { YearOrMajor = yearOrMajor; MonthOrMinor = monthOrMinor; PatchOrBuild = Some patch; Build = Some build } ->            
+        | Some { YearOrMajor = yearOrMajor; MonthOrMinor = monthOrMinor; Patch = Some patch; Build = Some build } ->            
             let build = Build.tryParseFromString build
             match build with
             | Ok build ->
@@ -117,21 +119,23 @@ let private tryParse (cleanVersion: CleanString) : Version option =
             | Error _ ->
                 return Unsupported
         
-        | Some { YearOrMajor = yearOrMajor; MonthOrMinor = monthOrMinor; PatchOrBuild = Some patchOrBuild; Build = None } ->
-            match tryToUInt32 patchOrBuild with
+        | Some { YearOrMajor = yearOrMajor; MonthOrMinor = monthOrMinor; Patch = Some patch; Build = None } ->
+            match tryToUInt32 patch with
             | Some _ ->
-                let patch = patchOrBuild
                 return fromFourSegments yearOrMajor monthOrMinor patch None
             | None ->
-                let build = Build.tryParseFromString patchOrBuild
-                match build with
-                | Ok build ->
-                    let version = fromThreeSegments yearOrMajor monthOrMinor build
-                    return version
-                | Error _ ->
-                    return Unsupported
+                return Unsupported
+                
+        | Some { YearOrMajor = yearOrMajor; MonthOrMinor = monthOrMinor; Patch = None; Build = Some build } ->
+            match Build.tryParseFromString build with
+            | Ok (Some build) ->
+                return fromThreeSegments yearOrMajor monthOrMinor build
+            | Ok None ->
+                return fromThreeSegments yearOrMajor monthOrMinor None
+            | Error _ ->
+                return Unsupported
             
-        | Some { YearOrMajor = yearOrMajor; MonthOrMinor = monthOrMinor; PatchOrBuild = None; Build = None } ->
+        | Some { YearOrMajor = yearOrMajor; MonthOrMinor = monthOrMinor; Patch = None; Build = None } ->
             return fromThreeSegments yearOrMajor monthOrMinor None
         | _ ->
             return Unsupported
