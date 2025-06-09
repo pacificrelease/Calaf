@@ -5,13 +5,6 @@ open FsToolkit.ErrorHandling
 open Calaf.Domain.DomainTypes.Values
 
 [<Literal>]
-let internal versionDivider = '.'
-[<Literal>]
-let internal buildDivider = '-'
-
-// [<Literal>]
-// let internal versionStringRegex = @"^(\d+)\.(\d+)(?:\.(\d+))?(-.*)?$"
-[<Literal>]
 let internal versionStringRegex = @"^(\d+)\.(\d+)(?:\.(\d+))?(?:-(.*))?$"
 let internal versionPrefixes =
     [ "version."; "ver."; "v."
@@ -25,6 +18,12 @@ let internal commitVersionPrefix =
     $"{chore}: {versionPrefixes[2]}"
     
 type private CleanString = string
+type private VersionSegments = {
+    YearOrMajor: string
+    MonthOrMinor: string
+    PatchOrBuild: string option
+    Build: string option
+}
 
 let private tryToUInt32 (versionPart: string) : uint32 option =
     match System.UInt32.TryParse versionPart with
@@ -44,72 +43,31 @@ let private tryCleanString (bareString: string) =
         None
     else
         bareString.Trim() |> String.filter (asciiWs.Contains >> not) |> Some
-        
-let private dedicateBuild (cleanString: CleanString) =
-    cleanString.Split(buildDivider, System.StringSplitOptions.RemoveEmptyEntries)    
-        
-let private dedicateParts (cleanString: CleanString)=    
-    cleanString.Split(versionDivider, System.StringSplitOptions.RemoveEmptyEntries)
-        
-let private dedicate (cleanString: CleanString) =
-    let parts = cleanString.Split(versionDivider, System.StringSplitOptions.RemoveEmptyEntries)
-    match parts with
-    | [||] -> [||]
-    | [| single |] -> [| single |]
-    | _ ->
-        let tail = parts |> Array.last
-        let buildDividerIndex = tail.IndexOf(buildDivider, System.StringComparison.OrdinalIgnoreCase)
-        if buildDividerIndex < 0
-        then
-            // No hyphen in the last segment, so return the dot-split parts as is.
-            parts
-        else
-            // Hyphen found in the last segment.
-            let beforeBuildDivider = tail.Substring(0, buildDividerIndex)
-            let afterBuildDivider = tail.Substring(buildDividerIndex + 1)            
-            let head = parts |> Array.take (parts.Length - 1)
-            Array.append head [| beforeBuildDivider; afterBuildDivider |]
             
 let private versionRegex =
     System.Text.RegularExpressions.Regex(
-        versionStringRegex, // Uses the existing 'versionStringRegex' literal
+        versionStringRegex,
         System.Text.RegularExpressions.RegexOptions.Compiled |||
-        System.Text.RegularExpressions.RegexOptions.IgnoreCase
-    )
+        System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+    
+let private isValidGroupValue (group: System.Text.RegularExpressions.Group) =
+    group.Success && not (System.String.IsNullOrWhiteSpace group.Value)
             
-let private dedicate2 (cleanString: CleanString) =
+let private tryCreateVersionSegments (cleanString: CleanString) =
     let m = versionRegex.Match(cleanString)
-    if m.Success then
-        [|
-            yield m.Groups.[1].Value
-            yield m.Groups.[2].Value
-            if m.Groups.[3].Success &&
-               not (System.String.IsNullOrWhiteSpace m.Groups.[3].Value) then
-                yield m.Groups.[3].Value
-            if m.Groups.[4].Success &&
-               not (System.String.IsNullOrWhiteSpace m.Groups.[4].Value) then
-                yield m.Groups.[4].Value
-        |]
-        // let required = [|
-        //     yield m.Groups.[1].Value
-        //     yield m.Groups.[2].Value
-        // |]
-        // let optional =
-        //     [| 3; 4 |]
-        //     |> Array.choose (fun i ->
-        //         let v = m.Groups.[i].Value
-        //         if not (System.String.IsNullOrWhiteSpace v)
-        //         then Some v
-        //         else None)
-        //
-        // Array.append required optional
-    else
-        dedicateParts cleanString
-        
+    if m.Success
+    then
+        {
+            YearOrMajor = m.Groups[1].Value
+            MonthOrMinor = m.Groups[2].Value
+            PatchOrBuild = if isValidGroupValue m.Groups[3] then Some m.Groups[3].Value else None
+            Build = if isValidGroupValue m.Groups[4] then Some m.Groups[4].Value else None
+        } |> Some
+    else None
 
 // TODO: Refactor to return Error instead of Option  
 let private tryParse (cleanVersion: CleanString) : Version option =
-    let createVersionFromThreeParts first second third build =
+    let fromFourSegments first second third build =
         let major = tryToUInt32 first
         let minor = tryToUInt32 second
         let patch = tryToUInt32 third
@@ -139,7 +97,7 @@ let private tryParse (cleanVersion: CleanString) : Version option =
             | _ ->
                 Unsupported
                 
-    let createVersionFromTwoParts first second build =
+    let fromThreeSegments first second build =
         let year = Year.tryParseFromString first
         let month = Month.tryParseFromString second        
         match year, month with
@@ -149,32 +107,32 @@ let private tryParse (cleanVersion: CleanString) : Version option =
             Unsupported
         
     option {
-        let parts = dedicate2 cleanVersion
-        match parts with
-        | [| major; minor; patch; build |] ->            
+        let segments = cleanVersion |> tryCreateVersionSegments
+        match segments with
+        | Some { YearOrMajor = yearOrMajor; MonthOrMinor = monthOrMinor; PatchOrBuild = Some patch; Build = Some build } ->            
             let build = Build.tryParseFromString build
             match build with
             | Ok build ->
-                return createVersionFromThreeParts major minor patch build
+                return fromFourSegments yearOrMajor monthOrMinor patch build
             | Error _ ->
                 return Unsupported
         
-        | [| major; minor; patchOrBuild |] ->
+        | Some { YearOrMajor = yearOrMajor; MonthOrMinor = monthOrMinor; PatchOrBuild = Some patchOrBuild; Build = None } ->
             match tryToUInt32 patchOrBuild with
             | Some _ ->
                 let patch = patchOrBuild
-                return createVersionFromThreeParts major minor patch None
+                return fromFourSegments yearOrMajor monthOrMinor patch None
             | None ->
                 let build = Build.tryParseFromString patchOrBuild
                 match build with
                 | Ok build ->
-                    let version = createVersionFromTwoParts major minor build
+                    let version = fromThreeSegments yearOrMajor monthOrMinor build
                     return version
                 | Error _ ->
                     return Unsupported
             
-        | [| year; month |] ->
-            return createVersionFromTwoParts year month None
+        | Some { YearOrMajor = yearOrMajor; MonthOrMinor = monthOrMinor; PatchOrBuild = None; Build = None } ->
+            return fromThreeSegments yearOrMajor monthOrMinor None
         | _ ->
             return Unsupported
     }
