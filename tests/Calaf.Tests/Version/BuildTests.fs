@@ -11,9 +11,11 @@ open Calaf.Tests
 module TryParseFromStringPropertyTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyString> |])>]
     let ``Nightly string recognizes correctly to the Nightly with number and hash`` (nightlyString: string) =
-        test <@ match nightlyString |> tryParseFromString with
-                | Ok (Some (Build.Nightly (number, hash))) -> true
-                | _ -> false
+        test <@
+            let result = nightlyString |> tryParseFromString
+            match result with
+            | Ok (Some (Build.Nightly _)) -> true
+            | _ -> false
         @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.nullOrWhiteSpaceString> |])>]
@@ -21,7 +23,7 @@ module TryParseFromStringPropertyTests =
         badString
         |> tryParseFromString = Ok None
     
-    [<Property(Arbitrary = [| typeof<Arbitrary.Build.wrongBuildString> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.wrongString> |])>]
     let ``Arbitrary string parses to BuildInvalidString error`` (wrongStringBuild: string) =
         wrongStringBuild
         |> tryParseFromString = Error BuildInvalidString
@@ -33,7 +35,7 @@ module TryParseFromStringPropertyTests =
     
 // TODO: Update tests to use generators
 module NightlyPropertyTests =
-    [<Property(Arbitrary = [| typeof<Arbitrary.Build.wrongBuildString> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.wrongString> |])>]
     let ``Make new Nightly on a Nightly build returns a new Nightly`` () =
         let build = Some (Build.Nightly (1uy, "hash1"))
         let newBuildMetadata = (2uy, "hash2")

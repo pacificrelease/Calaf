@@ -9,10 +9,17 @@ open Calaf.Domain.DomainTypes.Values
 let private NightlyBuildType =
     "nightly"
 [<Literal>]
-let internal AllowedBuildRegexString =
+let internal BuildTypeNumberDivider = "."
+[<Literal>]
+let internal NumberHashDivider = "+"
+let internal AllowedNightlyBuildRegexString =
+    $@"^(?i:({NightlyBuildType}))\{BuildTypeNumberDivider}([0-9]{{1,3}})\{NumberHashDivider}([A-Za-z0-9]{{1,512}})$"
+let internal AllowedNightlyBuildRegexString2 =
     @"^(?i:(nightly))\.([0-9]{1,3})\+([A-Za-z0-9]{1,512})$"
 let private buildRegex =
-    System.Text.RegularExpressions.Regex(AllowedBuildRegexString)
+    System.Text.RegularExpressions.Regex(AllowedNightlyBuildRegexString)
+let private buildRegex2 =
+    System.Text.RegularExpressions.Regex(AllowedNightlyBuildRegexString2)
     
 type private BuildSegments = {
     BuildType: string

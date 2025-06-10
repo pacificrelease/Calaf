@@ -84,11 +84,17 @@ module Generator =
             return utcInstant.ToOffset(offset)
         }
         
-    let genCommitHash =
-        Bogus.Faker().Random.Hash() |> Gen.constant
+    let genCommitHash =     
+        Gen.constant <| Bogus.Faker().Random.Hash()
+        
+    let genHexadecimal =
+        Gen.constant <| Bogus.Faker().Random.Hexadecimal()
+        
+    let genFrom1To512LettersString =
+        Gen.constant <| Bogus.Faker().Random.String2(1, 512)
         
     let validPatchUInt32 =
-       Gen.choose64(1L, int64 System.UInt32.MaxValue) |> Gen.map uint32    
+        Gen.choose64(1L, int64 System.UInt32.MaxValue) |> Gen.map uint32    
         
     let nonNumericString =
         let letterChars = ['a'..'z'] @ ['A'..'Z']
@@ -158,11 +164,15 @@ module Generator =
             gen {
                 let! nightly = Gen.elements ["nightly"; "NIGHTLY"; "Nightly"; "NiGhTlY"; "nIgHtLy"; "NIGHTly"; "nightLY"]
                 let! number = Gen.choose(int 0uy, int 255uy)
-                let! hash = genCommitHash
-                return $"{nightly}.{number:D2}+{hash}"
+                let! hash = Gen.frequency [
+                    1, genCommitHash
+                    1, genHexadecimal
+                    1, genFrom1To512LettersString
+                ]
+                return $"{nightly}{Calaf.Domain.Build.BuildTypeNumberDivider}{number:D2}{Calaf.Domain.Build.NumberHashDivider}{hash}"
             }            
             
-        let wrongBuildString =
+        let wrongString =
             let letterChars = ['a'..'z'] @ ['A'..'Z']
             let specialChars = ['!'; '@'; '#'; '$'; '%'; '^'; '&'; '*'; '('; ')'; '-'; '_'; '+'; '='; '~'; '?'; '/'; '\\'; '['; ']'; '{'; '}'; '|'; '<'; '>'; ','; '.'; ':']
             gen {
@@ -175,9 +185,13 @@ module Generator =
         let containingNightlyBadString =
             gen {
                 let! nightlyString = nightlyString
-                let! wrongString = wrongBuildString
+                let! wrongString = wrongString
                 let! leadingWhiteSpaces = genWhiteSpacesString
                 let! choice = Gen.frequency [
+                    1, Gen.constant $"{Calaf.Domain.Build.BuildTypeNumberDivider}{nightlyString}"
+                    1, Gen.constant $"{nightlyString}{Calaf.Domain.Build.BuildTypeNumberDivider}"
+                    1, Gen.constant $"{Calaf.Domain.Build.NumberHashDivider}{nightlyString}"
+                    1, Gen.constant $"{nightlyString}{Calaf.Domain.Build.NumberHashDivider}"
                     1, Gen.constant $"{nightlyString}{wrongString}{nightlyString}"
                     1, Gen.constant $"{wrongString}{nightlyString}{wrongString}"
                     1, Gen.constant $"{wrongString}{nightlyString}"
@@ -801,9 +815,9 @@ module Arbitrary =
             static member nightlyString() =
                 Arb.fromGen Generator.Build.nightlyString
                 
-        type wrongBuildString =
-            static member wrongBuildString() =
-                Arb.fromGen Generator.Build.wrongBuildString
+        type wrongString =
+            static member wrongString() =
+                Arb.fromGen Generator.Build.wrongString
                 
         type containingNightlyBadString =
             static member containingNightlyBadString() =
