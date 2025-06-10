@@ -93,6 +93,9 @@ module Generator =
     let genFrom1To512LettersString =
         Gen.constant <| Bogus.Faker().Random.String2(1, 512)
         
+    let genByte =
+        Gen.choose(int 0uy, int 255uy) |> Gen.map byte
+        
     let validPatchUInt32 =
         Gen.choose64(1L, int64 System.UInt32.MaxValue) |> Gen.map uint32    
         
@@ -159,16 +162,22 @@ module Generator =
     let directoryPathString =
         Gen.constant (Bogus.Faker().System.DirectoryPath())
         
-    module Build =            
-        let nightlyString =
+    module Build =
+        let hashString =
             gen {
-                let! nightly = Gen.elements ["nightly"; "NIGHTLY"; "Nightly"; "NiGhTlY"; "nIgHtLy"; "NIGHTly"; "nightLY"]
-                let! number = Gen.choose(int 0uy, int 255uy)
                 let! hash = Gen.frequency [
                     1, genCommitHash
                     1, genHexadecimal
                     1, genFrom1To512LettersString
                 ]
+                return hash
+            }
+            
+        let nightlyString =
+            gen {
+                let! nightly = Gen.elements ["nightly"; "NIGHTLY"; "Nightly"; "NiGhTlY"; "nIgHtLy"; "NIGHTly"; "nightLY"]
+                let! number = genByte
+                let! hash = hashString
                 return $"{nightly}{Calaf.Domain.Build.BuildTypeNumberDivider}{number:D2}{Calaf.Domain.Build.NumberHashDivider}{hash}"
             }            
             
@@ -200,10 +209,16 @@ module Generator =
                     1, Gen.constant $"{leadingWhiteSpaces}{nightlyString}"
                     1, Gen.constant $"{leadingWhiteSpaces}{nightlyString}{leadingWhiteSpaces}"
                     1, Gen.constant $"{nightlyString}{nightlyString}"
-                    1, Gen.constant $"{nightlyString}{nightlyString}{nightlyString}"
-                    
+                    1, Gen.constant $"{nightlyString}{nightlyString}{nightlyString}"                    
                 ]
                 return choice
+            }
+            
+        let nightlyBuild =
+            gen {
+                let! number = genByte
+                let! hash = hashString
+                return Build.Nightly (number, hash)
             }
             
         
@@ -822,6 +837,10 @@ module Arbitrary =
         type containingNightlyBadString =
             static member containingNightlyBadString() =
                 Arb.fromGen Generator.Build.containingNightlyBadString
+                
+        type nightlyBuild =
+            static member nightlyBuild() =
+                Arb.fromGen Generator.Build.nightlyBuild
             
     module internal Month =
         type inRangeByteMonth =

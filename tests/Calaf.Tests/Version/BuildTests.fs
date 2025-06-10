@@ -35,12 +35,14 @@ module TryParseFromStringPropertyTests =
     
 // TODO: Update tests to use generators
 module NightlyPropertyTests =
-    [<Property(Arbitrary = [| typeof<Arbitrary.Build.wrongString> |])>]
-    let ``Make new Nightly on a Nightly build returns a new Nightly`` () =
-        let build = Some (Build.Nightly (1uy, "hash1"))
-        let newBuildMetadata = (2uy, "hash2")
-        tryNightly build newBuildMetadata = Ok (Build.Nightly(newBuildMetadata))
-        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyBuild> |])>]
+    let ``Make new Nightly on a Nightly build returns a new Nightly`` (nightlyBuild: Build) =
+        match nightlyBuild with
+        | Build.Nightly (number, hash) ->
+            let newBuildMetadata = (number + 1uy, hash.ToCharArray() |> Array.rev |> System.String)
+            let build = Some nightlyBuild
+            tryNightly build newBuildMetadata = Ok (Build.Nightly(newBuildMetadata))
+
     [<Property>]
     let ``Make Nightly on an empty Build returns Nightly`` () =
         let newBuildMetadata = (2uy, "hash2")
