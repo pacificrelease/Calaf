@@ -8,6 +8,11 @@ open Calaf.Domain.DomainTypes.Values
 open Calaf.Domain.Build
 open Calaf.Tests
 
+module ToStringPropertyTests =
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyBuild> |])>]
+    let ``Nightly build converts to non-empty string`` (nightlyBuild: Build) =       
+        test <@ toString nightlyBuild |> System.String.IsNullOrWhiteSpace |> not @>
+            
 module TryParseFromStringPropertyTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyString> |])>]
     let ``Nightly string recognizes correctly to the Nightly with number and hash`` (nightlyString: string) =
@@ -15,8 +20,7 @@ module TryParseFromStringPropertyTests =
             let result = nightlyString |> tryParseFromString
             match result with
             | Ok (Some (Build.Nightly _)) -> true
-            | _ -> false
-        @>
+            | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.nullOrWhiteSpaceString> |])>]
     let ``Null or empty or whitespace string parses to the None`` (badString: string) =

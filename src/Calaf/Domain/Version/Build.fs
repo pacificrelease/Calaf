@@ -57,6 +57,11 @@ let private tryParseFromBuildSegments = function
         | _ -> Error BuildInvalidString
     | _ -> Error BuildInvalidString
     
+let toString (build: Build) : string =
+    match build with
+    | Build.Nightly (number, hash) ->
+        $"{NightlyBuildType}{BuildTypeNumberDivider}{number}{NumberHashDivider}{hash}"
+    
 let tryParseFromString (build: string) =
     build |> tryCreateBuildSegments |> Result.bind tryParseFromBuildSegments 
 
