@@ -65,77 +65,63 @@ let private tryCreateVersionSegments (cleanString: CleanString) =
             Patch = if isValidGroupValue m.Groups[3] then Some m.Groups[3].Value else None
             Build = if isValidGroupValue m.Groups[4] then Some m.Groups[4].Value else None
         } |> Some
-    else None
+    else None    
+    
+let private tryCreateVersion (segments: VersionSegments) =
+    result {
+        match segments with
+        | { YearOrMajor = yearOrMajorSegment; MonthOrMinor = monthOrMinorSegment; Patch = Some patchSegment; Build = buildSegment } ->
+            let! build =
+                buildSegment
+                |> Option.map Build.tryParseFromString
+                |> Option.defaultValue (Ok None)
+           
+            let major = tryToUInt32 yearOrMajorSegment
+            let minor = tryToUInt32 monthOrMinorSegment
+            let patch = tryToUInt32 patchSegment                
+            let year =
+                match major with
+                | Some major -> major |> int32 |> Year.tryParseFromInt32
+                | _ -> Year.tryParseFromString yearOrMajorSegment
+            let month =
+                match minor with
+                | Some minor -> minor |> int32 |> Month.tryParseFromInt32
+                | _ -> monthOrMinorSegment |> Month.tryParseFromString 
+            let patch =
+                match patch with
+                | Some patch -> Some patch
+                | _ -> patchSegment |> Patch.tryParseFromString 
+            
+            match year, month, patch with
+            | Ok year, Ok month, patch ->
+                return CalVer({ Year = year; Month = month; Patch = patch }) |> Some
+            | _ ->
+                match major, minor, patch with
+                | Some major, Some minor, Some patch ->
+                    return SemVer({ Major = major; Minor = minor; Patch = patch }) |> Some
+                | _ ->
+                    return Unsupported |> Some
+        | { YearOrMajor = yearOrMajorSegment; MonthOrMinor = monthOrMinorSegment; Patch = None; Build = buildSegment } ->
+            let! build =
+                buildSegment
+                |> Option.map Build.tryParseFromString
+                |> Option.defaultValue (Ok None)
+                
+            let year = Year.tryParseFromString yearOrMajorSegment
+            let month = Month.tryParseFromString monthOrMinorSegment        
+            match year, month with
+            | Ok year, Ok month ->
+                return CalVer({ Year = year; Month = month; Patch = None }) |> Some
+            | _ ->
+                return Some Unsupported                
+    }    
 
 // TODO: Refactor to return Error instead of Option  
-let private tryParse (cleanVersion: CleanString) : Version option =
-    let fromFourSegments first second third build =
-        let major = tryToUInt32 first
-        let minor = tryToUInt32 second
-        let patch = tryToUInt32 third
-        
-        let year =
-            match major with
-            | Some major -> major |> int32 |> Year.tryParseFromInt32
-            | _ -> Year.tryParseFromString first
-        let month =
-            match minor with
-            | Some minor -> minor |> int32 |> Month.tryParseFromInt32
-            | _ -> second |> Month.tryParseFromString 
-        let patch =
-            match patch with
-            | Some patch -> Some patch
-            | _ -> third |> Patch.tryParseFromString 
-        
-        match year, month, patch with
-        | Ok year, Ok month, patch ->
-            CalVer({ Year = year; Month = month; Patch = patch })
-        | _ ->
-            match major, minor, patch with
-            | Some major, Some minor, Some patch ->
-                SemVer({ Major = major; Minor = minor; Patch = patch })
-            | _ -> Unsupported
-                
-    let fromThreeSegments first second build =
-        let year = Year.tryParseFromString first
-        let month = Month.tryParseFromString second        
-        match year, month with
-        | Ok year, Ok month ->
-            CalVer({ Year = year; Month = month; Patch = None })
-        | _ -> Unsupported
-        
-    option {
-        let segments = cleanVersion |> tryCreateVersionSegments
-        match segments with
-        | Some { YearOrMajor = yearOrMajor; MonthOrMinor = monthOrMinor; Patch = Some patch; Build = Some build } ->            
-            let build = Build.tryParseFromString build
-            match build with
-            | Ok build ->
-                return fromFourSegments yearOrMajor monthOrMinor patch build
-            | Error _ ->
-                return Unsupported
-        
-        | Some { YearOrMajor = yearOrMajor; MonthOrMinor = monthOrMinor; Patch = Some patch; Build = None } ->
-            match tryToUInt32 patch with
-            | Some _ ->
-                return fromFourSegments yearOrMajor monthOrMinor patch None
-            | None ->
-                return Unsupported
-                
-        | Some { YearOrMajor = yearOrMajor; MonthOrMinor = monthOrMinor; Patch = None; Build = Some build } ->
-            match Build.tryParseFromString build with
-            | Ok (Some build) ->
-                return fromThreeSegments yearOrMajor monthOrMinor build
-            | Ok None ->
-                return fromThreeSegments yearOrMajor monthOrMinor None
-            | Error _ ->
-                return Unsupported
-            
-        | Some { YearOrMajor = yearOrMajor; MonthOrMinor = monthOrMinor; Patch = None; Build = None } ->
-            return fromThreeSegments yearOrMajor monthOrMinor None
-        | _ ->
-            return Unsupported
-    }
+let private tryParse (cleanVersion: CleanString) : Version option =    
+    let segments = cleanVersion |> tryCreateVersionSegments
+    match segments with
+    | Some segments -> segments |> tryCreateVersion |> Result.toOption |> Option.flatten
+    | None -> Some Unsupported
 
 let toString (calVer: CalendarVersion) : string =
     match calVer.Patch with
