@@ -430,7 +430,7 @@ module Generator =
         gen {
             let! year  = Year.inRangeUInt16Year
             let! month = Month.inRangeByteMonth
-            return { Year = year; Month = month; Patch = None }
+            return { Year = year; Month = month; Patch = None; Build = None }
         }
         
     let threeSectionCalendarVersion =
@@ -503,7 +503,7 @@ module Generator =
             gen { 
                 let! year  = Gen.choose(int Calaf.Domain.Year.lowerYearBoundary, int Calaf.Domain.Year.upperYearBoundary - 1)
                 let! month = Gen.choose(1, 11)       
-                return { Year = uint16 year; Month = byte month; Patch = None }
+                return { Year = uint16 year; Month = byte month; Patch = None; Build = None }
             }            
         gen {
             let! calVer = genCalVer

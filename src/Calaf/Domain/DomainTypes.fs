@@ -35,11 +35,12 @@ module Values =
         Year:  Year
         Month: Month
         Patch: Patch option
+        Build: Build option
     }
 
     type Version =
-        | CalVer of calendarVersion: CalendarVersion
-        | SemVer of semanticVersion: SemanticVersion
+        | CalVer of CalendarVersion
+        | SemVer of SemanticVersion
         | Unsupported
 
     // Repository

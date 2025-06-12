@@ -10,7 +10,7 @@ open Calaf.Tests
 
 module TryParseFromStringPropertiesTests =
     [<Fact>]
-    let ``Valid three-part + build CalVer string parses to their corresponding values`` () =
+    let ``Nightly CalVer version with patch string parses to it corresponding values`` () =
         //let version = "2023.10"
         let version = "2023.10-nightly.06+0fefe3f"
         //let version = "2023.10-nightly.06+0fefe3fnightly.06+0fefe3f"
@@ -22,24 +22,24 @@ module TryParseFromStringPropertiesTests =
         //let version = "2023.10.1--nightly--."
         //let version = "2023.10.1-nightly.--..2023.10.1--nightly--"
         
+        
+        
         let version = version |> tryParseFromString
         test <@ version |> Option.map _.IsCalVer |> Option.defaultValue false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.validThreePartCalVerString> |], MaxTest = 200)>]
-    let ``Valid three-part CalVer string parses to their corresponding values`` (validVersion: string) =
-        let parts = validVersion.Split('.')
+    let ``Release CalVer version with patch string parses to it corresponding values`` (releaseVersion: string) =
+        let parts = releaseVersion.Split('.')
         let expectedYear = uint16 parts[0]
         let expectedMonth = byte parts[1]
         let expectedPatch = uint32 parts[2]
-
-        test <@
-            match tryParseFromString validVersion with
-            | Some (CalVer calVer) ->
-                calVer.Year = expectedYear &&
-                calVer.Month = expectedMonth &&
-                calVer.Patch = Some expectedPatch
-            | _ -> false
-        @>
+        
+        let version = tryParseFromString releaseVersion
+        test <@ match version with | Some (CalVer calVer)
+                                    -> calVer.Year = expectedYear &&
+                                       calVer.Month = expectedMonth &&
+                                       calVer.Patch = Some expectedPatch
+                                    | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.validTwoPartCalVerString> |], MaxTest = 200)>]
     let ``Valid two-part CalVer string parses to their corresponding values`` (validVersion: string) =
@@ -51,7 +51,7 @@ module TryParseFromStringPropertiesTests =
         | Some (CalVer calVer) ->
             calVer.Year = expectedYear &&
             calVer.Month = expectedMonth &&
-            calVer.Patch = None
+            calVer.Patch = None            
         | _ -> false
         
     [<Property(Arbitrary = [| typeof<Arbitrary.SematicVersion.semanticVersionStr> |], MaxTest = 500)>]

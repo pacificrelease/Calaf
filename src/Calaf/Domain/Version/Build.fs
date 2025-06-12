@@ -74,3 +74,16 @@ let tryNightly (currentBuild: Build option) (newBuildMetadata: BuildNumber * Bui
         else Build.Nightly newBuildMetadata |> Ok
     | None ->
         Ok (Build.Nightly newBuildMetadata)
+        
+let tryMax (builds: Build seq) : Build option =
+    match builds with
+    | _ when Seq.isEmpty builds -> None
+    | _ ->
+        // sort by build type where Alpha is the first and by the greatest number then Nightly and by the greater number        
+        let maxVersion =
+            builds
+            |> Seq.maxBy (fun b ->
+                match b with
+                // First digit (1 for nightly) defines comparison priority where higher number is better
+                | Build.Nightly (n, _) -> (1, n))
+        Some maxVersion

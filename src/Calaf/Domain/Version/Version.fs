@@ -94,11 +94,13 @@ let private tryCreateVersion (segments: VersionSegments) =
             
             match year, month, patch with
             | Ok year, Ok month, patch ->
-                return CalVer({ Year = year; Month = month; Patch = patch }) |> Some
+                let calVer = CalVer({ Year = year; Month = month; Patch = patch; Build = build })
+                return Some calVer
             | _ ->
                 match major, minor, patch with
                 | Some major, Some minor, Some patch ->
-                    return SemVer({ Major = major; Minor = minor; Patch = patch }) |> Some
+                    let semVer = SemVer({ Major = major; Minor = minor; Patch = patch })
+                    return Some semVer
                 | _ ->
                     return Unsupported |> Some
         | { YearOrMajor = yearOrMajorSegment; MonthOrMinor = monthOrMinorSegment; Patch = None; Build = buildSegment } ->
@@ -111,7 +113,8 @@ let private tryCreateVersion (segments: VersionSegments) =
             let month = Month.tryParseFromString monthOrMinorSegment        
             match year, month with
             | Ok year, Ok month ->
-                return CalVer({ Year = year; Month = month; Patch = None }) |> Some
+                let calVer = CalVer({ Year = year; Month = month; Patch = None; Build = build })
+                return Some calVer
             | _ ->
                 return Some Unsupported                
     }    
@@ -147,24 +150,36 @@ let release (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : Calenda
     if shouldBumpYear then
         { Year = monthStamp.Year
           Month = monthStamp.Month
-          Patch = None }
+          Patch = None
+          Build = None }
     else
         let shouldBumpMonth = monthStamp.Month > currentVersion.Month
         if shouldBumpMonth then
             { Year = currentVersion.Year
               Month = monthStamp.Month
-              Patch = None }
+              Patch = None
+              Build = None }
         else
             let patch = currentVersion.Patch |> Patch.release |> Some
             { Year = currentVersion.Year
               Month = currentVersion.Month
-              Patch = patch }           
+              Patch = patch
+              Build = None }
     
 let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
     match versions with
     | _ when Seq.isEmpty versions -> None
     | _ ->
-        let maxVersion = versions |> Seq.maxBy (fun v -> v.Year, v.Month, v.Patch)
+        // let maxVersion =
+        //     builds
+        //     |> Seq.maxBy (fun b ->
+        //         match b with
+        //         // First digit (1 for nightly) defines comparison priority where higher number is better
+        //         | Build.Nightly (n, _) -> (1, n))
+        // Some maxVersion
+        let maxVersion =
+            versions
+            |> Seq.maxBy (fun v -> v.Year, v.Month, v.Patch)
         Some maxVersion
 
 let tryParseFromString (bareVersion: string) : Version option =
