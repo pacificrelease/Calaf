@@ -217,8 +217,11 @@ module Generator =
         let nightlyBuild =
             gen {
                 let! number = genByte
-                let! hash = hashString
-                return Build.Nightly (number, hash)
+                let! hash = Gen.frequency [
+                    1, Gen.constant None
+                    1, hashString |> Gen.map Some
+                ] 
+                return Build.Nightly { Number = number; Hash = hash }
             }
             
         

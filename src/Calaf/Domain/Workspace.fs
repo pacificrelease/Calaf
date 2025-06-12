@@ -27,7 +27,7 @@ module Events =
         } |> DomainEvent.Workspace
 
 let private getNextReleaseVersion (workspace: Workspace) (monthStamp: MonthStamp) =
-    Version.release workspace.Version monthStamp
+    Version.release workspace.Version monthStamp  
     
 let private combineVersions suite repoOption =
     [

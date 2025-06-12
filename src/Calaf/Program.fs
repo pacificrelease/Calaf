@@ -12,6 +12,6 @@ let private loadTenTags = 1uy
 [<EntryPoint>]
 let main args =
     let path = String.Empty
-    let ctx = SpaceApplyContext.create
+    let context = MakeContext.create
     let settings = MakeSettings.tryCreate supportedFilesPattern loadTenTags
-    Make.run path args ctx settings
+    Make.run path args context settings

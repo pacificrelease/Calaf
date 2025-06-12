@@ -2,7 +2,7 @@ namespace Calaf.Infrastructure
 
 open Calaf.Application
 
-module SpaceApplyContext =        
+module MakeContext =        
     let create =
         let fileSystem = Calaf.Infrastructure.FileSystem() :> IFileSystem
         let git = Calaf.Infrastructure.Git() :> IGit

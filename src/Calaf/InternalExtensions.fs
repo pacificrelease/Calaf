@@ -1,6 +1,9 @@
 ﻿namespace Calaf.Extensions
 
 module internal InternalExtensions =
+    module RegularExpressions =
+        let validGroupValue (group: System.Text.RegularExpressions.Group) =
+            group.Success && not (System.String.IsNullOrWhiteSpace group.Value)
     
     module Result =
         let partition (results: Result<'a, 'e> seq) =

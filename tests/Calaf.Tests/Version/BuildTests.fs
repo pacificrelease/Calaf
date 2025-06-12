@@ -40,21 +40,21 @@ module TryParseFromStringPropertyTests =
 // TODO: Update tests to use generators
 module NightlyPropertyTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyBuild> |])>]
-    let ``Make new Nightly on a Nightly build returns a new Nightly`` (nightlyBuild: Build) =
+    let ``Make new Nightly on a Nightly build with hash returns a new Nightly`` (nightlyBuild: Build) =
         match nightlyBuild with
-        | Build.Nightly (number, hash) ->
-            let newBuildMetadata = (number + 1uy, hash.ToCharArray() |> Array.rev |> System.String)
+        | Build.Nightly { Number = number; Hash = hash } ->
+            let newBuildMetadata = { Number = number + 1uy; Hash = hash |> Option.map (fun h -> h.ToCharArray() |> Array.rev |> System.String) }
             let build = Some nightlyBuild
             tryNightly build newBuildMetadata = Ok (Build.Nightly(newBuildMetadata))
 
     [<Property>]
     let ``Make Nightly on an empty Build returns Nightly`` () =
-        let newBuildMetadata = (2uy, "hash2")
+        let newBuildMetadata = { Number = 2uy; Hash = Some "hash2" }
         let build = None
         tryNightly build newBuildMetadata = Ok (Build.Nightly(newBuildMetadata))
         
     [<Property>]
     let ``Make same Nightly on a Nightly build returns BuildAlreadyCurrent error`` () =
-        let build = Some (Build.Nightly (1uy, "hash"))
-        let newBuildMetadata = (1uy, "hash")
+        let build = Some (Build.Nightly { Number = 1uy; Hash = Some "hash" })
+        let newBuildMetadata = { Number = 1uy; Hash = Some "hash" }
         tryNightly build newBuildMetadata = Error BuildAlreadyCurrent

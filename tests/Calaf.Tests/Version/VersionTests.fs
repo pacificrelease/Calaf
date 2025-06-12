@@ -12,7 +12,8 @@ module TryParseFromStringPropertiesTests =
     [<Fact>]
     let ``Nightly CalVer version with patch string parses to it corresponding values`` () =
         //let version = "2023.10"
-        let version = "2023.10-nightly.06+0fefe3f"
+        let version = "2023.10-nightly.06"
+        //let version = "2023.10-nightly.06+0fefe3f"
         //let version = "2023.10-nightly.06+0fefe3fnightly.06+0fefe3f"
         //let version = "2023.10.1-nightly.06+0fefe3f"
         

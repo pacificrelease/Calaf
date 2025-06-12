@@ -7,4 +7,3 @@ let create (commitInfo: GitCommitInfo) =
     { Message = commitInfo.Message
       Hash = commitInfo.Hash
       When = commitInfo.When }
-

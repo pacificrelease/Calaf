@@ -2,6 +2,7 @@
 
 open FsToolkit.ErrorHandling
 
+open Calaf.Extensions.InternalExtensions.RegularExpressions
 open Calaf.Domain.DomainTypes.Values
 
 [<Literal>]
@@ -51,9 +52,6 @@ let private tryCleanString (bareString: string) =
         None
     else
         bareString.Trim() |> String.filter (asciiWs.Contains >> not) |> Some
-    
-let private isValidGroupValue (group: System.Text.RegularExpressions.Group) =
-    group.Success && not (System.String.IsNullOrWhiteSpace group.Value)
             
 let private tryCreateVersionSegments (cleanString: CleanString) =
     let m = versionRegex.Match(cleanString)
@@ -62,8 +60,8 @@ let private tryCreateVersionSegments (cleanString: CleanString) =
         {
             YearOrMajor = m.Groups[1].Value
             MonthOrMinor = m.Groups[2].Value
-            Patch = if isValidGroupValue m.Groups[3] then Some m.Groups[3].Value else None
-            Build = if isValidGroupValue m.Groups[4] then Some m.Groups[4].Value else None
+            Patch = if m.Groups[3] |> validGroupValue then Some m.Groups[3].Value else None
+            Build = if m.Groups[4] |> validGroupValue then Some m.Groups[4].Value else None
         } |> Some
     else None    
     
@@ -145,7 +143,7 @@ let toTagName (calVer: CalendarVersion) : string =
 let toCommitMessage (calVer: CalendarVersion) : string =
     $"{commitVersionPrefix} {calVer |> toString}" 
 
-let release (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : CalendarVersion =    
+let release (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : CalendarVersion =
     let shouldBumpYear = monthStamp.Year > currentVersion.Year            
     if shouldBumpYear then
         { Year = monthStamp.Year
@@ -179,7 +177,15 @@ let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
         // Some maxVersion
         let maxVersion =
             versions
-            |> Seq.maxBy (fun v -> v.Year, v.Month, v.Patch)
+            //|> Seq.maxBy (fun v -> v.Year, v.Month, v.Patch, )
+            // Compare by build if it exists, otherwise compare by year, month, and patch
+            |> Seq.maxBy (fun v ->
+                match v.Build with
+                | Some build ->
+                    match build with
+                    | Build.Nightly nightlyBuild -> (1, v.Year, v.Month, v.Patch, nightlyBuild.Number)                    
+                | None -> (0, v.Year, v.Month, v.Patch, 0uy))
+            //|> Seq.maxBy (fun v -> v.Year, v.Month, v.Patch, )
         Some maxVersion
 
 let tryParseFromString (bareVersion: string) : Version option =

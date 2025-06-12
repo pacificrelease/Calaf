@@ -6,8 +6,12 @@ module Values =
     type Patch = uint32
     type BuildNumber = uint8
     type BuildHash = string
+    type NightlyBuild = {
+        Number: BuildNumber
+        Hash: BuildHash option
+    }
     type Build =
-        | Nightly of number: BuildNumber * hash: BuildHash
+        | Nightly of NightlyBuild
     // SemVer
     type Major = uint32
     type Minor = uint32
