@@ -27,8 +27,8 @@ module TryParseFromStringPropertiesTests =
         let version = version |> tryParseFromString
         test <@ version |> Option.map _.IsCalVer |> Option.defaultValue false @>
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.validThreePartCalVerString> |], MaxTest = 200)>]
-    let ``Release CalVer version with patch string parses to it corresponding values`` (releaseVersion: string) =
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatchStr> |], MaxTest = 200)>]
+    let ``Release calendar version string parses to the corresponding values`` (releaseVersion: string) =
         let parts = releaseVersion.Split('.')
         let expectedYear = uint16 parts[0]
         let expectedMonth = byte parts[1]
@@ -41,13 +41,13 @@ module TryParseFromStringPropertiesTests =
                                        calVer.Patch = Some expectedPatch
                                     | _ -> false @>
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.validTwoPartCalVerString> |], MaxTest = 200)>]
-    let ``Valid two-part CalVer string parses to their corresponding values`` (validVersion: string) =
-        let parts = validVersion.Split('.')
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionShortStr> |], MaxTest = 200)>]
+    let ``Valid two-part CalVer string parses to their corresponding values`` (calendarVersionShortStr: string) =
+        let parts = calendarVersionShortStr.Split('.')
         let expectedYear = uint16 parts[0]
         let expectedMonth = byte parts[1]
 
-        match tryParseFromString validVersion with
+        match tryParseFromString calendarVersionShortStr with
         | Some (CalVer calVer) ->
             calVer.Year = expectedYear &&
             calVer.Month = expectedMonth &&
@@ -68,15 +68,15 @@ module TryParseFromStringPropertiesTests =
             semVer.Patch = expectedPatch
         | _ -> false        
     
-    [<Property(Arbitrary = [| typeof<Arbitrary.whiteSpaceLeadingTrailingValidCalVerString> |], MaxTest = 200)>]
-    let ``Leading/trailing whitespace in input is ignored`` (str: string) =        
-        match tryParseFromString str with
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.whiteSpaceLeadingTrailingCalendarVersionStr> |], MaxTest = 200)>]
+    let ``Leading/trailing whitespace in input is ignored`` (whiteSpaceLeadingTrailingCalendarVersionStr: string) =        
+        match tryParseFromString whiteSpaceLeadingTrailingCalendarVersionStr with
         | Some (CalVer _) -> true
         | _               -> false
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.validTwoPartCalVerString> |], MaxTest = 200)>]
-    let ``Valid two-part CalVer string parses to CalVer with None Patch`` (twoPartCalVerString: string) =
-        match tryParseFromString twoPartCalVerString with
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionShortStr> |], MaxTest = 200)>]
+    let ``Valid two-part CalVer string parses to CalVer with None Patch`` (calendarVersionShortStr: string) =
+        match tryParseFromString calendarVersionShortStr with
         | Some (CalVer calVer) -> calVer.Patch.IsNone
         | _ -> false
         
@@ -93,9 +93,9 @@ module TryParseFromStringPropertiesTests =
         badVersion |> tryParseFromString = None
         
 module TryParseFromTagPropertiesTests =
-    [<Property(Arbitrary = [| typeof<Arbitrary.validTagCalVerString> |], MaxTest = 200)>]
-    let ``Correct prefix + valid CalVer string parses to Some CalVer`` (validTagCalVerString: string) =
-        match tryParseFromTag validTagCalVerString with
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionTagStr> |], MaxTest = 200)>]
+    let ``Correct prefix + valid CalVer string parses to Some CalVer`` (calendarVersionTagStr: string) =
+        match tryParseFromTag calendarVersionTagStr with
         | Some (CalVer _) -> true
         | _               -> false
         
@@ -105,15 +105,15 @@ module TryParseFromTagPropertiesTests =
         | Some (SemVer _) -> true
         | _               -> false
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.whiteSpaceLeadingTrailingValidTagCalVerString> |], MaxTest = 200)>]
-    let ``Leading/trailing whitespace in input is ignored`` (str: string) =        
-        match tryParseFromTag str with
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.whiteSpaceLeadingTrailingCalendarVersionTagStr> |], MaxTest = 200)>]
+    let ``Leading/trailing whitespace in input is ignored`` (tagStr: string) =        
+        match tryParseFromTag tagStr with
         | Some (CalVer _) -> true
         | _               -> false
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.validTwoPartTagCalVerString> |], MaxTest = 200)>]
-    let ``Valid two-part CalVer string parses to CalVer with None Patch`` (twoPartCalVerString: string) =
-        match tryParseFromTag twoPartCalVerString with
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionShortTagStr> |], MaxTest = 200)>]
+    let ``Valid two-part CalVer string parses to CalVer with None Patch`` (tagStr: string) =
+        match tryParseFromTag tagStr with
         | Some (CalVer calVer) -> calVer.Patch.IsNone
         | _ -> false
         
@@ -136,40 +136,40 @@ module TryMaxPropertiesTests =
         versions
         |> tryMax = None
 
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |], MaxTest = 200)>]
-    let ``Single element returns that element`` (version: CalendarVersion) =
-        let versions = [| version |]
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |], MaxTest = 200)>]
+    let ``Single element returns that element`` (calendarVersion: CalendarVersion) =
+        let versions = [| calendarVersion |]
         versions
-        |> tryMax = Some version
+        |> tryMax = Some calendarVersion
 
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersions> |], MaxTest = 200)>]
-    let ``Multiple elements returns the maximum`` (versions: CalendarVersion[]) =
-        versions
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersions> |], MaxTest = 200)>]
+    let ``Multiple elements returns the maximum`` (calendarVersions: CalendarVersion[]) =
+        calendarVersions
         |> tryMax
         |> Option.isSome
       
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersions> |], MaxTest = 200)>]
-    let ``Result element belongs to input`` (versions: CalendarVersion[]) =
-        let max = versions |> tryMax
-        let contains = versions |> Array.contains max.Value
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersions> |], MaxTest = 200)>]
+    let ``Result element belongs to input`` (calendarVersions: CalendarVersion[]) =
+        let max = calendarVersions |> tryMax
+        let contains = calendarVersions |> Array.contains max.Value
         contains
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersions> |], MaxTest = 200)>]
-    let ``Order invariance (array reversal does not affect result)`` (versions: CalendarVersion[]) =
-        versions
-        |> tryMax = tryMax (Array.rev versions)
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersions> |], MaxTest = 200)>]
+    let ``Order invariance (array reversal does not affect result)`` (calendarVersions: CalendarVersion[]) =
+        calendarVersions
+        |> tryMax = tryMax (Array.randomShuffle calendarVersions)
     
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersions> |])>]
-    let ``Duplicate tolerance`` (versions: CalendarVersion[]) =
-        let max = tryMax versions
-        let duplicated = Array.append versions [| max.Value |]
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersions> |])>]
+    let ``Duplicate tolerance`` (calendarVersions: CalendarVersion[]) =
+        let max = tryMax calendarVersions
+        let duplicated = Array.append calendarVersions [| max.Value |]
         tryMax duplicated = max
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersions> |])>]
-    let ``Result is maximum`` (versions: CalendarVersion[]) =
-        let max = versions
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersions> |])>]
+    let ``Result is maximum`` (calendarVersions: CalendarVersion[]) =
+        let max = calendarVersions
                 |> tryMax                
-        versions
+        calendarVersions
         |> Array.forall (fun v -> compare v max.Value <= 0)
         
 module ReleasePropertiesTests =
@@ -179,38 +179,38 @@ module ReleasePropertiesTests =
         | Month -> { monthStamp with Month = monthStamp.Month + byte 1 }
         | Both -> { Year = monthStamp.Year + 1us; Month = monthStamp.Month + byte 1 }
     
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersionWithSameMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
     let ``CalendarVersion release Year when the MonthStamp Year is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement) =
         let monthStamp = increment (monthStamp, incr)
         let release = release calVer monthStamp
         release.Year = uint16 monthStamp.Year
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersionWithSameMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
     let ``CalendarVersion release Month when the MonthStamp Month is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement) =
         let monthStamp = increment (monthStamp, incr)
         let release = release calVer monthStamp
         release.Month = byte monthStamp.Month
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.threePartCalendarVersionWithSameMonthStamp> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatchMonthStamp> |])>]
     let ``Three-part CalendarVersion release only Patch when the MonthStamp has the same Year and Month`` (calVer: CalendarVersion, monthStamp: MonthStamp) =
         let release = release calVer monthStamp
         release.Patch > calVer.Patch &&
         release.Month = calVer.Month &&
         release.Year = calVer.Year
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.threePartCalendarVersionWithSameMonthStamp> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatchMonthStamp> |])>]
     let ``CalendarVersion preserves Year and Month when the MonthStamp has the same Year and Month`` (calVer: CalendarVersion, monthStamp: MonthStamp)=
         let release = release calVer monthStamp
         release.Year = calVer.Year &&
         release.Month = calVer.Month
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.threePartCalendarVersionWithSameMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatchMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
     let ``Three-part CalendarVersion reset Patch when the MonthStamp Year and/or Month is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement)=
         let timeStamp = increment (monthStamp, incr)
         let release = release calVer timeStamp
         release.Patch = None
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.twoPartCalendarVersionWithSameMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionShortMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
     let ``Two-part CalendarVersion still has None Patch when the MonthStamp Year and/or Month is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement) =
         let monthStamp = increment (monthStamp, incr)
         let release = release calVer monthStamp
@@ -219,96 +219,96 @@ module ReleasePropertiesTests =
 module ToStringPropertiesTests =
     let private dotSegments (s:string) = s.Split '.'
     
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
-    let ``CalendarVersion contains it's Year in the string representation`` (calVer: CalendarVersion) =
-        let calVerString = calVer |> toString
-        calVerString.Contains(calVer.Year |> string)
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``CalendarVersion contains it's Year in the string representation`` (calendarVersion: CalendarVersion) =
+        let calVerString = calendarVersion |> toString
+        calVerString.Contains(calendarVersion.Year |> string)
     
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
-    let ``CalendarVersion contains it's Month in the string representation`` (calVer: CalendarVersion) =
-        let calVerString = calVer |> toString
-        calVerString.Contains(calVer.Month |> string)   
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``CalendarVersion contains it's Month in the string representation`` (calendarVersion: CalendarVersion) =
+        let calVerString = calendarVersion |> toString
+        calVerString.Contains(calendarVersion.Month |> string)   
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.threeSectionCalendarVersion> |])>]
-    let ``CalendarVersion with Patch contains it's Patch in the string representation`` (calVer: CalendarVersion) =
-        let calVerString = calVer |> toString
-        calVerString.Contains(calVer.Patch.Value |> string)
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatch> |])>]
+    let ``CalendarVersion with Patch contains it's Patch in the string representation`` (calendarVersion: CalendarVersion) =
+        let calVerString = calendarVersion |> toString
+        calVerString.Contains(calendarVersion.Patch.Value |> string)
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.threeSectionCalendarVersion> |])>]
-    let ``CalendarVersion with Patch contains three string sections`` (calVer: CalendarVersion) =
-        calVer
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatch> |])>]
+    let ``CalendarVersion with Patch contains three string sections`` (calendarVersion: CalendarVersion) =
+        calendarVersion
         |> toString
         |> dotSegments
         |> Array.length  = 3
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.twoSectionCalendarVersion> |])>]
-    let ``CalendarVersion without Patch contains two string sections`` (calVer: CalendarVersion) =
-        calVer
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionShort> |])>]
+    let ``CalendarVersion without Patch contains two string sections`` (calendarVersion: CalendarVersion) =
+        calendarVersion
         |> toString
         |> dotSegments
         |> Array.length  = 2
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
-    let ``Equal CalendarVersion values produce identical strings`` (calVer: CalendarVersion)=
-        let copy = calVer
-        let calVerString1 = calVer |> toString
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``Equal CalendarVersion values produce identical strings`` (calendarVersion: CalendarVersion)=
+        let copy = calendarVersion
+        let calVerString1 = calendarVersion |> toString
         let calVerString2 = copy   |> toString
         calVerString1 = calVerString2
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
-    let ``Output is never empty`` (calVer: CalendarVersion) =
-        calVer
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``Output is never empty`` (calendarVersion: CalendarVersion) =
+        calendarVersion
         |> toString
         |> System.String.IsNullOrWhiteSpace
         |> not
         
 module ToTagNamePropertiesTests =
     // Prefix Prepending
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
-    let ``Prefix is prepended to the CalendarVersion tag name`` (calVer: CalendarVersion) =
-        let tag = calVer |> toTagName
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``Prefix is prepended to the CalendarVersion tag name`` (calendarVersion: CalendarVersion) =
+        let tag = calendarVersion |> toTagName
         tag.StartsWith(tagVersionPrefix)    
     
     // Suffix Format
     // The part after the prefix should match the output of toString calVer.
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
-    let ``Tag name after prefix matches CalendarVersion string representation`` (calVer: CalendarVersion) =
-        let tag = calVer |> toTagName
-        let versionString = calVer |> toString
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``Tag name after prefix matches CalendarVersion string representation`` (calendarVersion: CalendarVersion) =
+        let tag = calendarVersion |> toTagName
+        let versionString = calendarVersion |> toString
         tag.EndsWith(versionString)
     
     // Reversibility
     // If you strip the prefix from the result and parse it, you should recover the original CalendarVersion (assuming toString and parsing are consistent).
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
-    let ``Tag name can be parsed back to CalendarVersion`` (calVer: CalendarVersion) =
-        let tagName = calVer |> toTagName
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``Tag name can be parsed back to CalendarVersion`` (calendarVersion: CalendarVersion) =
+        let tagName = calendarVersion |> toTagName
         match tryParseFromTag tagName with
-        | Some (CalVer version) -> version = calVer
+        | Some (CalVer version) -> version = calendarVersion
         | _ -> false
         
     // No Unexpected Characters
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
-    let ``Tag name does not contain unexpected empty or whitespace characters`` (calVer: CalendarVersion) =
-        let tagName = calVer |> toTagName
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``Tag name does not contain unexpected empty or whitespace characters`` (calendarVersion: CalendarVersion) =
+        let tagName = calendarVersion |> toTagName
         not (System.String.IsNullOrWhiteSpace tagName) &&
         tagName |> Seq.forall (fun c -> not (System.Char.IsWhiteSpace c))
         
 module ToCommitMessagePropertiesTests =
     // Prefix Prepending
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
-    let ``Commit message starts with commitVersionPrefix`` (calVer: CalendarVersion) =
-        let commitMsg = calVer |> toCommitMessage
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``Commit message starts with commitVersionPrefix`` (calendarVersion: CalendarVersion) =
+        let commitMsg = calendarVersion |> toCommitMessage
         commitMsg.StartsWith(commitVersionPrefix)
     
     // Suffix Format
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
-    let ``Commit message ends with string representation of version`` (calVer: CalendarVersion) =
-        let commitMsg = calVer |> toCommitMessage
-        commitMsg.EndsWith(toString calVer)
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``Commit message ends with string representation of version`` (calendarVersion: CalendarVersion) =
+        let commitMsg = calendarVersion |> toCommitMessage
+        commitMsg.EndsWith(toString calendarVersion)
 
     // Contains commit version prefix
-    [<Property(Arbitrary = [| typeof<Arbitrary.calendarVersion> |])>]
-    let ``Commit message does not contain unexpected empty or whitespace and contains commit version prefix`` (calVer: CalendarVersion) =
-        let commitMsg = calVer |> toCommitMessage
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``Commit message does not contain unexpected empty or whitespace and contains commit version prefix`` (calendarVersion: CalendarVersion) =
+        let commitMsg = calendarVersion |> toCommitMessage
         not (System.String.IsNullOrWhiteSpace commitMsg) &&
         commitMsg.Contains commitVersionPrefix

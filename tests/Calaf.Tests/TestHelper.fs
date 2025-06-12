@@ -334,6 +334,168 @@ module Generator =
                 return choice
             }
             
+    module internal CalendarVersion =
+        let calendarVersionShortStr =
+            gen {
+                let! year  = Year.inRangeUInt16Year
+                let! month = Month.inRangeByteMonth
+                return $"{year}.{month}"
+            }
+            
+        let calendarVersionPatchStr =
+            gen {
+                let! year  = Year.inRangeUInt16Year
+                let! month = Month.inRangeByteMonth
+                let! patch = validPatchUInt32
+                return $"{year}.{month}.{patch}"
+            }
+            
+        let calendarVersionShortNightlyBuildStr =
+            gen {
+                let! year  = Year.inRangeUInt16Year
+                let! month = Month.inRangeByteMonth
+                let! nightlyBuild = Build.nightlyString
+                return $"{year}.{month}-{nightlyBuild}"                 
+            }
+            
+        let calendarVersionPatchNightlyBuildStr =
+            gen {
+                let! year  = Year.inRangeUInt16Year
+                let! month = Month.inRangeByteMonth
+                let! patch = validPatchUInt32
+                let! nightlyBuild = Build.nightlyString
+                return $"{year}.{month}.{patch}-{nightlyBuild}"                 
+            }
+            
+        let calendarVersionStr =
+            gen {            
+                let! calendarVersion = Gen.frequency [
+                    1, calendarVersionPatchStr
+                    1, calendarVersionShortStr
+                ]
+                return calendarVersion
+            }
+        
+        let calendarVersionShort =
+            gen {
+                let! year  = Year.inRangeUInt16Year
+                let! month = Month.inRangeByteMonth
+                return { Year = year; Month = month; Patch = None; Build = None }
+            }
+            
+        let calendarVersionPatch =
+            gen {
+                let! shortCalendarVersion = calendarVersionShort
+                let! patch = validPatchUInt32
+                return { shortCalendarVersion with Patch = Some patch }
+            }
+            
+        let calendarVersionShortNightlyBuild =
+            gen {
+                let! shortCalendarVersion = calendarVersionShort
+                let! nightlyBuild = Build.nightlyBuild
+                return { shortCalendarVersion with Build = Some nightlyBuild }
+            }
+            
+        let calendarVersionPatchNightlyBuild =
+            gen {
+                let! patchCalendarVersion = calendarVersionPatch
+                let! nightlyBuild = Build.nightlyBuild
+                return { patchCalendarVersion with Build = Some nightlyBuild }
+            }
+            
+        let calendarVersion =
+            gen {
+                let! choice = Gen.frequency [
+                    1, calendarVersionShort
+                    1, calendarVersionPatch
+                    //1, calendarVersionShortNightlyBuild
+                    //1, calendarVersionPatchNightlyBuild
+                ]
+                return choice
+            }
+            
+        let calendarVersions =
+            gen {
+                let! smallCount = Gen.choose(1, 50)
+                let! middleCount = Gen.choose(51, 1000)            
+                let! bigCount = Gen.choose(1001, 25_000)            
+                let! choice = Gen.frequency [
+                    3, Gen.arrayOfLength smallCount calendarVersion
+                    2, Gen.arrayOfLength middleCount calendarVersion
+                    1, Gen.arrayOfLength bigCount calendarVersion
+                ]
+                return choice
+            }
+            
+        let calendarVersionTagStr =
+            gen {
+                let! versionPrefix = genTagVersionPrefix
+                let! choice = Gen.frequency [
+                    1, calendarVersionShortStr
+                    1, calendarVersionPatchStr
+                    //1, calendarVersionShortNightlyBuildStr
+                    //1, calendarVersionPatchNightlyBuildStr                    
+                ]
+                return $"{versionPrefix}{choice}"
+            }
+            
+        let calendarVersionShortTagStr =
+            gen {
+                let! versionPrefix = genTagVersionPrefix
+                let! calendarVersionShortStr = calendarVersionShortStr
+                return $"{versionPrefix}{calendarVersionShortStr}"
+            }
+            
+        let whiteSpaceLeadingTrailingCalendarVersionStr =
+            gen {
+                let! calVerStr = calendarVersionStr
+                
+                let! whiteSpacesPrefix = genWhiteSpacesString
+                let! whiteSpacesSuffix = genWhiteSpacesString
+                
+                return $"{whiteSpacesPrefix}{calVerStr}{whiteSpacesSuffix}";
+            }
+            
+        let whiteSpaceLeadingTrailingCalendarVersionTagStr =
+            gen {
+                let! calVerStr = calendarVersionTagStr
+                
+                let! whiteSpacesPrefix = genWhiteSpacesString
+                let! whiteSpacesSuffix = genWhiteSpacesString
+                
+                return $"{whiteSpacesPrefix}{calVerStr}{whiteSpacesSuffix}";
+            }    
+        
+        let calendarVersionShortMonthStamp =
+            let genCalVer =
+                gen { 
+                    let! year  = Gen.choose(int Calaf.Domain.Year.lowerYearBoundary, int Calaf.Domain.Year.upperYearBoundary - 1)
+                    let! month = Gen.choose(1, 11)       
+                    return { Year = uint16 year; Month = byte month; Patch = None; Build = None }
+                }            
+            gen {
+                let! calVer = genCalVer
+                let dateStamp = { Year = calVer.Year; Month = calVer.Month }
+                return (calVer, dateStamp)
+            }
+            
+        let calendarVersionPatchMonthStamp =            
+            gen {
+                let! calVer, dateStamp = calendarVersionShortMonthStamp
+                let! patch = validPatchUInt32 
+                return ({ calVer with Patch = Some patch }, dateStamp)
+            }
+            
+        let calendarVersionMonthStamp =
+            gen {
+                let! choice =  Gen.frequency [
+                    1, calendarVersionShortMonthStamp
+                    1, calendarVersionPatchMonthStamp
+                ]
+                return choice  
+            }        
+            
     module internal SematicVersion =
         let semanticVersion =
             let genBigSemVer =
@@ -370,12 +532,20 @@ module Generator =
                 return $"{semanticVersion.Major}.{semanticVersion.Minor}.{semanticVersion.Patch}"
             }
             
-        let semanticVersionWithVersionPrefixStr =
+        let semanticVersionTagStr =
             gen {
                 let! validPrefix = genTagVersionPrefix
                 let! semVer = semanticVersionStr
                 return $"{validPrefix}{semVer}"
-            }        
+            }
+            
+    let invalidThreePartString =
+        gen {
+            let! first  = nonNumericString
+            let! second = nonNumericString
+            let! third  = nonNumericString
+            return $"{first}.{second}.{third}"
+        }
             
     module internal DateSteward =
         let inRangeDateTime =
@@ -392,139 +562,7 @@ module Generator =
                 let! month = Month.inRangeByteMonth
                 let! day = Gen.choose(1, 28)
                 return (outOfRangeLowerThaAllowed, int month, day) |> System.DateTime
-            }
-        
-    let validThreePartCalVerString =
-        gen {
-            let! year  = Year.inRangeUInt16Year
-            let! month = Month.inRangeByteMonth
-            let! patch = validPatchUInt32
-            return $"{year}.{month}.{patch}"
-        }    
-        
-    let validTwoPartCalVerString =
-        gen {
-            let! year  = Year.inRangeUInt16Year
-            let! month = Month.inRangeByteMonth
-            return $"{year}.{month}"
-        }
-        
-    let validCalVerString =
-        gen {            
-            let! choice = Gen.frequency [
-                1, validThreePartCalVerString
-                1, validTwoPartCalVerString
-            ]
-            return choice
-        }        
-        
-    let invalidThreePartString =
-        gen {
-            let! first  = nonNumericString
-            let! second = nonNumericString
-            let! third  = nonNumericString
-            return $"{first}.{second}.{third}"
-        }
-    
-    let twoSectionCalendarVersion =
-        gen {
-            let! year  = Year.inRangeUInt16Year
-            let! month = Month.inRangeByteMonth
-            return { Year = year; Month = month; Patch = None; Build = None }
-        }
-        
-    let threeSectionCalendarVersion =
-        gen {
-            let! calVer = twoSectionCalendarVersion
-            let! patch = validPatchUInt32
-            return { calVer with Patch = Some patch }
-        }
-        
-    let calendarVersion =
-        gen {
-            let! threeSectionCalVer = genBool
-            return! if threeSectionCalVer
-                then threeSectionCalendarVersion
-                else twoSectionCalendarVersion
-        }
-        
-    let calendarVersions =
-        gen {
-            let! smallCount = Gen.choose(1, 50)
-            let! middleCount = Gen.choose(51, 1000)            
-            let! bigCount = Gen.choose(1001, 25_000)            
-            let! choice = Gen.frequency [
-                3, Gen.arrayOfLength smallCount calendarVersion
-                2, Gen.arrayOfLength middleCount calendarVersion
-                1, Gen.arrayOfLength bigCount calendarVersion
-            ]
-            return choice
-        }
-        
-    let validTagCalVerString =
-        gen {
-            let! validPrefix = genTagVersionPrefix
-            let! choice = Gen.frequency [
-                1, validThreePartCalVerString
-                1, validTwoPartCalVerString
-            ]
-            return $"{validPrefix}{choice}"
-        }
-        
-    let validTwoPartTagCalVerString =
-        gen {
-            let! prefix = genTagVersionPrefix
-            let! version = validTwoPartCalVerString
-            return $"{prefix}{version}"
-        }
-        
-    let whiteSpaceLeadingTrailingValidCalVerString =
-        gen {
-            let! validCalVerString = validCalVerString
-            
-            let! whiteSpacesPrefix = genWhiteSpacesString
-            let! whiteSpacesSuffix = genWhiteSpacesString
-            
-            return $"{whiteSpacesPrefix}{validCalVerString}{whiteSpacesSuffix}";
-        }
-        
-    let whiteSpaceLeadingTrailingValidTagCalVerString =
-        gen {
-            let! validTagCalVerString = validTagCalVerString
-            
-            let! whiteSpacesPrefix = genWhiteSpacesString
-            let! whiteSpacesSuffix = genWhiteSpacesString
-            
-            return $"{whiteSpacesPrefix}{validTagCalVerString}{whiteSpacesSuffix}";
-        }    
-    
-    let twoPartCalendarVersionWithSameMonthStamp =
-        let genCalVer =
-            gen { 
-                let! year  = Gen.choose(int Calaf.Domain.Year.lowerYearBoundary, int Calaf.Domain.Year.upperYearBoundary - 1)
-                let! month = Gen.choose(1, 11)       
-                return { Year = uint16 year; Month = byte month; Patch = None; Build = None }
-            }            
-        gen {
-            let! calVer = genCalVer
-            let dateStamp = { Year = calVer.Year; Month = calVer.Month }
-            return (calVer, dateStamp)
-        }
-        
-    let threePartCalendarVersionWithSameMonthStamp =            
-        gen {
-            let! calVer, dateStamp = twoPartCalendarVersionWithSameMonthStamp
-            let! patch = validPatchUInt32 
-            return ({ calVer with Patch = Some patch }, dateStamp)
-        }
-        
-    let calendarVersionWithSameMonthStamp =
-        gen {
-            let! threeSectionCalVer = genBool
-            return! if threeSectionCalVer
-                then threePartCalendarVersionWithSameMonthStamp
-                else twoPartCalendarVersionWithSameMonthStamp                        
-        }
+            }    
         
     let monthStampIncrement =
         gen {
@@ -533,7 +571,7 @@ module Generator =
         
     module Git =
         let branchName =            
-            Gen.frequency [ 1, SematicVersion.semanticVersionWithVersionPrefixStr
+            Gen.frequency [ 1, SematicVersion.semanticVersionTagStr
                             1, Gen.elements [ "master"; "main"; "develop"; "feature"; "bugfix"; "release" ]]            
         
         let branchNameOrNone =
@@ -588,7 +626,7 @@ module Generator =
             
         let calVerGitTagInfo =
             gen {
-                let! validCalVerString = validTagCalVerString
+                let! validCalVerString = CalendarVersion.calendarVersionTagStr
                 let! maybeCommit = Gen.frequency [
                     1, Gen.constant None
                     3, gitCommitInfo |> Gen.map Some
@@ -598,7 +636,7 @@ module Generator =
             
         let semVerGitTagInfo =
             gen {
-                let! validSemVerString = SematicVersion.semanticVersionWithVersionPrefixStr
+                let! validSemVerString = SematicVersion.semanticVersionTagStr
                 let! maybeCommit = Gen.frequency [
                     1, Gen.constant None
                     3, gitCommitInfo |> Gen.map Some
@@ -623,11 +661,11 @@ module Generator =
                 return { Name = unversionedTagName; Commit = maybeCommit }
             }
             
-        let calVerOrSemVerWithCommitGitTagInfo =
+        let calendarVersionOrSemanticVersionGitTagInfo =
             gen {
                 let! tagName = Gen.frequency [
-                    3, validTagCalVerString
-                    1, SematicVersion.semanticVersionWithVersionPrefixStr
+                    3, CalendarVersion.calendarVersionTagStr
+                    1, SematicVersion.semanticVersionTagStr
                 ]
                 let! commit = gitCommitInfo |> Gen.map Some
                 return { Name = tagName; Commit = commit }
@@ -650,12 +688,13 @@ module Generator =
             ]
             
         let calendarVersionTag : Gen<Tag> =            
-            gen {                
-                let! calVerVersion = calendarVersion
-                let tagNameSb = System.Text.StringBuilder($"{calVerVersion.Year}.{calVerVersion.Month}")
-                let tagNameSb = if calVerVersion.Patch.IsSome then tagNameSb.Append calVerVersion.Patch.Value else tagNameSb 
+            gen {
+                // TODO: Rewrite generator!
+                let! calendarVersion = CalendarVersion.calendarVersion
+                let tagNameSb = System.Text.StringBuilder($"{calendarVersion.Year}.{calendarVersion.Month}")
+                let tagNameSb = if calendarVersion.Patch.IsSome then tagNameSb.Append calendarVersion.Patch.Value else tagNameSb 
                 let! maybeCommit = commitOrNone
-                return Tag.Versioned (tagNameSb.ToString(), (calVerVersion |> CalVer), maybeCommit)
+                return Tag.Versioned (tagNameSb.ToString(), (calendarVersion |> CalVer), maybeCommit)
             }
             
         let sematicVersionTag : Gen<Tag> =            
@@ -759,63 +798,11 @@ module Arbitrary =
             
     type internal overflowPatchString =
         static member overflowPatchString() =
-            Arb.fromGen Generator.overflowPatchString
-            
-    type internal validThreePartCalVerString =
-        static member validThreePartCalVerString() =
-            Arb.fromGen Generator.validThreePartCalVerString
-            
-    type internal validTwoPartCalVerString =
-        static member validTwoPartCalVerString() =
-            Arb.fromGen Generator.validTwoPartCalVerString
+            Arb.fromGen Generator.overflowPatchString    
             
     type internal invalidThreePartString =
         static member invalidThreePartString() =
-            Arb.fromGen Generator.invalidThreePartString
-            
-    type internal calendarVersion =
-        static member calendarVersion() =
-            Arb.fromGen Generator.calendarVersion
-
-    type internal twoSectionCalendarVersion =
-        static member twoSectionCalendarVersion() =
-            Arb.fromGen Generator.twoSectionCalendarVersion
-            
-    type internal threeSectionCalendarVersion =
-        static member threeSectionCalendarVersion() =
-            Arb.fromGen Generator.threeSectionCalendarVersion            
-            
-    type internal calendarVersions =
-        static member calendarVersions() =
-            Arb.fromGen Generator.calendarVersions
-    
-    type internal twoPartCalendarVersionWithSameMonthStamp =
-        static member twoPartCalendarVersionWithSameMonthStamp() =
-            Arb.fromGen Generator.twoPartCalendarVersionWithSameMonthStamp
-            
-    type internal threePartCalendarVersionWithSameMonthStamp =
-        static member threePartCalendarVersionWithSameMonthStamp() =
-            Arb.fromGen Generator.threePartCalendarVersionWithSameMonthStamp
-            
-    type internal calendarVersionWithSameMonthStamp =
-        static member calendarVersionWithSameMonthStamp() =
-            Arb.fromGen Generator.calendarVersionWithSameMonthStamp
-            
-    type internal validTagCalVerString =
-        static member validTagCalVerString() =
-            Arb.fromGen Generator.validTagCalVerString
-            
-    type internal validTwoPartTagCalVerString =
-        static member validTwoPartTagCalVerString() =
-            Arb.fromGen Generator.validTwoPartTagCalVerString
-    
-    type internal whiteSpaceLeadingTrailingValidCalVerString =
-        static member whiteSpaceLeadingTrailingValidCalVerString() =
-            Arb.fromGen Generator.whiteSpaceLeadingTrailingValidCalVerString
-            
-    type internal whiteSpaceLeadingTrailingValidTagCalVerString =
-        static member whiteSpaceLeadingTrailingValidTagCalVerString() =
-            Arb.fromGen Generator.whiteSpaceLeadingTrailingValidTagCalVerString
+            Arb.fromGen Generator.invalidThreePartString    
             
     type internal monthStampIncrement =
         static member monthStampIncrement() =
@@ -893,6 +880,60 @@ module Arbitrary =
             static member wrongStringYear() =
                 Arb.fromGen Generator.Year.wrongStringYear
                 
+    module internal CalendarVersion =
+        type internal calendarVersionPatchStr =
+            static member calendarVersionPatchStr() =
+                Arb.fromGen Generator.CalendarVersion.calendarVersionPatchStr
+                
+        type internal calendarVersionShortStr =
+            static member calendarVersionShortStr() =
+                Arb.fromGen Generator.CalendarVersion.calendarVersionShortStr
+                
+        type internal calendarVersion =
+            static member calendarVersion() =
+                Arb.fromGen Generator.CalendarVersion.calendarVersion
+
+        type internal calendarVersionShort =
+            static member calendarVersionShort() =
+                Arb.fromGen Generator.CalendarVersion.calendarVersionShort
+                
+        type internal calendarVersionPatch =
+            static member calendarVersionPatch() =
+                Arb.fromGen Generator.CalendarVersion.calendarVersionPatch            
+                
+        type internal calendarVersions =
+            static member calendarVersions() =
+                Arb.fromGen Generator.CalendarVersion.calendarVersions
+        
+        type internal calendarVersionShortMonthStamp =
+            static member calendarVersionShortMonthStamp() =
+                Arb.fromGen Generator.CalendarVersion.calendarVersionShortMonthStamp
+                
+        type internal calendarVersionPatchMonthStamp =
+            static member calendarVersionPatchMonthStamp() =
+                Arb.fromGen Generator.CalendarVersion.calendarVersionPatchMonthStamp
+                
+        type internal calendarVersionMonthStamp =
+            static member calendarVersionMonthStamp() =
+                Arb.fromGen Generator.CalendarVersion.calendarVersionMonthStamp
+                
+        type internal calendarVersionTagStr =
+            static member calendarVersionTagStr() =
+                Arb.fromGen Generator.CalendarVersion.calendarVersionTagStr
+                
+        type internal calendarVersionShortTagStr =
+            static member calendarVersionShortTagStr() =
+                Arb.fromGen Generator.CalendarVersion.calendarVersionShortTagStr
+        
+        type internal whiteSpaceLeadingTrailingCalendarVersionStr =
+            static member whiteSpaceLeadingTrailingCalendarVersionStr() =
+                Arb.fromGen Generator.CalendarVersion.whiteSpaceLeadingTrailingCalendarVersionStr
+                
+        type internal whiteSpaceLeadingTrailingCalendarVersionTagStr =
+            static member whiteSpaceLeadingTrailingCalendarVersionTagStr() =
+                Arb.fromGen Generator.CalendarVersion.whiteSpaceLeadingTrailingCalendarVersionTagStr
+        
+                
     module internal SematicVersion =
         type internal semanticVersionStr =
             static member semanticVersionStr() =
@@ -928,9 +969,9 @@ module Arbitrary =
             static member malformedGitTagInfo() =
                 Arb.fromGen Generator.Git.malformedGitTagInfo
                 
-        type calVerOrSemVerWithCommitGitTagInfo =
-            static member calVerOrSemVerWithCommitGitTagInfo() =
-                Arb.fromGen Generator.Git.calVerOrSemVerWithCommitGitTagInfo
+        type calendarVersionOrSemanticVersionGitTagInfo =
+            static member calendarVersionOrSemanticVersionGitTagInfo() =
+                Arb.fromGen Generator.Git.calendarVersionOrSemanticVersionGitTagInfo
                 
         type randomGitTagInfo =
             static member randomGitTagInfo() =

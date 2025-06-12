@@ -32,9 +32,9 @@ module CreatePropertiesTests =
             name = contract.Name
         | _ -> false
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.Git.calVerOrSemVerWithCommitGitTagInfo> |])>]
-    let ``CalVer or SemVer named tag with the commit option creates Tag.Versioned with the corresponding commit option`` (contract: GitTagInfo) =
-        match create contract, contract.Commit with
+    [<Property(Arbitrary = [| typeof<Arbitrary.Git.calendarVersionOrSemanticVersionGitTagInfo> |])>]
+    let ``CalVer or SemVer named tag with the commit option creates Tag.Versioned with the corresponding commit option`` (gitTagInfo: GitTagInfo) =
+        match create gitTagInfo, gitTagInfo.Commit with
         | Tag.Versioned(_, _, Some commit), Some expectedCommit ->
             expectedCommit.Message = commit.Message &&
             expectedCommit.Hash = commit.Hash &&
