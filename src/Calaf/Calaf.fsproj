@@ -6,7 +6,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>calaf</ToolCommandName>
 
-    <Version>2025.6.2</Version>
+    <Version>2025.6.3</Version>
     <FileVersion>$(Version)</FileVersion>
     
     <Title>Calaf</Title>
