@@ -4,11 +4,14 @@ namespace Calaf.Domain.DomainTypes
 module Values =
     // Common
     type Patch = uint32
+    type DayOfMonth = uint8
     type BuildNumber = uint8
     type BuildHash = string
+    
     type NightlyBuild = {
+        Day:    DayOfMonth
         Number: BuildNumber
-        Hash: BuildHash option
+        Hash:   BuildHash option
     }
     type Build =
         | Nightly of NightlyBuild

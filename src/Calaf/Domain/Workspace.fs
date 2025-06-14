@@ -26,8 +26,8 @@ module Events =
             RepositoryExist = workspace.Repository |> Option.isSome
         } |> DomainEvent.Workspace
 
-let private getNextReleaseVersion (workspace: Workspace) (monthStamp: MonthStamp) =
-    Version.release workspace.Version monthStamp  
+let private getNextReleaseVersion (version: CalendarVersion) (monthStamp: MonthStamp) =
+    Version.release version monthStamp  
     
 let private combineVersions suite repoOption =
     [
@@ -77,7 +77,7 @@ let profile (workspace: Workspace) =
     
 let tryRelease (workspace: Workspace) (monthStamp: MonthStamp) =
     result {
-        let nextVersion = getNextReleaseVersion workspace monthStamp
+        let nextVersion = getNextReleaseVersion workspace.Version monthStamp
         if workspace.Version = nextVersion
         then
             return! WorkspaceAlreadyCurrent |> Error

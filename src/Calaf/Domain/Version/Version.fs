@@ -6,16 +6,16 @@ open Calaf.Extensions.InternalExtensions.RegularExpressions
 open Calaf.Domain.DomainTypes.Values
 
 [<Literal>]
+let internal CalendarVersionBuildTypeDivider =
+    "-"
+[<Literal>]
 let private AllowedVersionRegexString =
     @"^(\d+)\.(\d+)(?:\.(\d+))?(?:-(.*))?$"
 [<Literal>]
 let private ChoreCommitPrefix =
     "chore: "
 let private versionRegex =
-    System.Text.RegularExpressions.Regex(
-        AllowedVersionRegexString,
-        System.Text.RegularExpressions.RegexOptions.Compiled |||
-        System.Text.RegularExpressions.RegexOptions.IgnoreCase)    
+    System.Text.RegularExpressions.Regex(AllowedVersionRegexString)    
 let internal versionPrefixes =
     [ "version."; "ver."; "v."
       "Version."; "Ver."; "V."
@@ -125,9 +125,20 @@ let private tryParse (cleanVersion: CleanString) : Version option =
     | None -> Some Unsupported
 
 let toString (calVer: CalendarVersion) : string =
-    match calVer.Patch with
-    | Some patch -> $"{calVer.Year}.{calVer.Month}.{patch}"
-    | None -> $"{calVer.Year}.{calVer.Month}"
+    let calVerStr =
+        match calVer.Patch with
+        | Some patch ->        
+            $"{calVer.Year}.{calVer.Month}.{patch}"
+        | None ->
+            $"{calVer.Year}.{calVer.Month}"
+    let sb = System.Text.StringBuilder(calVerStr)
+    match calVer.Build with
+    | Some build ->
+        let buildStr = Build.toString build
+        let sb = sb.Append(CalendarVersionBuildTypeDivider).Append(buildStr)
+        sb.ToString()        
+    | None ->
+        sb.ToString()
     
 /// <summary>
 /// Converts a CalendarVersion to a Git tag name string.
@@ -163,41 +174,36 @@ let release (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : Calenda
               Month = currentVersion.Month
               Patch = patch
               Build = None }
+            
+//let nightly (currentVersion: CalendarVersion) (monthStamp: MonthStamp, day: DayOfMonth) : CalendarVersion =
     
 let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
     match versions with
     | _ when Seq.isEmpty versions -> None
     | _ ->
-        // let maxVersion =
-        //     builds
-        //     |> Seq.maxBy (fun b ->
-        //         match b with
-        //         // First digit (1 for nightly) defines comparison priority where higher number is better
-        //         | Build.Nightly (n, _) -> (1, n))
-        // Some maxVersion
         let maxVersion =
             versions
-            //|> Seq.maxBy (fun v -> v.Year, v.Month, v.Patch, )
-            // Compare by build if it exists, otherwise compare by year, month, and patch
             |> Seq.maxBy (fun v ->
                 match v.Build with
                 | Some build ->
                     match build with
-                    | Build.Nightly nightlyBuild -> (1, v.Year, v.Month, v.Patch, nightlyBuild.Number)                    
-                | None -> (0, v.Year, v.Month, v.Patch, 0uy))
-            //|> Seq.maxBy (fun v -> v.Year, v.Month, v.Patch, )
+                    | Build.Nightly nightlyBuild ->
+                        let priority = 1
+                        (v.Year, v.Month, v.Patch, priority, nightlyBuild.Number)                    
+                | None ->
+                    let priority = 0
+                    let number = 0uy
+                    (v.Year, v.Month, v.Patch, priority, number))
         Some maxVersion
 
 let tryParseFromString (bareVersion: string) : Version option =
     option {
-        let! cleanVersion = tryCleanString bareVersion 
-        return! cleanVersion |> tryParse
+        let! cleanString = tryCleanString bareVersion
+        return! cleanString |> tryParse
     }
     
 let tryParseFromTag (bareVersion: string) : Version option =
    option {
-       let! cleanString = tryCleanString bareVersion 
-       return! cleanString
-        |> stripVersionPrefix
-        |> tryParse
+       let! cleanString = tryCleanString bareVersion
+       return! cleanString |> stripVersionPrefix |> tryParse
    }

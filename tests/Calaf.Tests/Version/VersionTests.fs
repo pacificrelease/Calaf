@@ -12,8 +12,8 @@ module TryParseFromStringPropertiesTests =
     [<Fact>]
     let ``Nightly CalVer version with patch string parses to it corresponding values`` () =
         //let version = "2023.10"
-        let version = "2023.10-nightly.06"
-        //let version = "2023.10-nightly.06+0fefe3f"
+        //let version = "2023.10-nightly.06"
+        let version = "2023.10-nightly.31.06+0fefe3f"
         //let version = "2023.10-nightly.06+0fefe3fnightly.06+0fefe3f"
         //let version = "2023.10.1-nightly.06+0fefe3f"
         
@@ -21,9 +21,7 @@ module TryParseFromStringPropertiesTests =
         //let version = "2023.10.1-nightly"        
         
         //let version = "2023.10.1--nightly--."
-        //let version = "2023.10.1-nightly.--..2023.10.1--nightly--"
-        
-        
+        //let version = "2023.10.1-nightly.--..2023.10.1--nightly--"        
         
         let version = version |> tryParseFromString
         test <@ version |> Option.map _.IsCalVer |> Option.defaultValue false @>
@@ -144,10 +142,13 @@ module TryMaxPropertiesTests =
         |> tryMax = Some calendarVersion
 
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersions> |], MaxTest = 200)>]
-    let ``Multiple elements returns the maximum`` (calendarVersions: CalendarVersion[]) =
-        calendarVersions
-        |> tryMax
-        |> Option.isSome
+    let ``Multiple elements returns the element of this sequence`` (calendarVersions: CalendarVersion[]) =
+        let contains =
+            calendarVersions
+            |> tryMax
+            |> Option.map (fun v -> calendarVersions |> Seq.contains v)
+            |> Option.defaultValue false
+        test <@ contains @>
       
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersions> |], MaxTest = 200)>]
     let ``Result element belongs to input`` (calendarVersions: CalendarVersion[]) =
@@ -313,3 +314,17 @@ module ToCommitMessagePropertiesTests =
         let commitMsg = calendarVersion |> toCommitMessage
         not (System.String.IsNullOrWhiteSpace commitMsg) &&
         commitMsg.Contains commitVersionPrefix
+        
+module TryMaxTests =        
+    [<Fact>]
+    let ``Release and nightly calendar versions return max expected value`` () =
+        let versions = 
+            [| { Year = 2024us; Month = 11uy; Patch = Some 10u; Build = None }
+               { Year = 2024us; Month = 11uy; Patch = Some 11u; Build = Some (Build.Nightly { Day = 31uy; Number = 35uy; Hash = Some "abc" }) }
+               { Year = 2025us; Month = 10uy; Patch = None;     Build = None }
+               { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = None }
+               { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = Some (Build.Nightly { Day = 30uy; Number = 29uy; Hash = None }) }
+               { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = Some (Build.Nightly { Day = 31uy; Number = 30uy; Hash = Some "xyz" }) }
+            |]        
+        let version = versions |> tryMax
+        test <@ version |> Option.map (fun v -> v = versions[5]) |> Option.defaultValue false @>

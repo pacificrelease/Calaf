@@ -10,12 +10,14 @@ open Calaf.Tests
 
 module ToStringPropertyTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyBuild> |])>]
-    let ``Nightly build converts to non-empty string`` (nightlyBuild: Build) =       
+    let ``Nightly build converts to non-empty string`` (nightlyBuild: Build) =
+        //nightly.04.162+vnexsfsyhuzfedzkvtzslis - THIS STRING IS INVALID
         test <@ toString nightlyBuild |> System.String.IsNullOrWhiteSpace |> not @>
             
 module TryParseFromStringPropertyTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyString> |])>]
     let ``Nightly string recognizes correctly to the Nightly with number and hash`` (nightlyString: string) =
+        //nightly.04.162+vnexsfsyhuzfedzkvtzslis - THIS STRING IS INVALID
         test <@
             let result = nightlyString |> tryParseFromString
             match result with
@@ -39,22 +41,32 @@ module TryParseFromStringPropertyTests =
     
 // TODO: Update tests to use generators
 module NightlyPropertyTests =
+    // TODO: Use generators instead
+    let private bumpDay (day: byte) =
+        if day = 31uy then 1uy else day + 1uy
+    let bumpNumber (number: byte) =
+        if number = 255uy then 1uy else number + 1uy
+    
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyBuild> |])>]
     let ``Make new Nightly on a Nightly build with hash returns a new Nightly`` (nightlyBuild: Build) =
         match nightlyBuild with
-        | Build.Nightly { Number = number; Hash = hash } ->
-            let newBuildMetadata = { Number = number + 1uy; Hash = hash |> Option.map (fun h -> h.ToCharArray() |> Array.rev |> System.String) }
+        | Build.Nightly { Day = day; Number = number; Hash = hash } ->
+            let newBuildMetadata = {
+                Day = day |> bumpDay
+                Number = number |> bumpNumber
+                Hash = hash |> Option.map (fun h -> h.ToCharArray() |> Array.rev |> System.String)
+            }
             let build = Some nightlyBuild
             tryNightly build newBuildMetadata = Ok (Build.Nightly(newBuildMetadata))
 
     [<Property>]
     let ``Make Nightly on an empty Build returns Nightly`` () =
-        let newBuildMetadata = { Number = 2uy; Hash = Some "hash2" }
+        let newNightlyBuild = { Day = 25uy; Number = 2uy; Hash = Some "hash2" }
         let build = None
-        tryNightly build newBuildMetadata = Ok (Build.Nightly(newBuildMetadata))
+        tryNightly build newNightlyBuild = Ok (Build.Nightly(newNightlyBuild))
         
     [<Property>]
     let ``Make same Nightly on a Nightly build returns BuildAlreadyCurrent error`` () =
-        let build = Some (Build.Nightly { Number = 1uy; Hash = Some "hash" })
-        let newBuildMetadata = { Number = 1uy; Hash = Some "hash" }
-        tryNightly build newBuildMetadata = Error BuildAlreadyCurrent
+        let build = Some (Build.Nightly { Day = 05uy; Number = 1uy; Hash = Some "hash" })
+        let newNightlyBuild = { Day = 05uy; Number = 1uy; Hash = Some "hash" }
+        tryNightly build newNightlyBuild = Error BuildAlreadyCurrent

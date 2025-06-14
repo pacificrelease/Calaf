@@ -96,6 +96,12 @@ module Generator =
     let genByte =
         Gen.choose(int 0uy, int 255uy) |> Gen.map byte
         
+    let genDay =
+        gen {
+            let! day = Gen.choose(1, 31)
+            return byte day
+        }
+        
     let validPatchUInt32 =
         Gen.choose64(1L, int64 System.UInt32.MaxValue) |> Gen.map uint32    
         
@@ -176,9 +182,10 @@ module Generator =
         let nightlyString =
             gen {
                 let! nightly = Gen.elements ["nightly"; "NIGHTLY"; "Nightly"; "NiGhTlY"; "nIgHtLy"; "NIGHTly"; "nightLY"]
+                let! day = genDay
                 let! number = genByte
                 let! hash = hashString
-                return $"{nightly}{Calaf.Domain.Build.BuildTypeNumberDivider}{number:D2}{Calaf.Domain.Build.NumberHashDivider}{hash}"
+                return $"{nightly}{Calaf.Domain.Build.BuildTypeDayDivider}{day}{Calaf.Domain.Build.DayNumberDivider}{number:D2}{Calaf.Domain.Build.NumberHashDivider}{hash}"
             }            
             
         let wrongString =
@@ -197,8 +204,8 @@ module Generator =
                 let! wrongString = wrongString
                 let! leadingWhiteSpaces = genWhiteSpacesString
                 let! choice = Gen.frequency [
-                    1, Gen.constant $"{Calaf.Domain.Build.BuildTypeNumberDivider}{nightlyString}"
-                    1, Gen.constant $"{nightlyString}{Calaf.Domain.Build.BuildTypeNumberDivider}"
+                    1, Gen.constant $"{Calaf.Domain.Build.BuildTypeDayDivider}{nightlyString}"
+                    1, Gen.constant $"{nightlyString}{Calaf.Domain.Build.BuildTypeDayDivider}"
                     1, Gen.constant $"{Calaf.Domain.Build.NumberHashDivider}{nightlyString}"
                     1, Gen.constant $"{nightlyString}{Calaf.Domain.Build.NumberHashDivider}"
                     1, Gen.constant $"{nightlyString}{wrongString}{nightlyString}"
@@ -216,12 +223,13 @@ module Generator =
             
         let nightlyBuild =
             gen {
+                let! day = genDay
                 let! number = genByte
                 let! hash = Gen.frequency [
                     1, Gen.constant None
                     1, hashString |> Gen.map Some
                 ] 
-                return Build.Nightly { Number = number; Hash = hash }
+                return { Day = day; Number = number; Hash = hash } |> Build.Nightly
             }
             
         
@@ -412,8 +420,8 @@ module Generator =
                 let! choice = Gen.frequency [
                     1, calendarVersionShort
                     1, calendarVersionPatch
-                    //1, calendarVersionShortNightlyBuild
-                    //1, calendarVersionPatchNightlyBuild
+                    1, calendarVersionShortNightlyBuild
+                    1, calendarVersionPatchNightlyBuild
                 ]
                 return choice
             }
