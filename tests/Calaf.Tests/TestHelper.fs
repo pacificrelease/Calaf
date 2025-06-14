@@ -231,7 +231,35 @@ module Generator =
                 ] 
                 return { Day = day; Number = number; Hash = hash } |> Build.Nightly
             }
+    
+    module Day =
+        let inRangeByteDay =
+            gen {
+                let! day = Gen.choose(int Calaf.Domain.Day.lowerDayBoundary,
+                                      int Calaf.Domain.Day.upperDayBoundary)
+                return byte day
+            }
             
+        let outOfRangeByteDay =            
+            gen {
+                let! day = Gen.choose(int Calaf.Domain.Day.upperDayBoundary + 1, int System.Byte.MaxValue)
+                return day 
+            }
+            
+        let wrongInt32Day =
+            let wrongCornerCases = Gen.elements [ -1;                         
+                                                  System.Int32.MinValue
+                                                  System.Int32.MaxValue
+                                                  int System.Byte.MaxValue + 1]
+            let smallWrongInt32 = Gen.choose(int System.Int32.MinValue, int System.Byte.MinValue - 1)
+            let bigWrongInt32   = Gen.choose(int System.Byte.MaxValue + 1, System.Int32.MaxValue)
+            gen {
+                return! Gen.frequency [
+                    1, wrongCornerCases
+                    2, smallWrongInt32
+                    2, bigWrongInt32
+                ]
+            }
         
     module Month =
         let inRangeByteMonth =
@@ -244,7 +272,7 @@ module Generator =
         let outOfRangeByteMonth =            
             gen {
                 let! month = Gen.choose(int Calaf.Domain.Month.upperMonthBoundary + 1, int System.Byte.MaxValue)
-                return byte month 
+                return month 
             }
             
         let leadingZeroOutOfRangeStringMonth =
@@ -563,16 +591,16 @@ module Generator =
             gen {
                 let! year = Year.inRangeUInt16Year
                 let! month = Month.inRangeByteMonth
-                let! day = Gen.choose(1, 28)
-                return (int year, int month, day) |> System.DateTime
+                let! day = Day.inRangeByteDay
+                return (int year, int month, int day) |> System.DateTime
             }
             
         let outOfRangeDateTime =
             gen {
                 let! outOfRangeLowerThaAllowed = Gen.choose(int System.UInt16.MinValue + 1, int Calaf.Domain.Year.lowerYearBoundary - 1)
                 let! month = Month.inRangeByteMonth
-                let! day = Gen.choose(1, 28)
-                return (outOfRangeLowerThaAllowed, int month, day) |> System.DateTime
+                let! day = Day.inRangeByteDay
+                return (outOfRangeLowerThaAllowed, int month, int day) |> System.DateTime
             }    
         
     let monthStampIncrement =
@@ -839,13 +867,26 @@ module Arbitrary =
         type nightlyBuild =
             static member nightlyBuild() =
                 Arb.fromGen Generator.Build.nightlyBuild
+                
+    module internal Day =
+        type inRangeByteDay =
+            static member inRangeByteDay() =
+                Arb.fromGen Generator.Day.inRangeByteDay
+                
+        type outOfRangeByteDay =
+            static member outOfRangeByteDay() =
+                Arb.fromGen Generator.Day.outOfRangeByteDay
+                
+        type wrongInt32Day =
+            static member wrongInt32Day() =
+                Arb.fromGen Generator.Day.wrongInt32Day
             
     module internal Month =
         type inRangeByteMonth =
             static member inRangeByteMonth() =
                 Arb.fromGen Generator.Month.inRangeByteMonth
                 
-        type outOfRangeUInt16Year =
+        type outOfRangeByteMonth =
             static member outOfRangeByteMonth() =
                 Arb.fromGen Generator.Month.outOfRangeByteMonth
                 

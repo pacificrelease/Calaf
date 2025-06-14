@@ -41,6 +41,10 @@ module TryParseFromInt32PropertyTests =
     let ``Valid integer in-range parses to the Ok corresponding value`` (inRangeByteMonth: byte) =
         tryParseFromInt32 (int inRangeByteMonth) = Ok inRangeByteMonth
         
+    [<Property(Arbitrary = [| typeof<Arbitrary.Month.outOfRangeByteMonth> |], MaxTest = 200)>]
+    let ``Integer out of 1-12 range parses to MonthOutOfRange error`` (outOfRangeByteMonth: int) =
+        tryParseFromInt32 outOfRangeByteMonth = (MonthOutOfRange |> Error)
+        
     [<Property(Arbitrary = [| typeof<Arbitrary.Month.wrongInt32Month> |], MaxTest = 200)>]
     let ``Integer out of 1-12 range parses to MonthInvalidInt error`` (wrongInt32Month: int) =
         tryParseFromInt32 wrongInt32Month = (MonthInvalidInt |> Error)

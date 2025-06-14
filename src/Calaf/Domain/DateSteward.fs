@@ -10,3 +10,9 @@ let tryCreate (bareDateTime: System.DateTime) : Result<MonthStamp, DomainError> 
         let! month = Month.tryParseFromInt32 bareDateTime.Month
         return { Year = year; Month = month }        
     }
+    
+let tryCreateDayOfMonth (bareDateTime: System.DateTime) : Result<DayOfMonth, DomainError> =
+    result {
+        let! day = Day.tryParseFromInt32 bareDateTime.Day
+        return day
+    }

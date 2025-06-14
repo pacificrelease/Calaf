@@ -9,6 +9,8 @@ type DomainError =
     | MonthOutOfRange
     | MonthInvalidInt
     | MonthInvalidString
+    | DayOutOfRange
+    | DayInvalidInt
     | BuildInvalidString
     | BuildAlreadyCurrent
     
