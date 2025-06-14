@@ -235,6 +235,20 @@ module ToStringPropertiesTests =
     let ``CalendarVersion with Patch contains it's Patch in the string representation`` (calendarVersion: CalendarVersion) =
         let calVerString = calendarVersion |> toString
         calVerString.Contains(calendarVersion.Patch.Value |> string)
+      
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionShortNightlyBuild> |])>]
+    let ``CalendarVersion with Build contains it's Build in the string representation`` (calendarVersion: CalendarVersion) =
+        let calVerString = calendarVersion |> toString
+        let contains = match calendarVersion with
+                        | { Build = Some (Build.Nightly { Day = day; Number = number; Hash = Some hash }) } ->
+                            calVerString.Contains($"{day}") &&
+                            calVerString.Contains($"{number}") &&
+                            calVerString.Contains(hash)
+                        | { Build = Some (Build.Nightly { Day = day; Number = number; Hash = None }) } ->
+                            calVerString.Contains($"{day}") &&
+                            calVerString.Contains($"{number}")
+                        | _ -> failwith "CalendarVersion with Build should have a Build"
+        test <@ contains @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatch> |])>]
     let ``CalendarVersion with Patch contains three string sections`` (calendarVersion: CalendarVersion) =

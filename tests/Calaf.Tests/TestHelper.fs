@@ -910,7 +910,11 @@ module Arbitrary =
                 
         type internal calendarVersionPatch =
             static member calendarVersionPatch() =
-                Arb.fromGen Generator.CalendarVersion.calendarVersionPatch            
+                Arb.fromGen Generator.CalendarVersion.calendarVersionPatch
+                
+        type internal calendarVersionShortNightlyBuild =
+            static member calendarVersionShortNightlyBuild() =
+                Arb.fromGen Generator.CalendarVersion.calendarVersionShortNightlyBuild 
                 
         type internal calendarVersions =
             static member calendarVersions() =

@@ -136,7 +136,7 @@ let toString (calVer: CalendarVersion) : string =
     | Some build ->
         let buildStr = Build.toString build
         let sb = sb.Append(CalendarVersionBuildTypeDivider).Append(buildStr)
-        sb.ToString()        
+        sb.ToString()
     | None ->
         sb.ToString()
     
