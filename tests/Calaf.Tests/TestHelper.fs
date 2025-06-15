@@ -236,7 +236,7 @@ module Generator =
         let inRangeByteDay =
             gen {
                 let! day = Gen.choose(int Calaf.Domain.Day.lowerDayBoundary,
-                                      int Calaf.Domain.Day.upperDayBoundary)
+                                      int Calaf.Domain.Day.upperDayBoundary - 3)
                 return byte day
             }
             
@@ -597,10 +597,10 @@ module Generator =
             
         let outOfRangeDateTime =
             gen {
-                let! outOfRangeLowerThaAllowed = Gen.choose(int System.UInt16.MinValue + 1, int Calaf.Domain.Year.lowerYearBoundary - 1)
+                let! year = Gen.choose(100, int Calaf.Domain.Year.lowerYearBoundary - 1)
                 let! month = Month.inRangeByteMonth
                 let! day = Day.inRangeByteDay
-                return (outOfRangeLowerThaAllowed, int month, int day) |> System.DateTime
+                return (int year, int month, int day) |> System.DateTime
             }    
         
     let monthStampIncrement =
