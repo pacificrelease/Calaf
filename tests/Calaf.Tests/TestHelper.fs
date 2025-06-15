@@ -587,21 +587,33 @@ module Generator =
         }
             
     module internal DateSteward =
-        let inRangeDateTime =
+        let inRangeDateTimeOffset =
             gen {
-                let! year = Year.inRangeUInt16Year
-                let! month = Month.inRangeByteMonth
-                let! day = Day.inRangeByteDay
-                return (int year, int month, int day) |> System.DateTime
+                let min = System.DateTimeOffset(
+                    int Calaf.Domain.Year.lowerYearBoundary,
+                    int Calaf.Domain.Month.lowerMonthBoundary,
+                    int Calaf.Domain.Day.lowerDayBoundary, 0, 0, 0, System.TimeSpan.Zero)
+                let max = System.DateTimeOffset(
+                    int Calaf.Domain.Year.upperYearBoundary,
+                    int Calaf.Domain.Month.upperMonthBoundary,
+                    int Calaf.Domain.Day.upperDayBoundary, 23, 59, 59, 999, System.TimeSpan.Zero)
+                let dateTimeOffset = Bogus.Faker().Date.BetweenOffset(min, max)
+                return dateTimeOffset
             }
             
-        let outOfRangeDateTime =
+        let outOfRangeDateTimeOffset =
             gen {
-                let! year = Gen.choose(100, int Calaf.Domain.Year.lowerYearBoundary - 1)
-                let! month = Month.inRangeByteMonth
-                let! day = Day.inRangeByteDay
-                return (int year, int month, int day) |> System.DateTime
-            }    
+                let min = System.DateTimeOffset(
+                    1,
+                    int Calaf.Domain.Month.lowerMonthBoundary,
+                    int Calaf.Domain.Day.lowerDayBoundary, 0, 0, 0, System.TimeSpan.Zero)
+                let max = System.DateTimeOffset(
+                    int Calaf.Domain.Year.lowerYearBoundary - 1,
+                    int Calaf.Domain.Month.upperMonthBoundary,
+                    int Calaf.Domain.Day.upperDayBoundary, 23, 59, 59, 999, System.TimeSpan.Zero)
+                let dateTimeOffset = Bogus.Faker().Date.BetweenOffset(min, max)
+                return dateTimeOffset
+            }
         
     let monthStampIncrement =
         gen {
@@ -996,13 +1008,13 @@ module Arbitrary =
                 Arb.fromGen Generator.SematicVersion.semanticVersionStr
                 
     module internal DateSteward =
-        type inRangeDateTime =
-            static member inRangeDateTime() =
-                Arb.fromGen Generator.DateSteward.inRangeDateTime
+        type inRangeDateTimeOffset =
+            static member inRangeDateTimeOffset() =
+                Arb.fromGen Generator.DateSteward.inRangeDateTimeOffset
                 
-        type outOfRangeDateTime =
-            static member outOfRangeDateTime() =
-                Arb.fromGen Generator.DateSteward.outOfRangeDateTime
+        type outOfRangeDateTimeOffset =
+            static member outOfRangeDateTimeOffset() =
+                Arb.fromGen Generator.DateSteward.outOfRangeDateTimeOffset
     
     module internal Git =
         type branchName =
