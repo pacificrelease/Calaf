@@ -11,7 +11,7 @@ let tryCreateMonthStamp (bareDateTime: System.DateTimeOffset) : Result<MonthStam
         return { Year = year; Month = month }        
     }
     
-let tryCreateDayOfMonth (bareDateTime: System.DateTime) : Result<DayOfMonth, DomainError> =
+let tryCreateDayOfMonth (bareDateTime: System.DateTimeOffset) : Result<DayOfMonth, DomainError> =
     result {
         let! day = Day.tryParseFromInt32 bareDateTime.Day
         return day
