@@ -3,7 +3,6 @@ module internal Calaf.Domain.Build
 open System
 open FsToolkit.ErrorHandling
 
-open Calaf.Extensions.InternalExtensions.RegularExpressions
 open Calaf.Domain.DomainTypes.Values
 
 [<Literal>]
@@ -14,7 +13,7 @@ let internal BuildTypeDayDivider = "."
 [<Literal>]
 let internal DayNumberDivider = "."
 let internal AllowedNightlyBuildRegexString =
-    $@"^(?i:({NightlyBuildType}))\{BuildTypeDayDivider}(0?[1-9]|1[0-9]|2[0-9]|3[01])\{DayNumberDivider}([0-9]{{1,3}})$"
+    $@"^(?i:({NightlyBuildType}))\{BuildTypeDayDivider}(0?[1-9]|1[0-9]|2[0-9]|3[01])\{DayNumberDivider}(0*[1-9][0-9]{{0,4}})$"
 let internal AllowedNightlyBuildRegexString2 =
     @"^(?i:(nightly))\.(0?[1-9]|1[0-9]|2[0-9]|3[01])\.([0-9]{1,3})$"
 let private buildRegex =
@@ -26,7 +25,6 @@ type private BuildSegments = {
     BuildType:   string
     BuildDay:    string
     BuildNumber: string
-    BuildHash:   string option
 }
 
 let private isEmptyString (build: string) =
@@ -47,8 +45,7 @@ let private tryCreateBuildSegments (buildString: string) =
                 let segments =
                     { BuildType   = m.Groups[1].Value
                       BuildDay    = m.Groups[2].Value
-                      BuildNumber = m.Groups[3].Value
-                      BuildHash   = if m.Groups[4] |> validGroupValue then Some m.Groups[4].Value else None }
+                      BuildNumber = m.Groups[3].Value }
                 return Some segments                
             else        
                 return! Error BuildInvalidString
@@ -58,7 +55,7 @@ let private tryParseFromBuildSegments segments =
     match segments with    
     | Some { BuildType = buildType; BuildDay = day; BuildNumber = number }
         when buildType |> isNightlyString ->
-        match (Byte.TryParse day, Byte.TryParse number) with
+        match (Byte.TryParse day, UInt16.TryParse number) with
         | (true, buildDay), (true, buildNumber) ->
             let nightly = { Day = buildDay; Number = buildNumber } |> Build.Nightly
             nightly |> Some |> Ok

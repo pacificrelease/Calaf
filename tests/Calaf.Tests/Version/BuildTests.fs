@@ -42,10 +42,23 @@ module TryParseFromStringPropertyTests =
 // TODO: Update tests to use generators
 module NightlyPropertyTests =
     // TODO: Use generators instead
+    [<Literal>]
+    let private numberInitialValue =
+        1us
+    [<Literal>]
+    let private dayIncreaseStep =
+        1uy
+    [<Literal>]
+    let private numberIncreaseStep =
+        1us
     let private bumpDay (day: byte) =
-        if day = 31uy then 1uy else day + 1uy
-    let bumpNumber (number: byte) =
-        if number = 255uy then 1uy else number + 1uy
+        if day = Day.upperDayBoundary
+        then Day.lowerDayBoundary
+        else day + dayIncreaseStep
+    let private bumpNumber (number: uint16) =
+        if number = System.UInt16.MaxValue
+        then numberInitialValue
+        else number + numberIncreaseStep
     
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyBuild> |])>]
     let ``Make new Nightly on a Nightly build returns a new one`` (nightlyBuild: Build) =
@@ -60,12 +73,12 @@ module NightlyPropertyTests =
 
     [<Property>]
     let ``Make Nightly on an empty Build returns Nightly`` () =
-        let newNightlyBuild = { Day = 25uy; Number = 2uy }
+        let newNightlyBuild = { Day = 25uy; Number = 2us }
         let build = None
         tryNightly build newNightlyBuild = Ok (Build.Nightly(newNightlyBuild))
         
     [<Property>]
     let ``Make same Nightly on a Nightly build returns BuildAlreadyCurrent error`` () =
-        let build = Some (Build.Nightly { Day = 05uy; Number = 1uy })
-        let newNightlyBuild = { Day = 05uy; Number = 1uy }
+        let build = Some (Build.Nightly { Day = 05uy; Number = 1us })
+        let newNightlyBuild = { Day = 05uy; Number = 1us }
         tryNightly build newNightlyBuild = Error BuildAlreadyCurrent

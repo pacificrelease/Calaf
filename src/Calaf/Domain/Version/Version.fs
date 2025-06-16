@@ -6,6 +6,12 @@ open Calaf.Extensions.InternalExtensions.RegularExpressions
 open Calaf.Domain.DomainTypes.Values
 
 [<Literal>]
+let internal YearMonthDivider =
+    "."
+[<Literal>]
+let internal MonthPatchDivider =
+    "."
+[<Literal>]
 let internal CalendarVersionBuildTypeDivider =
     "-"
 [<Literal>]
@@ -128,9 +134,9 @@ let toString (calVer: CalendarVersion) : string =
     let calVerStr =
         match calVer.Patch with
         | Some patch ->        
-            $"{calVer.Year}.{calVer.Month}.{patch}"
+            $"{calVer.Year}{YearMonthDivider}{calVer.Month}{MonthPatchDivider}{patch}"
         | None ->
-            $"{calVer.Year}.{calVer.Month}"
+            $"{calVer.Year}{YearMonthDivider}{calVer.Month}"
     let sb = System.Text.StringBuilder(calVerStr)
     match calVer.Build with
     | Some build ->
@@ -191,7 +197,7 @@ let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
                 | None ->
                     let priority = 0
                     let day = 1uy
-                    let number = 0uy
+                    let number = 0us
                     (v.Year, v.Month, v.Patch, priority, day, number))
         Some maxVersion
 

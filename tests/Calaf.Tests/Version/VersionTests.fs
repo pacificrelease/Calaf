@@ -25,7 +25,11 @@ module TryParseFromStringTests =
         
         let version = version |> tryParseFromString
         test <@ version |> Option.map _.IsCalVer |> Option.defaultValue false @>
-        
+       
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionNightlyBuildStr> |], MaxTest = 200)>]
+    let ``Nightly calendar version string parses to the corresponding values`` (nightlyVersion: string) =        
+        let version = tryParseFromString nightlyVersion
+        test <@ version |> Option.map (function | CalVer v -> v.Build.IsSome | _ -> false) |> Option.defaultValue false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatchStr> |], MaxTest = 200)>]
     let ``Release calendar version string parses to the corresponding values`` (releaseVersion: string) =
@@ -134,12 +138,12 @@ module TryMaxTests =
     let ``Same date release, nightly versions return nightly build with higher number and hash (hash may be sorted alphabetically)`` () =
         let versions = [
             { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = None }
-            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 30uy; Number = 100uy }) }
-            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1uy   }) }
-            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1uy   }) }
-            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 2uy   }) }
-            { Year = 2023us; Month = 11uy; Patch = Some 2u; Build = Some (Build.Nightly { Day = 31uy; Number = 3uy   }) }
-            { Year = 2023us; Month = 12uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1uy   }) }
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 30uy; Number = 100us }) }
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us   }) }
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us   }) }
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 2us   }) }
+            { Year = 2023us; Month = 11uy; Patch = Some 2u; Build = Some (Build.Nightly { Day = 31uy; Number = 3us   }) }
+            { Year = 2023us; Month = 12uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us   }) }
         ]
         let max = versions |> tryMax
         test <@ max |> Option.map (fun v -> v = versions[6]) |> Option.defaultValue false @>
@@ -148,11 +152,11 @@ module TryMaxTests =
     let ``Different release and nightly calendar versions return max expected value`` () =
         let versions = 
             [| { Year = 2024us; Month = 11uy; Patch = Some 10u; Build = None }
-               { Year = 2024us; Month = 11uy; Patch = Some 11u; Build = Some (Build.Nightly { Day = 31uy; Number = 35uy }) }
+               { Year = 2024us; Month = 11uy; Patch = Some 11u; Build = Some (Build.Nightly { Day = 31uy; Number = 35us }) }
                { Year = 2025us; Month = 11uy; Patch = None;     Build = None }
                { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = None }
-               { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = Some (Build.Nightly { Day = 30uy; Number = 29uy }) }
-               { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = Some (Build.Nightly { Day = 31uy; Number = 30uy }) }
+               { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = Some (Build.Nightly { Day = 30uy; Number = 29us }) }
+               { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = Some (Build.Nightly { Day = 31uy; Number = 30us }) }
             |]        
         let max = versions |> tryMax
         test <@ max |> Option.map (fun v -> v = versions[2]) |> Option.defaultValue false @>

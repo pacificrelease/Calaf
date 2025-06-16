@@ -93,8 +93,8 @@ module Generator =
     let genFrom1To512LettersString =
         Gen.constant <| Bogus.Faker().Random.String2(1, 512)
         
-    let genByte =
-        Gen.choose(int 0uy, int 255uy) |> Gen.map byte
+    let genUInt16 =
+        Gen.choose(int 0uy, int System.UInt16.MaxValue) |> Gen.map uint16
         
     let genDay =
         gen {
@@ -173,8 +173,11 @@ module Generator =
             gen {
                 let! nightly = Gen.elements ["nightly"; "NIGHTLY"; "Nightly"; "NiGhTlY"; "nIgHtLy"; "NIGHTly"; "nightLY"]
                 let! day = genDay
-                let! number = genByte
-                return $"{nightly}{Calaf.Domain.Build.BuildTypeDayDivider}{day}{Calaf.Domain.Build.DayNumberDivider}{number:D2}"
+                let! number = genUInt16
+                let sb = System.Text.StringBuilder($"{nightly}{Calaf.Domain.Build.BuildTypeDayDivider}{day:D2}{Calaf.Domain.Build.DayNumberDivider}")
+                let! shouldTrait = Gen.elements [true; false]
+                let sb = if shouldTrait then sb.Append($"{number:D5}") else sb.Append($"{number}")
+                return sb.ToString()
             }            
             
         let wrongString =
@@ -211,7 +214,7 @@ module Generator =
         let nightlyBuild =
             gen {
                 let! day = genDay
-                let! number = genByte
+                let! number = genUInt16
                 return Build.Nightly { Day = day; Number = number }
             }
     
@@ -357,27 +360,12 @@ module Generator =
             }
             
     module internal CalendarVersion =
-        let calendarVersionShortStr =
-            gen {
-                let! year  = Year.inRangeUInt16Year
-                let! month = Month.inRangeByteMonth
-                return $"{year}.{month}"
-            }
-            
-        let calendarVersionPatchStr =
-            gen {
-                let! year  = Year.inRangeUInt16Year
-                let! month = Month.inRangeByteMonth
-                let! patch = validPatchUInt32
-                return $"{year}.{month}.{patch}"
-            }
-            
         let calendarVersionShortNightlyBuildStr =
             gen {
                 let! year  = Year.inRangeUInt16Year
                 let! month = Month.inRangeByteMonth
                 let! nightlyBuild = Build.nightlyString
-                return $"{year}.{month}-{nightlyBuild}"                 
+                return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{nightlyBuild}"                 
             }
             
         let calendarVersionPatchNightlyBuildStr =
@@ -386,8 +374,32 @@ module Generator =
                 let! month = Month.inRangeByteMonth
                 let! patch = validPatchUInt32
                 let! nightlyBuild = Build.nightlyString
-                return $"{year}.{month}.{patch}-{nightlyBuild}"                 
+                return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.MonthPatchDivider}{patch}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{nightlyBuild}"                 
             }
+            
+        let calendarVersionNightlyBuildStr =
+            gen {
+                let! choice = Gen.frequency [
+                    1, calendarVersionShortNightlyBuildStr
+                    1, calendarVersionPatchNightlyBuildStr
+                ]
+                return choice
+            }
+            
+        let calendarVersionShortStr =
+            gen {
+                let! year  = Year.inRangeUInt16Year
+                let! month = Month.inRangeByteMonth
+                return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}"
+            }
+            
+        let calendarVersionPatchStr =
+            gen {
+                let! year  = Year.inRangeUInt16Year
+                let! month = Month.inRangeByteMonth
+                let! patch = validPatchUInt32
+                return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.MonthPatchDivider}{patch}"
+            }        
             
         let calendarVersionStr =
             gen {            
@@ -928,6 +940,10 @@ module Arbitrary =
                 Arb.fromGen Generator.Year.wrongStringYear
                 
     module internal CalendarVersion =
+        type internal calendarVersionNightlyBuildStr =
+            static member calendarVersionNightlyBuildStr() =
+                Arb.fromGen Generator.CalendarVersion.calendarVersionNightlyBuildStr
+                
         type internal calendarVersionPatchStr =
             static member calendarVersionPatchStr() =
                 Arb.fromGen Generator.CalendarVersion.calendarVersionPatchStr
@@ -950,7 +966,7 @@ module Arbitrary =
                 
         type internal calendarVersionShortNightlyBuild =
             static member calendarVersionShortNightlyBuild() =
-                Arb.fromGen Generator.CalendarVersion.calendarVersionShortNightlyBuild 
+                Arb.fromGen Generator.CalendarVersion.calendarVersionShortNightlyBuild
                 
         type internal calendarVersions =
             static member calendarVersions() =

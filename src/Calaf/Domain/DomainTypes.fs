@@ -5,7 +5,7 @@ module Values =
     // Common
     type Patch = uint32
     type DayOfMonth = uint8
-    type BuildNumber = uint8    
+    type BuildNumber = uint16
     type NightlyBuild = {
         Day:    DayOfMonth
         Number: BuildNumber
