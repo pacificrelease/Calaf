@@ -12,8 +12,8 @@ module TryParseFromStringTests =
     [<Fact>]
     let ``Nightly CalVer version with patch string parses to it corresponding values`` () =
         //let version = "2023.10"
-        //let version = "2023.10-nightly.06"
-        let version = "2023.10-nightly.31.06+0fefe3f"
+        let version = "2023.10-nightly.31.01"
+        //let version = "2023.10-nightly.31.06+0fefe3f"
         //let version = "2023.10-nightly.06+0fefe3fnightly.06+0fefe3f"
         //let version = "2023.10.1-nightly.06+0fefe3f"
         
@@ -134,12 +134,12 @@ module TryMaxTests =
     let ``Same date release, nightly versions return nightly build with higher number and hash (hash may be sorted alphabetically)`` () =
         let versions = [
             { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = None }
-            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 30uy; Number = 100uy; Hash = Some "abc" }) }
-            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1uy; Hash = None }) }
-            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1uy; Hash = Some "xyz" }) }
-            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 2uy; Hash = None }) }
-            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 2uy; Hash = Some "abc" }) }
-            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 2uy; Hash = Some "opq" }) }
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 30uy; Number = 100uy }) }
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1uy   }) }
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1uy   }) }
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 2uy   }) }
+            { Year = 2023us; Month = 11uy; Patch = Some 2u; Build = Some (Build.Nightly { Day = 31uy; Number = 3uy   }) }
+            { Year = 2023us; Month = 12uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1uy   }) }
         ]
         let max = versions |> tryMax
         test <@ max |> Option.map (fun v -> v = versions[6]) |> Option.defaultValue false @>
@@ -148,11 +148,11 @@ module TryMaxTests =
     let ``Different release and nightly calendar versions return max expected value`` () =
         let versions = 
             [| { Year = 2024us; Month = 11uy; Patch = Some 10u; Build = None }
-               { Year = 2024us; Month = 11uy; Patch = Some 11u; Build = Some (Build.Nightly { Day = 31uy; Number = 35uy; Hash = Some "abc" }) }
+               { Year = 2024us; Month = 11uy; Patch = Some 11u; Build = Some (Build.Nightly { Day = 31uy; Number = 35uy }) }
                { Year = 2025us; Month = 11uy; Patch = None;     Build = None }
                { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = None }
-               { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = Some (Build.Nightly { Day = 30uy; Number = 29uy; Hash = None }) }
-               { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = Some (Build.Nightly { Day = 31uy; Number = 30uy; Hash = Some "xyz" }) }
+               { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = Some (Build.Nightly { Day = 30uy; Number = 29uy }) }
+               { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = Some (Build.Nightly { Day = 31uy; Number = 30uy }) }
             |]        
         let max = versions |> tryMax
         test <@ max |> Option.map (fun v -> v = versions[2]) |> Option.defaultValue false @>
@@ -268,11 +268,7 @@ module ToStringPropertiesTests =
     let ``CalendarVersion with Build contains it's Build in the string representation`` (calendarVersion: CalendarVersion) =
         let calVerString = calendarVersion |> toString
         let contains = match calendarVersion with
-                        | { Build = Some (Build.Nightly { Day = day; Number = number; Hash = Some hash }) } ->
-                            calVerString.Contains($"{day}") &&
-                            calVerString.Contains($"{number}") &&
-                            calVerString.Contains(hash)
-                        | { Build = Some (Build.Nightly { Day = day; Number = number; Hash = None }) } ->
+                        | { Build = Some (Build.Nightly { Day = day; Number = number }) } ->
                             calVerString.Contains($"{day}") &&
                             calVerString.Contains($"{number}")
                         | _ -> failwith "CalendarVersion with Build should have a Build"

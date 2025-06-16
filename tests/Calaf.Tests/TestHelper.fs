@@ -168,24 +168,13 @@ module Generator =
     let directoryPathString =
         Gen.constant (Bogus.Faker().System.DirectoryPath())
         
-    module Build =
-        let hashString =
-            gen {
-                let! hash = Gen.frequency [
-                    1, genCommitHash
-                    1, genHexadecimal
-                    1, genFrom1To512LettersString
-                ]
-                return hash
-            }
-            
+    module Build =            
         let nightlyString =
             gen {
                 let! nightly = Gen.elements ["nightly"; "NIGHTLY"; "Nightly"; "NiGhTlY"; "nIgHtLy"; "NIGHTly"; "nightLY"]
                 let! day = genDay
                 let! number = genByte
-                let! hash = hashString
-                return $"{nightly}{Calaf.Domain.Build.BuildTypeDayDivider}{day}{Calaf.Domain.Build.DayNumberDivider}{number:D2}{Calaf.Domain.Build.NumberHashDivider}{hash}"
+                return $"{nightly}{Calaf.Domain.Build.BuildTypeDayDivider}{day}{Calaf.Domain.Build.DayNumberDivider}{number:D2}"
             }            
             
         let wrongString =
@@ -206,8 +195,6 @@ module Generator =
                 let! choice = Gen.frequency [
                     1, Gen.constant $"{Calaf.Domain.Build.BuildTypeDayDivider}{nightlyString}"
                     1, Gen.constant $"{nightlyString}{Calaf.Domain.Build.BuildTypeDayDivider}"
-                    1, Gen.constant $"{Calaf.Domain.Build.NumberHashDivider}{nightlyString}"
-                    1, Gen.constant $"{nightlyString}{Calaf.Domain.Build.NumberHashDivider}"
                     1, Gen.constant $"{nightlyString}{wrongString}{nightlyString}"
                     1, Gen.constant $"{wrongString}{nightlyString}{wrongString}"
                     1, Gen.constant $"{wrongString}{nightlyString}"
@@ -225,11 +212,7 @@ module Generator =
             gen {
                 let! day = genDay
                 let! number = genByte
-                let! hash = Gen.frequency [
-                    1, Gen.constant None
-                    1, hashString |> Gen.map Some
-                ] 
-                return { Day = day; Number = number; Hash = hash } |> Build.Nightly
+                return Build.Nightly { Day = day; Number = number }
             }
     
     module Day =

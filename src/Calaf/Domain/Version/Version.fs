@@ -174,9 +174,7 @@ let release (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : Calenda
               Month = currentVersion.Month
               Patch = patch
               Build = None }
-            
-//let nightly (currentVersion: CalendarVersion) (monthStamp: MonthStamp, day: DayOfMonth) : CalendarVersion =
-    
+
 let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
     match versions with
     | _ when Seq.isEmpty versions -> None
@@ -189,13 +187,12 @@ let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
                     match build with
                     | Build.Nightly nightlyBuild ->
                         let priority = 1
-                        (v.Year, v.Month, v.Patch, priority, nightlyBuild.Day, nightlyBuild.Number, nightlyBuild.Hash)                    
+                        (v.Year, v.Month, v.Patch, priority, nightlyBuild.Day, nightlyBuild.Number)                    
                 | None ->
                     let priority = 0
                     let day = 1uy
                     let number = 0uy
-                    let hash = None
-                    (v.Year, v.Month, v.Patch, priority, day, number, hash))
+                    (v.Year, v.Month, v.Patch, priority, day, number))
         Some maxVersion
 
 let tryParseFromString (bareVersion: string) : Version option =

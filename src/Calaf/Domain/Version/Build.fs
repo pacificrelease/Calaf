@@ -13,12 +13,10 @@ let private NightlyBuildType =
 let internal BuildTypeDayDivider = "."
 [<Literal>]
 let internal DayNumberDivider = "."
-[<Literal>]
-let internal NumberHashDivider = "+"
 let internal AllowedNightlyBuildRegexString =
-    $@"^(?i:({NightlyBuildType}))\{BuildTypeDayDivider}(0?[1-9]|1[0-9]|2[0-9]|3[01])\{DayNumberDivider}([0-9]{{1,3}})(?:\{NumberHashDivider}([A-Za-z0-9]{{1,512}}))?$"
+    $@"^(?i:({NightlyBuildType}))\{BuildTypeDayDivider}(0?[1-9]|1[0-9]|2[0-9]|3[01])\{DayNumberDivider}([0-9]{{1,3}})$"
 let internal AllowedNightlyBuildRegexString2 =
-    @"^(?i:(nightly))\.(0?[1-9]|1[0-9]|2[0-9]|3[01])\.([0-9]{1,3})(?:\+([A-Za-z0-9]{1,512}))?$"
+    @"^(?i:(nightly))\.(0?[1-9]|1[0-9]|2[0-9]|3[01])\.([0-9]{1,3})$"
 let private buildRegex =
     System.Text.RegularExpressions.Regex(AllowedNightlyBuildRegexString)
 let private buildRegex2 =
@@ -33,6 +31,9 @@ type private BuildSegments = {
 
 let private isEmptyString (build: string) =
     String.IsNullOrWhiteSpace(build)
+    
+let private isNightlyString (buildType: string) =
+    String.Equals(buildType, NightlyBuildType, StringComparison.InvariantCultureIgnoreCase)    
     
 let private tryCreateBuildSegments (buildString: string) =
     result {
@@ -53,21 +54,21 @@ let private tryCreateBuildSegments (buildString: string) =
                 return! Error BuildInvalidString
     }
 
-let private tryParseFromBuildSegments = function
-    | None -> Ok None
-    | Some { BuildType = buildType; BuildDay = day; BuildNumber = number; BuildHash = hash }
-        when String.Equals(buildType, NightlyBuildType, StringComparison.InvariantCultureIgnoreCase) ->
+let private tryParseFromBuildSegments segments =
+    match segments with    
+    | Some { BuildType = buildType; BuildDay = day; BuildNumber = number }
+        when buildType |> isNightlyString ->
         match (Byte.TryParse day, Byte.TryParse number) with
         | (true, buildDay), (true, buildNumber) ->
-            Ok (Some (Build.Nightly { Day = buildDay; Number = buildNumber; Hash = hash }))
+            let nightly = { Day = buildDay; Number = buildNumber } |> Build.Nightly
+            nightly |> Some |> Ok
         | _ -> Error BuildInvalidString
+    | None -> Ok None
     | _ -> Error BuildInvalidString
     
 let toString (build: Build) : string =    
     match build with
-    | Build.Nightly { Day = day; Number = number; Hash = Some hash } ->
-        $"{NightlyBuildType}{BuildTypeDayDivider}{day:D2}{DayNumberDivider}{number:D3}{NumberHashDivider}{hash}"
-    | Build.Nightly { Day = day; Number = number; Hash = None } ->
+    | Build.Nightly { Day = day; Number = number } ->
         $"{NightlyBuildType}{BuildTypeDayDivider}{day:D2}{DayNumberDivider}{number:D3}"
     
 let tryParseFromString (build: string) =
@@ -82,17 +83,3 @@ let tryNightly (currentBuild: Build option) (newNightly: NightlyBuild) : Result<
         else Build.Nightly newNightly |> Ok
     | None ->
         Ok (Build.Nightly newNightly)
-        
-let tryMax (builds: Build seq) : Build option =
-    match builds with
-    | _ when Seq.isEmpty builds -> None
-    | _ ->
-        // sort by build type where f.e. Alpha is the first and by the greatest number then Nightly and by the greater number        
-        let maxVersion =
-            builds
-            |> Seq.maxBy (fun b ->
-                match b with
-                // NOTE:: The higher is the first number the more important is the build
-                // First digit (1 for nightly) defines comparison priority where higher number is better
-                | Build.Nightly nightlyBuild -> (1, nightlyBuild.Day, nightlyBuild.Number))
-        Some maxVersion
