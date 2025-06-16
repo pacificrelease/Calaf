@@ -8,7 +8,7 @@ open Calaf.Domain.DomainTypes.Values
 open Calaf.Domain.Version
 open Calaf.Tests
 
-module TryParseFromStringPropertiesTests =
+module TryParseFromStringTests =
     [<Fact>]
     let ``Nightly CalVer version with patch string parses to it corresponding values`` () =
         //let version = "2023.10"
@@ -25,6 +25,7 @@ module TryParseFromStringPropertiesTests =
         
         let version = version |> tryParseFromString
         test <@ version |> Option.map _.IsCalVer |> Option.defaultValue false @>
+        
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatchStr> |], MaxTest = 200)>]
     let ``Release calendar version string parses to the corresponding values`` (releaseVersion: string) =
@@ -89,9 +90,9 @@ module TryParseFromStringPropertiesTests =
         
     [<Property(Arbitrary = [| typeof<Arbitrary.nullOrWhiteSpaceString> |], MaxTest = 200)>]
     let ``Null or empty or whitespace string parses to None`` (badVersion: string) =
-        badVersion |> tryParseFromString = None
+        badVersion |> tryParseFromString = None        
         
-module TryParseFromTagPropertiesTests =
+module TryParseFromTagTests =   
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionTagStr> |], MaxTest = 200)>]
     let ``Correct prefix + valid CalVer string parses to Some CalVer`` (calendarVersionTagStr: string) =
         match tryParseFromTag calendarVersionTagStr with
@@ -128,20 +129,47 @@ module TryParseFromTagPropertiesTests =
     let ``Null or empty or whitespace string parses to None`` (badVersion: string) =
         badVersion |> tryParseFromTag = None
         
-module TryMaxPropertiesTests =
-    [<Property(MaxTest = 200)>]
+module TryMaxTests =
+    [<Fact>]
+    let ``Same date release, nightly versions return nightly build with higher number and hash (hash may be sorted alphabetically)`` () =
+        let versions = [
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = None }
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 30uy; Number = 100uy; Hash = Some "abc" }) }
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1uy; Hash = None }) }
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1uy; Hash = Some "xyz" }) }
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 2uy; Hash = None }) }
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 2uy; Hash = Some "abc" }) }
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 2uy; Hash = Some "opq" }) }
+        ]
+        let max = versions |> tryMax
+        test <@ max |> Option.map (fun v -> v = versions[6]) |> Option.defaultValue false @>
+        
+    [<Fact>]
+    let ``Different release and nightly calendar versions return max expected value`` () =
+        let versions = 
+            [| { Year = 2024us; Month = 11uy; Patch = Some 10u; Build = None }
+               { Year = 2024us; Month = 11uy; Patch = Some 11u; Build = Some (Build.Nightly { Day = 31uy; Number = 35uy; Hash = Some "abc" }) }
+               { Year = 2025us; Month = 11uy; Patch = None;     Build = None }
+               { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = None }
+               { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = Some (Build.Nightly { Day = 30uy; Number = 29uy; Hash = None }) }
+               { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = Some (Build.Nightly { Day = 31uy; Number = 30uy; Hash = Some "xyz" }) }
+            |]        
+        let max = versions |> tryMax
+        test <@ max |> Option.map (fun v -> v = versions[2]) |> Option.defaultValue false @>
+    
+    [<Property>]
     let ``Empty array returns None`` () =
         let versions = [||]
         versions
         |> tryMax = None
 
-    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |], MaxTest = 200)>]
-    let ``Single element returns that element`` (calendarVersion: CalendarVersion) =
+    [<Property>]
+    let ``Single element returns this element`` (calendarVersion: CalendarVersion) =
         let versions = [| calendarVersion |]
-        versions
-        |> tryMax = Some calendarVersion
+        let max = versions |> tryMax
+        test <@ max = Some calendarVersion @>
 
-    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersions> |], MaxTest = 200)>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersions> |])>]
     let ``Multiple elements returns the element of this sequence`` (calendarVersions: CalendarVersion[]) =
         let contains =
             calendarVersions
@@ -156,7 +184,7 @@ module TryMaxPropertiesTests =
         let contains = calendarVersions |> Array.contains max.Value
         contains
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersions> |], MaxTest = 200)>]
+    [<Property>]
     let ``Order invariance (array reversal does not affect result)`` (calendarVersions: CalendarVersion[]) =
         calendarVersions
         |> tryMax = tryMax (Array.randomShuffle calendarVersions)
@@ -165,12 +193,12 @@ module TryMaxPropertiesTests =
     let ``Duplicate tolerance`` (calendarVersions: CalendarVersion[]) =
         let max = tryMax calendarVersions
         let duplicated = Array.append calendarVersions [| max.Value |]
-        tryMax duplicated = max
+        let max' = tryMax duplicated
+        test <@ max' = max @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersions> |])>]
     let ``Result is maximum`` (calendarVersions: CalendarVersion[]) =
-        let max = calendarVersions
-                |> tryMax                
+        let max = calendarVersions |> tryMax                
         calendarVersions
         |> Array.forall (fun v -> compare v max.Value <= 0)
         
@@ -328,17 +356,3 @@ module ToCommitMessagePropertiesTests =
         let commitMsg = calendarVersion |> toCommitMessage
         not (System.String.IsNullOrWhiteSpace commitMsg) &&
         commitMsg.Contains commitVersionPrefix
-        
-module TryMaxTests =        
-    [<Fact>]
-    let ``Release and nightly calendar versions return max expected value`` () =
-        let versions = 
-            [| { Year = 2024us; Month = 11uy; Patch = Some 10u; Build = None }
-               { Year = 2024us; Month = 11uy; Patch = Some 11u; Build = Some (Build.Nightly { Day = 31uy; Number = 35uy; Hash = Some "abc" }) }
-               { Year = 2025us; Month = 10uy; Patch = None;     Build = None }
-               { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = None }
-               { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = Some (Build.Nightly { Day = 30uy; Number = 29uy; Hash = None }) }
-               { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = Some (Build.Nightly { Day = 31uy; Number = 30uy; Hash = Some "xyz" }) }
-            |]        
-        let version = versions |> tryMax
-        test <@ version |> Option.map (fun v -> v = versions[5]) |> Option.defaultValue false @>
