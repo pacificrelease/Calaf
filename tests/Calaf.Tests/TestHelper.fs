@@ -94,7 +94,7 @@ module Generator =
         Gen.constant <| Bogus.Faker().Random.String2(1, 512)
         
     let genUInt16 =
-        Gen.choose(int 0uy, int System.UInt16.MaxValue) |> Gen.map uint16
+        Gen.choose(0, int System.UInt16.MaxValue) |> Gen.map uint16
         
     let genDay =
         gen {

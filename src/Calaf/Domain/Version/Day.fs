@@ -19,4 +19,3 @@ let tryParseFromInt32 (dayOfMonth: System.Int32) : Result<DayOfMonth, DomainErro
         |> System.Convert.ToByte
         |> tryParseDay
     with _ -> DayInvalidInt |> Error
-

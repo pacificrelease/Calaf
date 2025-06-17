@@ -9,9 +9,11 @@ open Calaf.Domain.DomainTypes.Values
 let private NightlyBuildType =
     "nightly"
 [<Literal>]
-let internal BuildTypeDayDivider = "."
+let internal BuildTypeDayDivider =
+    "."
 [<Literal>]
-let internal DayNumberDivider = "."
+let internal DayNumberDivider =
+    "."
 let internal AllowedNightlyBuildRegexString =
     $@"^(?i:({NightlyBuildType}))\{BuildTypeDayDivider}(0?[1-9]|1[0-9]|2[0-9]|3[01])\{DayNumberDivider}(0*[1-9][0-9]{{0,4}})$"
 let internal AllowedNightlyBuildRegexString2 =
