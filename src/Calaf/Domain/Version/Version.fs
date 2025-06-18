@@ -52,6 +52,9 @@ let private stripVersionPrefix (tagString: CleanString) =
        | Some p -> tagString.Substring(p.Length)
        | None   -> tagString
        
+let private shouldChange (versionUnit, calendarUnit) =
+    calendarUnit <> versionUnit
+       
 let private tryCleanString (bareString: string) =
     let asciiWs = set [' '; '\t'; '\n'; '\r']
     if System.String.IsNullOrWhiteSpace bareString then
@@ -158,18 +161,43 @@ let toTagName (calVer: CalendarVersion) : string =
 /// </summary>
 /// <param name="calVer">Calendar version to convert</param>
 let toCommitMessage (calVer: CalendarVersion) : string =
-    $"{commitVersionPrefix} {calVer |> toString}" 
+    $"{commitVersionPrefix} {calVer |> toString}"
+    
+let nightly (currentVersion: CalendarVersion) (dayOfMonth: DayOfMonth, monthStamp: MonthStamp) : CalendarVersion =
+    let build = Build.nightly currentVersion.Build dayOfMonth |> Some
+    let shouldChangeYear = shouldChange (currentVersion.Year, monthStamp.Year)
+    if shouldChangeYear
+    then
+        { Year = monthStamp.Year
+          Month = monthStamp.Month
+          Patch = None
+          Build = build }
+    else
+        let changeMonth = shouldChange (currentVersion.Month, monthStamp.Month)
+        if changeMonth
+        then
+            { Year = currentVersion.Year
+              Month = monthStamp.Month
+              Patch = None
+              Build = build }
+        else
+            { Year = currentVersion.Year
+              Month = currentVersion.Month
+              Patch = currentVersion.Patch
+              Build = build }
 
 let release (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : CalendarVersion =
-    let shouldBumpYear = monthStamp.Year > currentVersion.Year            
-    if shouldBumpYear then
+    let changeYear = shouldChange (currentVersion.Year, monthStamp.Year)
+    if changeYear
+    then
         { Year = monthStamp.Year
           Month = monthStamp.Month
           Patch = None
           Build = None }
     else
-        let shouldBumpMonth = monthStamp.Month > currentVersion.Month
-        if shouldBumpMonth then
+        let changeMonth = shouldChange (currentVersion.Month, monthStamp.Month)
+        if changeMonth
+        then
             { Year = currentVersion.Year
               Month = monthStamp.Month
               Patch = None

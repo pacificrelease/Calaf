@@ -188,20 +188,28 @@ module Generator =
                 let! length = Gen.choose(64, 512)
                 let! chars = Gen.arrayOfLength length (Gen.elements shuffle)
                 return System.String(chars)
-            }             
+            }
+            
+        let wrongString2 =            
+            let specialChars = ['!'; '@'; '#'; '$'; '%'; '^'; '&'; '*'; '('; ')'; '-'; '_'; '+'; '='; '~'; '?'; '/'; '\\'; '['; ']'; '{'; '}'; '|'; '<'; '>'; ','; '.'; ':']
+            gen {
+                let! length = Gen.choose(64, 512)
+                let! chars = Gen.arrayOfLength length (Gen.elements specialChars)
+                return System.String(chars)
+            } 
             
         let containingNightlyBadString =
             gen {
                 let! nightlyString = nightlyString
-                let! wrongString = wrongString
+                let! specialCharacters = wrongString2
                 let! leadingWhiteSpaces = genWhiteSpacesString
                 let! choice = Gen.frequency [
                     1, Gen.constant $"{Calaf.Domain.Build.BuildTypeDayDivider}{nightlyString}"
                     1, Gen.constant $"{nightlyString}{Calaf.Domain.Build.BuildTypeDayDivider}"
                     1, Gen.constant $"{nightlyString}{wrongString}{nightlyString}"
-                    1, Gen.constant $"{wrongString}{nightlyString}{wrongString}"
-                    1, Gen.constant $"{wrongString}{nightlyString}"
-                    1, Gen.constant $"{nightlyString}{wrongString}"
+                    1, Gen.constant $"{specialCharacters}{nightlyString}{specialCharacters}"
+                    1, Gen.constant $"{specialCharacters}{nightlyString}"
+                    1, Gen.constant $"{nightlyString}{specialCharacters}"
                     1, Gen.constant $"{nightlyString}{leadingWhiteSpaces}"
                     1, Gen.constant $"{leadingWhiteSpaces}{nightlyString}"
                     1, Gen.constant $"{leadingWhiteSpaces}{nightlyString}{leadingWhiteSpaces}"

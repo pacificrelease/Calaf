@@ -206,7 +206,7 @@ module TryMaxTests =
         calendarVersions
         |> Array.forall (fun v -> compare v max.Value <= 0)
         
-module ReleasePropertiesTests =
+module ReleaseTests =
     let private increment (monthStamp: MonthStamp, incr: MonthStampIncrement ) =
         match incr with
         | Year -> { monthStamp with Year = monthStamp.Year + 1us }
@@ -249,6 +249,31 @@ module ReleasePropertiesTests =
         let monthStamp = increment (monthStamp, incr)
         let release = release calVer monthStamp
         release.Patch = None
+        
+module NightlyTests =
+    //Year Rollover
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``The calendar version nightly returns version with the MonthStamp Year when the MonthStamp Year is different from the calendar version Year``
+        (calendarVersion: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
+        let dayOfMonth = byte dateTimeOffset.Day
+        let monthStamp =
+         if uint16 dateTimeOffset.Year <> calendarVersion.Year
+          then { Year = uint16 dateTimeOffset.Year; Month = byte dateTimeOffset.Month }
+          else { Year = uint16 (dateTimeOffset.AddYears(1).Year); Month = byte dateTimeOffset.Month }          
+        let nightly = nightly calendarVersion (dayOfMonth, monthStamp)        
+        test <@ nightly.Year = monthStamp.Year @>
+        
+    // Month Rollover
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``The calendar version nightly returns version with the MonthStamp Month when the MonthStamp Month is different from the calendar version Month``
+        (calendarVersion: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
+        let dayOfMonth = byte dateTimeOffset.Day
+        let monthStamp =
+         if byte dateTimeOffset.Month <> calendarVersion.Month
+          then { Year = uint16 dateTimeOffset.Year; Month = byte dateTimeOffset.Month }
+          else { Year = uint16 dateTimeOffset.Year; Month = byte (dateTimeOffset.AddMonths(1).Month) }          
+        let nightly = nightly calendarVersion (dayOfMonth, monthStamp)        
+        test <@ nightly.Month = monthStamp.Month @>
         
 module ToStringPropertiesTests =
     let private dotSegments (s:string) = s.Split '.'

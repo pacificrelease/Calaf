@@ -25,9 +25,12 @@ module Events =
             NewCalendarVersion = workspace.Version
             RepositoryExist = workspace.Repository |> Option.isSome
         } |> DomainEvent.Workspace
+        
+let private getNextNightlyVersion (version: CalendarVersion) (dayOfMonth: DayOfMonth, monthStamp: MonthStamp) =
+    Version.nightly version (dayOfMonth, monthStamp)
 
 let private getNextReleaseVersion (version: CalendarVersion) (monthStamp: MonthStamp) =
-    Version.release version monthStamp  
+    Version.release version monthStamp 
     
 let private combineVersions suite repoOption =
     [
