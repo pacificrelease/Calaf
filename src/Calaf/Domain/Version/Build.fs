@@ -6,14 +6,16 @@ open FsToolkit.ErrorHandling
 open Calaf.Domain.DomainTypes.Values
 
 [<Literal>]
-let private NightlyBuildType =
-    "nightly"
+let internal NumberIncrementStep = 1us
 [<Literal>]
-let internal BuildTypeDayDivider =
-    "."
+let internal NumberStartValue = 1us
 [<Literal>]
-let internal DayNumberDivider =
-    "."
+let private NightlyBuildType = "nightly"
+[<Literal>]
+let internal BuildTypeDayDivider = "."
+[<Literal>]
+let internal DayNumberDivider = "."
+
 let internal AllowedNightlyBuildRegexString =
     $@"^(?i:({NightlyBuildType}))\{BuildTypeDayDivider}(0?[1-9]|1[0-9]|2[0-9]|3[01])\{DayNumberDivider}(0*[1-9][0-9]{{0,4}})$"
 let internal AllowedNightlyBuildRegexString2 =
@@ -73,12 +75,15 @@ let toString (build: Build) : string =
 let tryParseFromString (build: string) =
     build |> tryCreateBuildSegments |> Result.bind tryParseFromBuildSegments 
 
-let tryNightly (currentBuild: Build option) (newNightly: NightlyBuild) : Result<Build, DomainError> =
+let nightly (currentBuild: Build option) (dayOfMonth: DayOfMonth) : Build =
+    let nextNumber currentNumber =
+        let overflowPossible = currentNumber = BuildNumber.MaxValue
+        if overflowPossible
+        then NumberStartValue
+        else currentNumber + NumberIncrementStep
+    
     match currentBuild with
-    | Some (Build.Nightly currentNightly) ->
-        let same = newNightly = currentNightly
-        if same
-        then BuildAlreadyCurrent |> Error
-        else Build.Nightly newNightly |> Ok
-    | None ->
-        Ok (Build.Nightly newNightly)
+    | Some (Build.Nightly { Day = currentDay; Number = number }) when currentDay = dayOfMonth ->
+        Build.Nightly { Day = dayOfMonth; Number = nextNumber number }
+    | _ ->
+        Build.Nightly { Day = dayOfMonth; Number = NumberStartValue }

@@ -3,14 +3,14 @@
 open Calaf.Domain.DomainTypes.Values
 
 [<Literal>]
-let lowerMonthBoundary= 1uy
+let internal LowerMonthBoundary= 1uy
 [<Literal>]
-let upperMonthBoundary = 12uy
+let internal UpperMonthBoundary = 12uy
 
 let private tryParseMonth (month: System.Byte) : Result<Month, DomainError> =    
     match month with
-    | month when month >= lowerMonthBoundary &&
-                 month <= upperMonthBoundary -> Ok month
+    | month when month >= LowerMonthBoundary &&
+                 month <= UpperMonthBoundary -> Ok month
     | _ -> MonthOutOfRange |> Error
 
 let tryParseFromInt32 (month: System.Int32) : Result<Month, DomainError> =

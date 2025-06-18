@@ -94,7 +94,7 @@ module Generator =
         Gen.constant <| Bogus.Faker().Random.String2(1, 512)
         
     let genUInt16 =
-        Gen.choose(0, int System.UInt16.MaxValue) |> Gen.map uint16
+        Gen.choose(1, int System.UInt16.MaxValue) |> Gen.map uint16
         
     let genDay =
         gen {
@@ -217,18 +217,34 @@ module Generator =
                 let! number = genUInt16
                 return Build.Nightly { Day = day; Number = number }
             }
+            
+        let numberNoUpperBoundaryNightlyBuild =
+            gen {
+                let! day = genDay
+                let! number = Gen.choose(int 1, int (System.UInt16.MaxValue - 1us)) |> Gen.map uint16
+                return Build.Nightly { Day = day; Number = number }                
+            }
+            
+        let nightlyBuildOption =
+            gen {
+                let! choice = Gen.frequency [
+                    1, Gen.constant None
+                    3, nightlyBuild |> Gen.map Some
+                ]
+                return choice
+            }
     
     module Day =
         let inRangeByteDay =
             gen {
-                let! day = Gen.choose(int Calaf.Domain.Day.lowerDayBoundary,
-                                      int Calaf.Domain.Day.upperDayBoundary - 3)
+                let! day = Gen.choose(int Calaf.Domain.Day.LowerDayBoundary,
+                                      int Calaf.Domain.Day.UpperDayBoundary - 3)
                 return byte day
             }
             
         let outOfRangeByteDay =            
             gen {
-                let! day = Gen.choose(int Calaf.Domain.Day.upperDayBoundary + 1, int System.Byte.MaxValue)
+                let! day = Gen.choose(int Calaf.Domain.Day.UpperDayBoundary + 1, int System.Byte.MaxValue)
                 return day 
             }
             
@@ -250,14 +266,14 @@ module Generator =
     module Month =
         let inRangeByteMonth =
             gen {
-                let! month = Gen.choose(int Calaf.Domain.Month.lowerMonthBoundary,
-                                        int Calaf.Domain.Month.upperMonthBoundary)
+                let! month = Gen.choose(int Calaf.Domain.Month.LowerMonthBoundary,
+                                        int Calaf.Domain.Month.UpperMonthBoundary)
                 return byte month
             }
             
         let outOfRangeByteMonth =            
             gen {
-                let! month = Gen.choose(int Calaf.Domain.Month.upperMonthBoundary + 1, int System.Byte.MaxValue)
+                let! month = Gen.choose(int Calaf.Domain.Month.UpperMonthBoundary + 1, int System.Byte.MaxValue)
                 return month 
             }
             
@@ -586,12 +602,12 @@ module Generator =
             gen {
                 let min = System.DateTimeOffset(
                     int Calaf.Domain.Year.lowerYearBoundary,
-                    int Calaf.Domain.Month.lowerMonthBoundary,
-                    int Calaf.Domain.Day.lowerDayBoundary, 0, 0, 0, System.TimeSpan.Zero)
+                    int Calaf.Domain.Month.LowerMonthBoundary,
+                    int Calaf.Domain.Day.LowerDayBoundary, 0, 0, 0, System.TimeSpan.Zero)
                 let max = System.DateTimeOffset(
                     int Calaf.Domain.Year.upperYearBoundary,
-                    int Calaf.Domain.Month.upperMonthBoundary,
-                    int Calaf.Domain.Day.upperDayBoundary, 23, 59, 59, 999, System.TimeSpan.Zero)
+                    int Calaf.Domain.Month.UpperMonthBoundary,
+                    int Calaf.Domain.Day.UpperDayBoundary, 23, 59, 59, 999, System.TimeSpan.Zero)
                 let dateTimeOffset = Bogus.Faker().Date.BetweenOffset(min, max)
                 return dateTimeOffset
             }
@@ -600,12 +616,12 @@ module Generator =
             gen {
                 let min = System.DateTimeOffset(
                     1,
-                    int Calaf.Domain.Month.lowerMonthBoundary,
-                    int Calaf.Domain.Day.lowerDayBoundary, 0, 0, 0, System.TimeSpan.Zero)
+                    int Calaf.Domain.Month.LowerMonthBoundary,
+                    int Calaf.Domain.Day.LowerDayBoundary, 0, 0, 0, System.TimeSpan.Zero)
                 let max = System.DateTimeOffset(
                     int Calaf.Domain.Year.lowerYearBoundary - 1,
-                    int Calaf.Domain.Month.upperMonthBoundary,
-                    int Calaf.Domain.Day.upperDayBoundary, 23, 59, 59, 999, System.TimeSpan.Zero)
+                    int Calaf.Domain.Month.UpperMonthBoundary,
+                    int Calaf.Domain.Day.UpperDayBoundary, 23, 59, 59, 999, System.TimeSpan.Zero)
                 let dateTimeOffset = Bogus.Faker().Date.BetweenOffset(min, max)
                 return dateTimeOffset
             }
@@ -874,6 +890,14 @@ module Arbitrary =
         type nightlyBuild =
             static member nightlyBuild() =
                 Arb.fromGen Generator.Build.nightlyBuild
+                
+        type numberNoUpperBoundaryNightlyBuild =
+            static member numberNoUpperBoundaryNightlyBuild() =
+                Arb.fromGen Generator.Build.numberNoUpperBoundaryNightlyBuild
+                
+        type nightlyBuildOption =
+            static member nightlyBuildOption() =
+                Arb.fromGen Generator.Build.nightlyBuildOption
                 
     module internal Day =
         type inRangeByteDay =

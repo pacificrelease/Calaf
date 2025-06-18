@@ -25,4 +25,4 @@ module TryCreateDayOfMonthPropertiesTests =
         let day = dateTimeOffset |> tryCreateDayOfMonth |> function 
             | Ok day  -> day
             | Error _ -> failwith "Expected a valid day, but got an error."
-        test <@ day >= Day.lowerDayBoundary && day <= Day.upperDayBoundary @>
+        test <@ day >= Day.LowerDayBoundary && day <= Day.UpperDayBoundary @>
