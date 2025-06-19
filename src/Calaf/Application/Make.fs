@@ -29,6 +29,31 @@ module internal Make =
         let error (console: IConsole) e =            
             console.error $"{e}"                
     
+    let private nightly path context settings =
+        result {
+            let timeStamp = context.Clock.now()
+            let! dayOfMonth = timeStamp |> DateSteward.tryCreateDayOfMonth |> Result.mapError CalafError.Domain
+            let! monthStamp = timeStamp |> DateSteward.tryCreateMonthStamp |> Result.mapError CalafError.Domain                
+            let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
+            let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
+            let (TagQuantity tagCount) = settings.TagsToLoad
+            let! repo = context.Git.tryRead path tagCount Version.versionPrefixes timeStamp                
+            let! workspace,  _ = Workspace.tryCapture (dir, repo)                        |> Result.mapError CalafError.Domain
+            let! workspace', _ = Workspace.tryNightly workspace (dayOfMonth, monthStamp) |> Result.mapError CalafError.Domain                
+            let profile = Workspace.profile workspace'
+            do! profile.Projects
+                |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
+                |> Result.map ignore                
+            do! profile.Repository
+                |> Option.map (fun p ->
+                    let signature = { Name = p.Signature.Name; Email = p.Signature.Email; When = p.Signature.When }
+                    context.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName signature
+                    |> Result.map ignore
+                    |> Result.mapError id)
+                |> Option.defaultValue (Ok ())                                
+            return workspace'
+        }
+        
     let private release path context settings =
         result {
             let timeStamp = context.Clock.now()            
@@ -82,7 +107,7 @@ module internal Make =
                 | Make strategy ->
                     match strategy with
                     | MakeType.Nightly ->
-                        return! release path context settings
+                        return! nightly path context settings
                     | MakeType.Release ->
                         return! release path context settings
             }

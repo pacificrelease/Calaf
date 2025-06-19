@@ -57,7 +57,30 @@ let getCalendarVersion suite =
 let tryProfile suite =
     match suite with
     | StandardSet (_, projects) ->
-        projects |> Seq.map tryProfile |> Seq.choose id |> Seq.toList        
+        projects |> Seq.map tryProfile |> Seq.choose id |> Seq.toList
+        
+let tryNightly (suite: Suite) (nextVersion: CalendarVersion) =
+    result {
+        match suite with
+        | StandardSet (version, projects) ->
+            let nightly project =
+                match project with
+                | Versioned { Version = CalVer _ } as Versioned p ->
+                    tryNightly p nextVersion
+                    |> Result.map (fun p -> let p = Versioned p in (Some p, p))
+                | otherProject ->
+                    Ok (None, otherProject)
+            
+            let! result = projects |> List.traverseResultM nightly
+            let nightlyProjects, suiteProjects =
+                result
+                |> List.unzip
+                |> fun (releasedSuiteProjects, allSuiteProjects) -> (List.choose id releasedSuiteProjects, allSuiteProjects)
+                
+            let suite' = StandardSet (nextVersion, suiteProjects)
+            let event  = Events.toSuiteReleased suite' version nightlyProjects            
+            return (suite' , [event])
+    }
     
 let tryRelease (suite: Suite) (nextVersion: CalendarVersion) =
     result {

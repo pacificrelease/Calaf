@@ -78,6 +78,30 @@ let profile (workspace: Workspace) =
     { Projects = projectsProfiles
       Repository = repositoryProfile }
     
+let tryNightly (workspace: Workspace) (dayOfMonth: DayOfMonth, monthStamp: MonthStamp) =
+    result {
+        let nextVersion = getNextNightlyVersion workspace.Version (dayOfMonth, monthStamp)
+        if workspace.Version = nextVersion
+        then
+            return! WorkspaceAlreadyCurrent |> Error
+        else
+            let! suite', suiteEvents = Suite.tryNightly workspace.Suite nextVersion
+            let! repo' =
+                workspace.Repository
+                |> Option.traverseResult (fun repo -> Repository.tryRelease repo nextVersion)
+            
+            let events =
+               combineEvents suiteEvents (repo' |> Option.map snd)
+                
+            let workspace' =
+                { workspace with
+                    Version = nextVersion
+                    Suite = suite'
+                    Repository = repo' |> Option.map fst }
+            let event = Events.toWorkspaceReleased workspace' workspace.Version
+            return workspace', events @ [event] 
+    }
+    
 let tryRelease (workspace: Workspace) (monthStamp: MonthStamp) =
     result {
         let nextVersion = getNextReleaseVersion workspace.Version monthStamp

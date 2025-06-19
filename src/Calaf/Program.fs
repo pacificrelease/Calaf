@@ -11,7 +11,8 @@ let private loadTenTags = 1uy
 
 [<EntryPoint>]
 let main args =
-    let path = String.Empty
+    //let path = String.Empty
+    let path = "D:\\Learning\\Sandboxes\\Calaf"
     let context = MakeContext.create
     let settings = MakeSettings.tryCreate supportedFilesPattern loadTenTags
     Make.run path args context settings

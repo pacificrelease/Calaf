@@ -15,6 +15,8 @@ type DomainError =
     | BuildAlreadyCurrent
     
     // Project errors
+    | ProjectUnsupported
+    
     | VersionElementMissing
     | VersionElementUpdateFailed
     
