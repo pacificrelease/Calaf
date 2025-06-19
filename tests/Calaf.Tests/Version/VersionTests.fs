@@ -274,6 +274,22 @@ module NightlyTests =
           else { Year = uint16 dateTimeOffset.Year; Month = byte (dateTimeOffset.AddMonths(1).Month) }          
         let nightly = nightly calendarVersion (dayOfMonth, monthStamp)        
         test <@ nightly.Month = monthStamp.Month @>
+    
+    // Same Month & Year & Patch
+    [<Property>]
+    let ``The calendar version nightly returns version with the same Year, Month and Patch when MonthStamp has the same``
+        (calendarVersion: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
+        let dayOfMonth = byte dateTimeOffset.Day
+        let monthStamp =
+            { Year = calendarVersion.Year; Month = calendarVersion.Month }
+        let nightly = nightly calendarVersion (dayOfMonth, monthStamp)
+        test <@ nightly.Year = calendarVersion.Year && nightly.Month = calendarVersion.Month && nightly.Patch = calendarVersion.Patch @>
+        
+    // Build is always updated | Any CalendarVersion | Any valid (dayOfMonth, monthStamp) | The returned version's Build property is Some(Build.Nightly(...)).
+    
+    // Build Day is correct | Any CalendarVersion | A tuple with dayOfMonth | The Day field within the new Build matches the input dayOfMonth.
+    
+    // Patch is reset | A cv where Patch is Some(...) | ms date is after cv date (new year or month) | The returned version's Patch is None.
         
 module ToStringPropertiesTests =
     let private dotSegments (s:string) = s.Split '.'
