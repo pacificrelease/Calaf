@@ -253,7 +253,7 @@ module ReleaseTests =
 module NightlyTests =
     //Year Rollover
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
-    let ``The calendar version nightly returns version with the MonthStamp Year when the MonthStamp Year is different from the calendar version Year``
+    let ``The calendar version Nightly returns version with the MonthStamp Year when the MonthStamp Year is different from the calendar version Year``
         (calendarVersion: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
         let dayOfMonth = byte dateTimeOffset.Day
         let monthStamp =
@@ -265,19 +265,19 @@ module NightlyTests =
         
     // Month Rollover
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
-    let ``The calendar version nightly returns version with the MonthStamp Month when the MonthStamp Month is different from the calendar version Month``
+    let ``The calendar version Nightly returns version with the MonthStamp Month when the MonthStamp Month is different from the calendar version Month``
         (calendarVersion: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
         let dayOfMonth = byte dateTimeOffset.Day
         let monthStamp =
          if byte dateTimeOffset.Month <> calendarVersion.Month
           then { Year = uint16 dateTimeOffset.Year; Month = byte dateTimeOffset.Month }
-          else { Year = uint16 dateTimeOffset.Year; Month = byte (dateTimeOffset.AddMonths(1).Month) }          
+          else { Year = uint16 dateTimeOffset.Year; Month = byte (dateTimeOffset.AddMonths(1).Month) }
         let nightly = nightly calendarVersion (dayOfMonth, monthStamp)        
         test <@ nightly.Month = monthStamp.Month @>
     
     // Same Month & Year & Patch
-    [<Property>]
-    let ``The calendar version nightly returns version with the same Year, Month and Patch when MonthStamp has the same``
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``The calendar version Nightly returns version with the same Year, Month and Patch when MonthStamp has the same``
         (calendarVersion: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
         let dayOfMonth = byte dateTimeOffset.Day
         let monthStamp =
@@ -285,11 +285,42 @@ module NightlyTests =
         let nightly = nightly calendarVersion (dayOfMonth, monthStamp)
         test <@ nightly.Year = calendarVersion.Year && nightly.Month = calendarVersion.Month && nightly.Patch = calendarVersion.Patch @>
         
-    // Build is always updated | Any CalendarVersion | Any valid (dayOfMonth, monthStamp) | The returned version's Build property is Some(Build.Nightly(...)).
+    // Build is always updated
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``The calendar version Nightly always updates its build``
+        (calendarVersion: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
+        let dayOfMonth = byte dateTimeOffset.Day
+        let monthStamp = { Year = uint16 dateTimeOffset.Year; Month = byte dateTimeOffset.Month }
+        let nightly = nightly calendarVersion (dayOfMonth, monthStamp)        
+        test <@ calendarVersion.Build <> nightly.Build @>    
     
-    // Build Day is correct | Any CalendarVersion | A tuple with dayOfMonth | The Day field within the new Build matches the input dayOfMonth.
+    // Build Day is correct
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``The calendar version Nightly returns a build with the correct day of month``
+        (calendarVersion: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
+        // prepare data
+        let dayOfMonth =
+            if calendarVersion.Build
+               |> Option.map (function | Build.Nightly { Day = day } -> day = byte dateTimeOffset.Day)
+               |> Option.defaultValue false
+            then byte (dateTimeOffset.AddDays(1).Day)
+            else byte dateTimeOffset.Day
+        let monthStamp = { Year = uint16 dateTimeOffset.Year; Month = byte dateTimeOffset.Month }
+        let nightly = nightly calendarVersion (dayOfMonth, monthStamp)
+        test <@ nightly.Build |> Option.map (function | Build.Nightly { Day = day } -> day = dayOfMonth) |> Option.defaultValue false @>    
     
-    // Patch is reset | A cv where Patch is Some(...) | ms date is after cv date (new year or month) | The returned version's Patch is None.
+    // Patch is reset
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``The calendar version Nightly resets Patch when the MonthStamp Year and/or Month is different from the calendar version``
+        (calendarVersion: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
+        let dayOfMonth = byte dateTimeOffset.Day
+        let monthStamp =
+         if uint16 dateTimeOffset.Year <> calendarVersion.Year ||
+            byte dateTimeOffset.Month <> calendarVersion.Month            
+          then { Year = uint16 dateTimeOffset.Year; Month = byte dateTimeOffset.Month }
+          else { Year = uint16 (dateTimeOffset.AddYears(1).Year); Month = byte (dateTimeOffset.AddMonths(1).Month) }
+        let nightly = nightly calendarVersion (dayOfMonth, monthStamp)
+        test <@ nightly.Patch.IsNone @>
         
 module ToStringPropertiesTests =
     let private dotSegments (s:string) = s.Split '.'
