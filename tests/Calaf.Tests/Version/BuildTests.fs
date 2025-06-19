@@ -79,14 +79,14 @@ module NightlyTests =
         test <@ number' = NumberStartValue @>
         
     // New day resets the number to the NumberStartValue
-    [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyBuild>; typeof<Arbitrary.Day.inRangeByteDay> |])>]
-    let ``Nightly build with different day resets the number to NumberStartValue`` (nightlyBuild: Build, dayOfMonth: DayOfMonth) =
-        let currentDay = match nightlyBuild with | Build.Nightly { Day = day } -> day
-        let currentDay =
-            if currentDay <> dayOfMonth
-            then dayOfMonth
-            else Day.LowerDayBoundary
-        let nightlyBuild' = nightly (Some nightlyBuild) currentDay
-        let number' = match nightlyBuild' with | Build.Nightly { Number = number } -> number
-        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyBuild> |])>]
+    let ``Nightly build with different day resets the number to NumberStartValue``
+        (nightlyBuild: Build, dateTimeOffset: System.DateTimeOffset) =
+        let nightlyBuildDay = match nightlyBuild with | Build.Nightly { Day = day } -> day
+        let dayOfMonth =
+            if nightlyBuildDay = byte dateTimeOffset.Day
+            then dateTimeOffset.AddDays(1).Day |> byte
+            else dateTimeOffset.Day |> byte
+        let nightlyBuild' = nightly (Some nightlyBuild) dayOfMonth
+        let number' = match nightlyBuild' with | Build.Nightly { Number = number } -> number        
         test <@ number' = NumberStartValue @>
