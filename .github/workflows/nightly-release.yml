@@ -40,11 +40,11 @@ jobs:
 
             - name: Feed
               run: |
-                dotnet nuget add source \
+                dotnet nuget add source "${{ env.FEED }}" \
                   --username "${{ github.actor }}" \
                   --password "${{ secrets.FEED_PAT }}" \
                   --store-password-in-clear-text \
-                  --name github "${{ env.FEED }}"
+                  --name github
   
             - name: Tool
               run: |
