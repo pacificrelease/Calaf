@@ -62,8 +62,8 @@ module Generator =
 
         gen {
             let! pick = Gen.frequency [
-                1, genRandomWhitespace 1  20                         |> Gen.map System.String
-                1, genSpacesOnly       1  20                         |> Gen.map System.String
+                2, genRandomWhitespace 1  20                         |> Gen.map System.String
+                2, genSpacesOnly       1  20                         |> Gen.map System.String
                 1, genRandomWhitespace 21 (int System.Byte.MaxValue) |> Gen.map System.String
                 1, genSpacesOnly       21 (int System.Byte.MaxValue) |> Gen.map System.String
             ]
@@ -72,8 +72,8 @@ module Generator =
         
     let genValidDateTimeOffset =
         gen {
-            let min = System.DateTimeOffset(System.DateTime(int Calaf.Domain.Year.lowerYearBoundary, 1, 1, 0, 0, 0, System.DateTimeKind.Utc))
-            let max   = System.DateTimeOffset(System.DateTime(int Calaf.Domain.Year.upperYearBoundary, 12, 31, 23, 59, 59, 999, System.DateTimeKind.Utc))
+            let min   = System.DateTimeOffset(System.DateTime(int Calaf.Domain.Year.LowerYearBoundary, 1, 1, 0, 0, 0, System.DateTimeKind.Utc))
+            let max   = System.DateTimeOffset(System.DateTime(int Calaf.Domain.Year.UpperYearBoundary, 12, 31, 23, 59, 59, 999, System.DateTimeKind.Utc))
             let daysMax = int (max - min).TotalDays
             let! days     = Gen.choose (0, daysMax)
             let! seconds  = Gen.choose (0, 86_399)
@@ -323,17 +323,17 @@ module Generator =
         let inRangeUInt16Year =
             gen {
                 let! year =
-                    Gen.choose(int Calaf.Domain.Year.lowerYearBoundary,
-                               int Calaf.Domain.Year.upperYearBoundary)
+                    Gen.choose(int Calaf.Domain.Year.LowerYearBoundary,
+                               int Calaf.Domain.Year.UpperYearBoundary)
                 return uint16 year
             }
             
         let outOfRangeUInt16Year =
             let outOfRangeCornerCases = Gen.elements [ 0;
-                                                       int Calaf.Domain.Year.lowerYearBoundary - 1
-                                                       int Calaf.Domain.Year.upperYearBoundary + 1 ]
-            let outOfRangeLowerThaAllowed = Gen.choose(int System.UInt16.MinValue, int Calaf.Domain.Year.lowerYearBoundary - 1)
-            let outOfRangeGreaterThaAllowed = Gen.choose(int Calaf.Domain.Year.upperYearBoundary + 1, int System.UInt16.MaxValue)
+                                                       int Calaf.Domain.Year.LowerYearBoundary - 1
+                                                       int Calaf.Domain.Year.UpperYearBoundary + 1 ]
+            let outOfRangeLowerThaAllowed = Gen.choose(int System.UInt16.MinValue, int Calaf.Domain.Year.LowerYearBoundary - 1)
+            let outOfRangeGreaterThaAllowed = Gen.choose(int Calaf.Domain.Year.UpperYearBoundary + 1, int System.UInt16.MaxValue)
             gen {
                 let! year = Gen.frequency [
                     1, outOfRangeCornerCases
@@ -345,8 +345,8 @@ module Generator =
             
         let leadingZeroOutOfRangeStringYear =
             gen {
-                let! lowerThanAllowed   = Gen.choose(1, int Calaf.Domain.Year.lowerYearBoundary - 1)
-                let! greaterThanAllowed = Gen.choose(int Calaf.Domain.Year.upperYearBoundary + 1, int System.UInt16.MaxValue)
+                let! lowerThanAllowed   = Gen.choose(1, int Calaf.Domain.Year.LowerYearBoundary - 1)
+                let! greaterThanAllowed = Gen.choose(int Calaf.Domain.Year.UpperYearBoundary + 1, int System.UInt16.MaxValue)
                 let! year = Gen.frequency [
                     1, Gen.constant lowerThanAllowed
                     1, Gen.constant greaterThanAllowed
@@ -528,7 +528,7 @@ module Generator =
         let calendarVersionShortMonthStamp =
             let genCalVer =
                 gen { 
-                    let! year  = Gen.choose(int Calaf.Domain.Year.lowerYearBoundary, int Calaf.Domain.Year.upperYearBoundary - 1)
+                    let! year  = Gen.choose(int Calaf.Domain.Year.LowerYearBoundary, int Calaf.Domain.Year.UpperYearBoundary - 1)
                     let! month = Gen.choose(1, 11)       
                     return { Year = uint16 year; Month = byte month; Patch = None; Build = None }
                 }            
@@ -609,11 +609,11 @@ module Generator =
         let inRangeDateTimeOffset =
             gen {
                 let min = System.DateTimeOffset(
-                    int Calaf.Domain.Year.lowerYearBoundary,
+                    int Calaf.Domain.Year.LowerYearBoundary,
                     int Calaf.Domain.Month.LowerMonthBoundary,
                     int Calaf.Domain.Day.LowerDayBoundary, 0, 0, 0, System.TimeSpan.Zero)
                 let max = System.DateTimeOffset(
-                    int Calaf.Domain.Year.upperYearBoundary,
+                    int Calaf.Domain.Year.UpperYearBoundary,
                     int Calaf.Domain.Month.UpperMonthBoundary,
                     int Calaf.Domain.Day.UpperDayBoundary, 23, 59, 59, 999, System.TimeSpan.Zero)
                 let dateTimeOffset = Bogus.Faker().Date.BetweenOffset(min, max)
@@ -627,7 +627,7 @@ module Generator =
                     int Calaf.Domain.Month.LowerMonthBoundary,
                     int Calaf.Domain.Day.LowerDayBoundary, 0, 0, 0, System.TimeSpan.Zero)
                 let max = System.DateTimeOffset(
-                    int Calaf.Domain.Year.lowerYearBoundary - 1,
+                    int Calaf.Domain.Year.LowerYearBoundary - 1,
                     int Calaf.Domain.Month.UpperMonthBoundary,
                     int Calaf.Domain.Day.UpperDayBoundary, 23, 59, 59, 999, System.TimeSpan.Zero)
                 let dateTimeOffset = Bogus.Faker().Date.BetweenOffset(min, max)

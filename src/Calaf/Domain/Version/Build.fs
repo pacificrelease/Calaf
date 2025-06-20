@@ -15,15 +15,10 @@ let private NightlyBuildType = "nightly"
 let internal BuildTypeDayDivider = "."
 [<Literal>]
 let internal DayNumberDivider = "."
-
 let internal AllowedNightlyBuildRegexString =
     $@"^(?i:({NightlyBuildType}))\{BuildTypeDayDivider}(0?[1-9]|1[0-9]|2[0-9]|3[01])\{DayNumberDivider}(0*[1-9][0-9]{{0,4}})$"
-let internal AllowedNightlyBuildRegexString2 =
-    @"^(?i:(nightly))\.(0?[1-9]|1[0-9]|2[0-9]|3[01])\.([0-9]{1,3})$"
-let private buildRegex =
-    System.Text.RegularExpressions.Regex(AllowedNightlyBuildRegexString)
-let private buildRegex2 =
-    System.Text.RegularExpressions.Regex(AllowedNightlyBuildRegexString2)
+let private matchBuildRegex (input: string) =
+    System.Text.RegularExpressions.Regex.Match(input, AllowedNightlyBuildRegexString)
     
 type private BuildSegments = {
     BuildType:   string
@@ -43,7 +38,7 @@ let private tryCreateBuildSegments (buildString: string) =
         then
             return None
         else
-            let m = buildRegex.Match buildString
+            let m = matchBuildRegex buildString
             if m.Success
             then
                 let segments =

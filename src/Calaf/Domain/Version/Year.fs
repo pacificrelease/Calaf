@@ -3,14 +3,14 @@
 open Calaf.Domain.DomainTypes.Values
 
 [<Literal>]
-let lowerYearBoundary = 1970us
+let internal LowerYearBoundary = 1970us
 [<Literal>]
-let upperYearBoundary = 9999us
+let internal UpperYearBoundary = 9999us
 
 let private tryParseYear (year: System.UInt16) : Result<Year, DomainError> =    
     match year with
-    | year when year >= lowerYearBoundary &&
-                year <= upperYearBoundary -> Ok year
+    | year when year >= LowerYearBoundary &&
+                year <= UpperYearBoundary -> Ok year
     | _ -> YearOutOfRange |> Error
 
 let tryParseFromInt32 (year: System.Int32) : Result<Year, DomainError> =
