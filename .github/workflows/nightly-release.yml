@@ -7,7 +7,7 @@ on:
         - cron: '5 0 * * *'
           
 permissions:
-    contents: read
+    contents: write
     packages: write
           
 concurrency:
@@ -16,6 +16,7 @@ concurrency:
     
 env:
     DOTNET_VERSION: '9.0.x'
+    FEED: "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
 
 jobs:    
     nightly-release:
@@ -24,27 +25,20 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v4
+              with:
+                fetch-depth: 0
   
             - name: Setup
               uses: actions/setup-dotnet@v4
               with:
                 dotnet-version: ${{ env.DOTNET_VERSION }}
-  
-            - name: Restore
-              run: dotnet restore ${{ vars.SOLUTION }}
-  
-            - name: Build
-              run: dotnet build ${{ vars.SOLUTION }} --no-restore --configuration ${{ vars.CONFIGURATION }}
-  
-            - name: Hash
+              
+            - name: Configure
               run: |
-                echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-  
-            - name: Pack
-              run: |
-                dotnet pack ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --version-suffix nightly-${{ env.hash }} --output ./nupkgs
-                
-            - name: Source
+                git config --global user.name ${{ vars.GIT_USERNAME }}
+                git config --global user.email ${{ vars.GIT_EMAIL }}
+
+            - name: Feed
               run: |
                 dotnet nuget add source \
                   --username "${{ github.actor }}" \
@@ -52,6 +46,34 @@ jobs:
                   --store-password-in-clear-text \
                   --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
   
+            - name: Tool
+              run: |
+                if dotnet tool list -g | grep -q Calaf; then
+                  dotnet tool update -g --add-source ${{ env.FEED }} Calaf
+                else
+                  dotnet tool install -g --add-source ${{ env.FEED }} Calaf
+                fi
+              continue-on-error: true
+
+            - name: Version
+              run: |
+                calaf make nightly
+              
+            - name: Push Version Changes
+              run: |
+                git push
+                git push --tags
+  
+            - name: Restore
+              run: dotnet restore ${{ vars.SOLUTION }}
+  
+            - name: Build
+              run: dotnet build ${{ vars.SOLUTION }} --no-restore --configuration ${{ vars.CONFIGURATION }}
+  
+            - name: Pack
+              run: |
+                dotnet pack ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --output ./nupkgs
+                
             - name: Publish
               run: |
                 dotnet nuget push ./nupkgs/*.nupkg \
