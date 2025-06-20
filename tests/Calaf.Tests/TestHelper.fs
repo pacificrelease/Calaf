@@ -46,25 +46,28 @@ module Generator =
         }
         
     let genWhiteSpacesString =
-        let genMixed l h =
+        let whitespaceChars = [' '; '\t'; '\n'; '\r']
+
+        let genRandomWhitespace minLen maxLen =
             gen {
-                let chars = [' '; '\t'; '\n'; '\r']
-                let! length = Gen.choose(l, h)
-                return! Gen.arrayOfLength length (Gen.elements chars)
+                let! length = Gen.choose(minLen, maxLen)
+                return! Gen.arrayOfLength length (Gen.elements whitespaceChars)
             }
-        let genWhiteSpaceOnly l h =
+        
+        let genSpacesOnly minLen maxLen =
             gen {
-                let! length = Gen.choose(l, h)
+                let! length = Gen.choose(minLen, maxLen)
                 return! Gen.arrayOfLength length (Gen.constant ' ')
             }
+
         gen {
-            let! choice = Gen.frequency [
-                1, genMixed 1 20 |> Gen.map System.String
-                1, genWhiteSpaceOnly 1 20 |> Gen.map System.String
-                1, genMixed 21 (int System.Byte.MaxValue) |> Gen.map System.String
-                1, genWhiteSpaceOnly 21 (int System.Byte.MaxValue) |> Gen.map System.String
+            let! pick = Gen.frequency [
+                1, genRandomWhitespace 1  20                         |> Gen.map System.String
+                1, genSpacesOnly       1  20                         |> Gen.map System.String
+                1, genRandomWhitespace 21 (int System.Byte.MaxValue) |> Gen.map System.String
+                1, genSpacesOnly       21 (int System.Byte.MaxValue) |> Gen.map System.String
             ]
-            return choice
+            return pick
         }
         
     let genValidDateTimeOffset =
@@ -75,10 +78,7 @@ module Generator =
             let! days     = Gen.choose (0, daysMax)
             let! seconds  = Gen.choose (0, 86_399)
             let! millis   = Gen.choose (0, 999)
-            let utcInstant = min
-                                 .AddDays(float days)
-                                 .AddSeconds(float seconds)
-                                 .AddMilliseconds(float millis)
+            let utcInstant = min.AddDays(float days).AddSeconds(float seconds).AddMilliseconds(float millis)
             let! offsetMinutes = Gen.elements [ for m in -14*60 .. 30 .. 14*60 -> m ]
             let offset = System.TimeSpan.FromMinutes(float offsetMinutes)
             return utcInstant.ToOffset(offset)
