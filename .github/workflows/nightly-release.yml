@@ -42,28 +42,33 @@ jobs:
               run: |
                 dotnet nuget add source \
                   --username "${{ github.actor }}" \
-                  --password "${{ vars.FEED_PAT }}" \
+                  --password "${{ secrets.FEED_PAT }}" \
                   --store-password-in-clear-text \
-                  --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+                  --name github "${{ env.FEED }}"
   
             - name: Tool
               run: |
                 if dotnet tool list -g | grep -q Calaf; then
-                  dotnet tool update -g --add-source "${{ env.FEED }}" Calaf
+                  dotnet tool update -g --source github Calaf
                 else
-                  dotnet tool install -g --add-source "${{ env.FEED }}" Calaf
+                  dotnet tool install -g --source github Calaf
                 fi
               continue-on-error: true
 
             - name: Version
+              id: version
               run: |
                 calaf make nightly
-              
-            - name: Push Version Changes
+                echo "VERSION_CHANGED=$(git diff --quiet HEAD || echo 'true')" >> $GITHUB_OUTPUT
+              continue-on-error: false
+            
+            - name: Push
+              if: steps.version.outputs.VERSION_CHANGED == 'true'
               run: |
                 git push
                 git push --tags
-  
+              continue-on-error: false
+            
             - name: Restore
               run: dotnet restore ${{ vars.SOLUTION }}
   
@@ -77,6 +82,7 @@ jobs:
             - name: Publish
               run: |
                 dotnet nuget push ./nupkgs/*.nupkg \
-                  --source "${{ env.FEED }}" \
+                  --source github \
                   --api-key "${{ secrets.GITHUB_TOKEN }}" \
                   --skip-duplicate
+              continue-on-error: true
