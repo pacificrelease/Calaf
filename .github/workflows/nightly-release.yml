@@ -35,23 +35,23 @@ jobs:
               
             - name: Configure
               run: |
-                git config --global user.name ${{ vars.GIT_USERNAME }}
-                git config --global user.email ${{ vars.GIT_EMAIL }}
+                git config --global user.name "${{ vars.GIT_USERNAME }}"
+                git config --global user.email "${{ vars.GIT_EMAIL }}"
 
             - name: Feed
               run: |
                 dotnet nuget add source \
                   --username "${{ github.actor }}" \
-                  --password "${{ secrets.GITHUB_TOKEN }}" \
+                  --password "${{ vars.FEED_PAT }}" \
                   --store-password-in-clear-text \
                   --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
   
             - name: Tool
               run: |
                 if dotnet tool list -g | grep -q Calaf; then
-                  dotnet tool update -g --add-source ${{ env.FEED }} Calaf
+                  dotnet tool update -g --add-source "${{ env.FEED }}" Calaf
                 else
-                  dotnet tool install -g --add-source ${{ env.FEED }} Calaf
+                  dotnet tool install -g --add-source "${{ env.FEED }}" Calaf
                 fi
               continue-on-error: true
 
@@ -77,6 +77,6 @@ jobs:
             - name: Publish
               run: |
                 dotnet nuget push ./nupkgs/*.nupkg \
-                  --source github \
+                  --source "${{ env.FEED }}" \
                   --api-key "${{ secrets.GITHUB_TOKEN }}" \
                   --skip-duplicate
