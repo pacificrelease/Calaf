@@ -40,19 +40,14 @@ jobs:
 
             - name: Feed
               run: |
-                dotnet nuget add source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
-                  --username "${{ github.actor }}" \
+                dotnet nuget add source "${{ env.FEED }}" \
+                  --username "${{ github.repository_owner }}" \
                   --password "${{ secrets.GITHUB_TOKEN }}" \
                   --store-password-in-clear-text \
                   --name github
   
             - name: Tool
-              run: |
-                if dotnet tool list -g | grep -q calaf; then
-                  dotnet tool update -g --source github calaf
-                else
-                  dotnet tool install -g --source github calaf
-                fi
+              run: dotnet tool install --global Calaf
               continue-on-error: true
 
             - name: Version
