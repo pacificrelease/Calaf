@@ -30,7 +30,7 @@ let internal versionPrefixes =
 let internal tagVersionPrefix =
     $"{versionPrefixes[10]}"
 let internal commitVersionPrefix =    
-    $"{ChoreCommitPrefix}{versionPrefixes[2]}"
+    $"{ChoreCommitPrefix}{versionPrefixes[2]} "
     
 type private CleanString = string
 type private VersionSegments = {
