@@ -56,7 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Argu" Version="6.2.5" />
-    <PackageReference Include="FsToolkit.ErrorHandling" Version="4.18.0" />
+    <PackageReference Include="FsToolkit.ErrorHandling" Version="5.0.0" />
     <PackageReference Include="LibGit2Sharp" Version="0.31.0" />
   </ItemGroup>
 </Project>
