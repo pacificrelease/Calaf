@@ -27,7 +27,8 @@ let internal versionPrefixes =
       "version";  "ver";  "v"
       "Version";  "Ver";  "V" ]
     |> List.sortByDescending String.length
-let internal tagVersionPrefix = versionPrefixes[10]
+let internal tagVersionPrefix =
+    $"{versionPrefixes[10]} "
 let internal commitVersionPrefix =    
     $"{ChoreCommitPrefix}{versionPrefixes[2]}"
     
