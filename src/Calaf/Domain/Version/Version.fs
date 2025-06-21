@@ -13,7 +13,7 @@ let internal MonthPatchDivider =
     "."
 [<Literal>]
 let internal CalendarVersionBuildTypeDivider =
-    "."
+    "+"
 let private AllowedVersionRegexString =
     $@"^(\d+)\.(\d+)(?:\.(\d+))?(?:\{CalendarVersionBuildTypeDivider}(.*))?$"
 [<Literal>]
@@ -153,14 +153,14 @@ let toString (calVer: CalendarVersion) : string =
 /// </summary>
 /// <param name="calVer">Calendar version to convert</param>
 let toTagName (calVer: CalendarVersion) : string =    
-    tagVersionPrefix + toString calVer
+    $"{tagVersionPrefix}{toString calVer}"
 
 /// <summary>
 /// Converts a CalendarVersion to a Git commit message string.
 /// </summary>
 /// <param name="calVer">Calendar version to convert</param>
 let toCommitMessage (calVer: CalendarVersion) : string =
-    $"{commitVersionPrefix} {calVer |> toString}"
+    $"{commitVersionPrefix}{toString calVer}"
     
 let nightly (currentVersion: CalendarVersion) (dayOfMonth: DayOfMonth, monthStamp: MonthStamp) : CalendarVersion =
     let build = Build.nightly currentVersion.Build dayOfMonth |> Some
