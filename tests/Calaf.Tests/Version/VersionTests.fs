@@ -428,3 +428,10 @@ module ToCommitMessagePropertiesTests =
         let commitMsg = calendarVersion |> toCommitMessage
         not (System.String.IsNullOrWhiteSpace commitMsg) &&
         commitMsg.Contains commitVersionPrefix
+        
+    // Commit string contains 2 whitespace
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``Commit message contains two whitespaces on its format`` (calendarVersion: CalendarVersion) =
+        let commitMsg = toCommitMessage calendarVersion
+        let spaceCount = commitMsg |> Seq.filter (fun c -> c = ' ') |> Seq.length
+        test <@ spaceCount = 2 @>
