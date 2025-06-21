@@ -13,7 +13,7 @@ let internal MonthPatchDivider =
     "."
 [<Literal>]
 let internal CalendarVersionBuildTypeDivider =
-    "-"
+    "."
 let private AllowedVersionRegexString =
     $@"^(\d+)\.(\d+)(?:\.(\d+))?(?:\{CalendarVersionBuildTypeDivider}(.*))?$"
 [<Literal>]
