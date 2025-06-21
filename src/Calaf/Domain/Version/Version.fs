@@ -14,14 +14,13 @@ let internal MonthPatchDivider =
 [<Literal>]
 let internal CalendarVersionBuildTypeDivider =
     "-"
-[<Literal>]
 let private AllowedVersionRegexString =
-    @"^(\d+)\.(\d+)(?:\.(\d+))?(?:-(.*))?$"
+    $@"^(\d+)\.(\d+)(?:\.(\d+))?(?:\{CalendarVersionBuildTypeDivider}(.*))?$"
 [<Literal>]
 let private ChoreCommitPrefix =
     "chore: "
-let private versionRegex =
-    System.Text.RegularExpressions.Regex(AllowedVersionRegexString)    
+let private matchVersionRegex (input: string) =
+    System.Text.RegularExpressions.Regex.Match(input, AllowedVersionRegexString)
 let internal versionPrefixes =
     [ "version."; "ver."; "v."
       "Version."; "Ver."; "V."
@@ -63,7 +62,7 @@ let private tryCleanString (bareString: string) =
         bareString.Trim() |> String.filter (asciiWs.Contains >> not) |> Some
             
 let private tryCreateVersionSegments (cleanString: CleanString) =
-    let m = versionRegex.Match(cleanString)
+    let m = matchVersionRegex cleanString
     if m.Success
     then
         {
