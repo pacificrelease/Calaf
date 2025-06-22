@@ -6,13 +6,13 @@ open Calaf.Application
 open Calaf.Contracts
 
 type MakeFlag =    
-    | [<CliPrefix(CliPrefix.None)>] Release
+    | [<CliPrefix(CliPrefix.None)>] Stable
     | [<CliPrefix(CliPrefix.None)>] Nightly
     interface IArgParserTemplate with
         member flag.Usage =
             match flag with
-            | Release -> "Make a Release version"
-            | Nightly -> "Make a Nightly version"
+            | Stable  -> "Make a stable version"
+            | Nightly -> "Make a nightly version"
 
 type InputCommand = 
     | [<SubCommand; CliPrefix(CliPrefix.None)>] Make of ParseResults<MakeFlag>
@@ -25,8 +25,8 @@ module internal ConsoleInputGateway =
     let toMakeType (flags: MakeFlag list) =
         match flags with
             | [ Nightly ] -> Ok MakeType.Nightly
-            | [ Release ] -> Ok MakeType.Release
-            | [] -> Ok MakeType.Release
+            | [ Stable ] -> Ok MakeType.Stable
+            | [] -> Ok MakeType.Stable
             | _  ->
                 $"{flags.Head}"
                 |> BuildFlagNotRecognized
@@ -43,7 +43,7 @@ module internal ConsoleInput =
         | [ Make makeFlagsResults ] ->
             makeFlagsResults.GetAllResults()
             |> ConsoleInputGateway.toMakeType |> Result.map Command.Make
-        | [] -> MakeType.Release |> Command.Make |> Ok
+        | [] -> MakeType.Stable |> Command.Make |> Ok
         | commands ->
             $"{commands.Head}"
             |> CommandNotRecognized

@@ -39,7 +39,10 @@ module internal Make =
             let (TagQuantity tagCount) = settings.TagsToLoad
             let! repo = context.Git.tryRead path tagCount Version.versionPrefixes timeStamp                
             let! workspace,  _ = Workspace.tryCapture (dir, repo)                        |> Result.mapError CalafError.Domain
-            let! workspace', _ = Workspace.tryNightly workspace (dayOfMonth, monthStamp) |> Result.mapError CalafError.Domain                
+            let! workspace', _ =
+                Version.nightly workspace.Version (dayOfMonth, monthStamp)
+                |> Workspace.tryRelease workspace
+                |> Result.mapError CalafError.Domain
             let profile = Workspace.profile workspace'
             do! profile.Projects
                 |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
@@ -54,7 +57,7 @@ module internal Make =
             return workspace'
         }
         
-    let private release path context settings =
+    let private stable path context settings =
         result {
             let timeStamp = context.Clock.now()            
             let! monthStamp = timeStamp |> DateSteward.tryCreateMonthStamp |> Result.mapError CalafError.Domain                
@@ -63,7 +66,10 @@ module internal Make =
             let (TagQuantity tagCount) = settings.TagsToLoad
             let! repo = context.Git.tryRead path tagCount Version.versionPrefixes timeStamp                
             let! workspace,  _ = Workspace.tryCapture (dir, repo)          |> Result.mapError CalafError.Domain
-            let! workspace', _ = Workspace.tryRelease workspace monthStamp |> Result.mapError CalafError.Domain                
+            let! workspace', _ =
+                Version.stable workspace.Version monthStamp
+                |> Workspace.tryRelease workspace
+                |> Result.mapError CalafError.Domain                
             let profile = Workspace.profile workspace'
             do! profile.Projects
                 |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
@@ -108,8 +114,8 @@ module internal Make =
                     match strategy with
                     | MakeType.Nightly ->
                         return! nightly path context settings
-                    | MakeType.Release ->
-                        return! release path context settings
+                    | MakeType.Stable ->
+                        return! stable path context settings
             }
         let path = directory path
         let result = apply path arguments context settings

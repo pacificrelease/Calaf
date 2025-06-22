@@ -74,23 +74,12 @@ let tryProfile (project: Project) =
         Some { AbsolutePath = m.AbsolutePath; Content = xmlContent }
     | _ -> None
     
-let tryNightly (project: VersionedProject) (nextVersion: CalendarVersion) =
+let tryRelease (project: VersionedProject) (nextVersion: CalendarVersion) =
     match project with
     | { Version = CalVer _; Content = Xml xmlContent } ->
         Version.toString nextVersion
         |> XmlSchema.tryUpdateVersionElement xmlContent
         |> Result.map (fun xmlContent' ->
             { project with Content = Xml xmlContent'; Version = CalVer nextVersion })
-    | { Version = CalVer _; Content = Json _ } ->
-        Ok project
-    | _ ->
-        Error ProjectUnsupported
-    
-let tryRelease (project: VersionedProject) (nextVersion: CalendarVersion) =    
-    match project.Content with
-    | Xml xmlContent ->
-        Version.toString nextVersion
-        |> XmlSchema.tryUpdateVersionElement xmlContent
-        |> Result.map (fun upc ->
-            { project with Content = Xml upc; Version = CalVer nextVersion })
-    | Json _ -> Ok project
+    | { Version = CalVer _; Content = Json _ } -> Ok project
+    | _ -> Error ProjectUnsupported

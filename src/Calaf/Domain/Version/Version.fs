@@ -14,13 +14,13 @@ let internal MonthPatchDivider =
 [<Literal>]
 let internal CalendarVersionBuildTypeDivider =
     "-"
-let private AllowedVersionRegexString =
+let private allowedVersionRegexString =
     $@"^(\d+)\.(\d+)(?:\.(\d+))?(?:\{CalendarVersionBuildTypeDivider}(.*))?$"
 [<Literal>]
 let private ChoreCommitPrefix =
     "chore: "
 let private matchVersionRegex (input: string) =
-    System.Text.RegularExpressions.Regex.Match(input, AllowedVersionRegexString)
+    System.Text.RegularExpressions.Regex.Match(input, allowedVersionRegexString)
 let internal versionPrefixes =
     [ "version."; "ver."; "v."
       "Version."; "Ver."; "V."
@@ -186,7 +186,7 @@ let nightly (currentVersion: CalendarVersion) (dayOfMonth: DayOfMonth, monthStam
               Patch = currentVersion.Patch
               Build = build }
 
-let release (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : CalendarVersion =
+let stable (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : CalendarVersion =
     let changeYear = shouldChange (currentVersion.Year, monthStamp.Year)
     if changeYear
     then

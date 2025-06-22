@@ -195,7 +195,7 @@ module TryMaxTests =
         calendarVersions
         |> Array.forall (fun v -> compare v max.Value <= 0)
         
-module ReleaseTests =
+module StableTests =
     let private increment (monthStamp: MonthStamp, incr: MonthStampIncrement ) =
         match incr with
         | Year -> { monthStamp with Year = monthStamp.Year + 1us }
@@ -203,40 +203,40 @@ module ReleaseTests =
         | Both -> { Year = monthStamp.Year + 1us; Month = monthStamp.Month + byte 1 }
     
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
-    let ``CalendarVersion release Year when the MonthStamp Year is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement) =
+    let ``CalendarVersion stable release Year when the MonthStamp Year is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement) =
         let monthStamp = increment (monthStamp, incr)
-        let release = release calVer monthStamp
+        let release = stable calVer monthStamp
         release.Year = uint16 monthStamp.Year
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
-    let ``CalendarVersion release Month when the MonthStamp Month is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement) =
+    let ``CalendarVersion stable release Month when the MonthStamp Month is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement) =
         let monthStamp = increment (monthStamp, incr)
-        let release = release calVer monthStamp
+        let release = stable calVer monthStamp
         release.Month = byte monthStamp.Month
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatchMonthStamp> |])>]
-    let ``Three-part CalendarVersion release only Patch when the MonthStamp has the same Year and Month`` (calVer: CalendarVersion, monthStamp: MonthStamp) =
-        let release = release calVer monthStamp
+    let ``Three-part CalendarVersion stable release only Patch when the MonthStamp has the same Year and Month`` (calVer: CalendarVersion, monthStamp: MonthStamp) =
+        let release = stable calVer monthStamp
         release.Patch > calVer.Patch &&
         release.Month = calVer.Month &&
         release.Year = calVer.Year
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatchMonthStamp> |])>]
     let ``CalendarVersion preserves Year and Month when the MonthStamp has the same Year and Month`` (calVer: CalendarVersion, monthStamp: MonthStamp)=
-        let release = release calVer monthStamp
+        let release = stable calVer monthStamp
         release.Year = calVer.Year &&
         release.Month = calVer.Month
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatchMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
     let ``Three-part CalendarVersion reset Patch when the MonthStamp Year and/or Month is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement)=
         let timeStamp = increment (monthStamp, incr)
-        let release = release calVer timeStamp
+        let release = stable calVer timeStamp
         release.Patch = None
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionShortMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
     let ``Two-part CalendarVersion still has None Patch when the MonthStamp Year and/or Month is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement) =
         let monthStamp = increment (monthStamp, incr)
-        let release = release calVer monthStamp
+        let release = stable calVer monthStamp
         release.Patch = None
         
 module NightlyTests =

@@ -2,7 +2,7 @@
 
 // Incoming commands
 type MakeType =
-    | Release
+    | Stable
     | Nightly
     
 type Command =

@@ -59,14 +59,14 @@ let tryProfile suite =
     | StandardSet (_, projects) ->
         projects |> Seq.map tryProfile |> Seq.choose id |> Seq.toList
         
-let tryNightly (suite: Suite) (nextVersion: CalendarVersion) =
+let tryRelease (suite: Suite) (nextVersion: CalendarVersion) =
     result {
         match suite with
         | StandardSet (version, projects) ->
             let nightly project =
                 match project with
                 | Versioned { Version = CalVer _ } as Versioned p ->
-                    tryNightly p nextVersion
+                    tryRelease p nextVersion
                     |> Result.map (fun p -> let p = Versioned p in (Some p, p))
                 | otherProject ->
                     Ok (None, otherProject)
@@ -79,28 +79,5 @@ let tryNightly (suite: Suite) (nextVersion: CalendarVersion) =
                 
             let suite' = StandardSet (nextVersion, suiteProjects)
             let event  = Events.toSuiteReleased suite' version nightlyProjects            
-            return (suite' , [event])
-    }
-    
-let tryRelease (suite: Suite) (nextVersion: CalendarVersion) =
-    result {
-        match suite with
-        | StandardSet (version, projects) ->
-            let release project =
-                match project with
-                | Versioned { Version = CalVer _ } as Versioned p ->
-                    tryRelease p nextVersion
-                    |> Result.map (fun p -> let p = Versioned p in (Some p, p))
-                | otherProject ->
-                    Ok (None, otherProject)
-            
-            let! result = projects |> List.traverseResultM release
-            let releasedProjects, suiteProjects =
-                result
-                |> List.unzip
-                |> fun (releasedSuiteProjects, allSuiteProjects) -> (List.choose id releasedSuiteProjects, allSuiteProjects)
-                
-            let suite' = StandardSet (nextVersion, suiteProjects)
-            let event  = Events.toSuiteReleased suite' version releasedProjects            
             return (suite' , [event])
     }
