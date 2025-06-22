@@ -16,7 +16,7 @@ let internal BuildTypeDayDivider = "."
 [<Literal>]
 let internal DayNumberDivider = "."
 let private AllowedNightlyBuildRegexString =
-    $@"^(?i:({NightlyBuildType}))\{BuildTypeDayDivider}(0?[1-9]|1[0-9]|2[0-9]|3[01])\{DayNumberDivider}(0*[1-9][0-9]{{0,4}})$"
+    $@"^(?i:({NightlyBuildType}))\{BuildTypeDayDivider}([1-9]|[12][0-9]|3[0-1])\{DayNumberDivider}([1-9][0-9]{{0,4}})$"
 let private matchBuildRegex (input: string) =
     System.Text.RegularExpressions.Regex.Match(input, AllowedNightlyBuildRegexString)
     
@@ -65,7 +65,7 @@ let private tryParseFromBuildSegments segments =
 let toString (build: Build) : string =    
     match build with
     | Build.Nightly { Day = day; Number = number } ->
-        $"{NightlyBuildType}{BuildTypeDayDivider}{day:D2}{DayNumberDivider}{number:D3}"
+        $"{NightlyBuildType}{BuildTypeDayDivider}{day}{DayNumberDivider}{number}"
     
 let tryParseFromString (build: string) =
     build |> tryCreateBuildSegments |> Result.bind tryParseFromBuildSegments 

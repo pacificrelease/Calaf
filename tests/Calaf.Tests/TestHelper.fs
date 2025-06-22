@@ -174,10 +174,7 @@ module Generator =
                 let! nightly = Gen.elements ["nightly"; "NIGHTLY"; "Nightly"; "NiGhTlY"; "nIgHtLy"; "NIGHTly"; "nightLY"]
                 let! day = genDay
                 let! number = genUInt16
-                let sb = System.Text.StringBuilder($"{nightly}{Calaf.Domain.Build.BuildTypeDayDivider}{day:D2}{Calaf.Domain.Build.DayNumberDivider}")
-                let! shouldTrait = Gen.elements [true; false]
-                let sb = if shouldTrait then sb.Append($"{number:D5}") else sb.Append($"{number}")
-                return sb.ToString()
+                return $"{nightly}{Calaf.Domain.Build.BuildTypeDayDivider}{day}{Calaf.Domain.Build.DayNumberDivider}{number}"
             }            
             
         let wrongString =
