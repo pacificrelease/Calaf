@@ -7,16 +7,12 @@
     <ToolCommandName>calaf</ToolCommandName>
 
     <Version>2025.6.9</Version>
-    <FileVersion>$(Version)</FileVersion>
     
     <Title>Calaf</Title>
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
-  <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
-  </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="InternalExtensions.fs" />
