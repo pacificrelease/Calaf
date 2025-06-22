@@ -11,19 +11,7 @@ open Calaf.Tests
 module TryParseFromStringTests =
     [<Fact>]
     let ``Nightly CalVer version with patch string parses to it corresponding values`` () =
-        //let version = "2023.10"
-        let version = $"2023.10{CalendarVersionBuildTypeDivider}weekly.31.001"
-        //let version = "2023.10+nightly.31.001"
-        //let version = "2023.10-nightly.31.06+0fefe3f"
-        //let version = "2023.10-nightly.06+0fefe3fnightly.06+0fefe3f"
-        //let version = "2023.10.1-nightly.06+0fefe3f"
-        
-        //let version = "2023.10.1"
-        //let version = "2023.10.1-nightly"        
-        
-        //let version = "2023.10.1--nightly--."
-        //let version = "2023.10.1-nightly.--..2023.10.1--nightly--"        
-        
+        let version = $@"2023.10{CalendarVersionBuildTypeDivider}nightly.31.001"        
         let version = version |> tryParseFromString
         test <@ version |> Option.map _.IsCalVer |> Option.defaultValue false @>
        
