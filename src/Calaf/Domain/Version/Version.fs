@@ -180,10 +180,11 @@ let nightly (currentVersion: CalendarVersion) (dayOfMonth: DayOfMonth, monthStam
               Month = monthStamp.Month
               Patch = None
               Build = build }
-        else
+        else            
+            let patch = currentVersion.Patch |> Patch.release |> Some
             { Year = currentVersion.Year
               Month = currentVersion.Month
-              Patch = currentVersion.Patch
+              Patch = patch
               Build = build }
 
 let stable (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : CalendarVersion =
@@ -203,7 +204,10 @@ let stable (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : Calendar
               Patch = None
               Build = None }
         else
-            let patch = currentVersion.Patch |> Patch.release |> Some
+            let patch =
+                if currentVersion.Build.IsSome
+                then currentVersion.Patch
+                else currentVersion.Patch |> Patch.release |> Some
             { Year = currentVersion.Year
               Month = currentVersion.Month
               Patch = patch

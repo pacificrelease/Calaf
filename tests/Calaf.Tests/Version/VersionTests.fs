@@ -201,6 +201,21 @@ module StableTests =
         | Year -> { monthStamp with Year = monthStamp.Year + 1us }
         | Month -> { monthStamp with Month = monthStamp.Month + byte 1 }
         | Both -> { Year = monthStamp.Year + 1us; Month = monthStamp.Month + byte 1 }
+        
+    [<Fact>]
+    let ``Nightly CalendarVersion when release to stable keeps the same Year, Month and Patch when the year and month are the same`` () =        
+        let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us }) }
+        let monthStamp = { Year = 2023us; Month = 10uy }
+        let release = stable calVer monthStamp
+        test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch = calVer.Patch && release.Build.IsNone @>
+        
+    [<Fact>]
+    let ``Nightly CalendarVersion when release to stable change the Year, Month and removes Patch when the year and month are differed`` () =        
+        let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us }) }
+        let monthStamp = { Year = 2023us; Month = 11uy }
+        let release = stable calVer monthStamp
+        test <@ release.Year = monthStamp.Year && release.Month = monthStamp.Month && release.Patch.IsNone && release.Build.IsNone @>
+        
     
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
     let ``CalendarVersion stable release Year when the MonthStamp Year is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement) =
@@ -240,6 +255,29 @@ module StableTests =
         release.Patch = None
         
 module NightlyTests =
+    [<Fact>]
+    let ``Stable CalendarVersion when release to nightly keeps the same Year, Month, increase Patch and adds Build when the year and month are the same`` () =        
+        let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = None }
+        let dayOfMonth = 31uy
+        let monthStamp = { Year = 2023us; Month = 10uy }
+        let release = nightly calVer (dayOfMonth, monthStamp)
+        test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch > calVer.Patch && release.Build.IsSome @>
+        
+    [<Fact>]
+    let ``Stable CalendarVersion when release to nightly keeps the same Year, Month, adds Patch and adds Build when the year and month are the same and Patch is none`` () =        
+        let calVer = { Year = 2023us; Month = 10uy; Patch = None; Build = None }
+        let dayOfMonth = 7uy
+        let monthStamp = { Year = 2023us; Month = 10uy }
+        let release = nightly calVer (dayOfMonth, monthStamp)
+        test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch.IsSome && release.Build.IsSome @>
+        
+    [<Fact>]
+    let ``Nightly CalendarVersion when release to stable change the Year, Month and removes Patch when the year and month are differed`` () =        
+        let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us }) }
+        let monthStamp = { Year = 2023us; Month = 11uy }
+        let release = stable calVer monthStamp
+        test <@ release.Year = monthStamp.Year && release.Month = monthStamp.Month && release.Patch.IsNone && release.Build.IsNone @>
+        
     //Year Rollover
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
     let ``The calendar version Nightly returns version with the MonthStamp Year when the MonthStamp Year is different from the calendar version Year``
@@ -266,13 +304,13 @@ module NightlyTests =
     
     // Same Month & Year & Patch
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
-    let ``The calendar version Nightly returns version with the same Year, Month and Patch when MonthStamp has the same``
+    let ``The calendar version Nightly returns version with the same Year, Month and increased Patch when MonthStamp has the same``
         (calendarVersion: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
         let dayOfMonth = byte dateTimeOffset.Day
         let monthStamp =
             { Year = calendarVersion.Year; Month = calendarVersion.Month }
         let nightly = nightly calendarVersion (dayOfMonth, monthStamp)
-        test <@ nightly.Year = calendarVersion.Year && nightly.Month = calendarVersion.Month && nightly.Patch = calendarVersion.Patch @>
+        test <@ nightly.Year = calendarVersion.Year && nightly.Month = calendarVersion.Month && nightly.Patch > calendarVersion.Patch @>
         
     // Build is always updated
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
