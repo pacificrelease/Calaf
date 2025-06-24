@@ -272,10 +272,18 @@ module NightlyTests =
         test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch.IsSome && release.Build.IsSome @>
         
     [<Fact>]
-    let ``Nightly CalendarVersion when release to nightly keeps the same Year, Month, the same Patch, the same Day and increases Build's Number when the year, month, patch, day are the same`` () =        
-        let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us }) }
+    let ``Nightly CalendarVersion when release to nightly keeps the same Year, Month, the same Patch, the same Day and increases Build's Number when the year, month, patch, day are the same`` () =
         let dayOfMonth = 31uy
+        let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = dayOfMonth; Number = 1us }) }        
         let monthStamp = { Year = 2023us; Month = 10uy }
+        let release = nightly calVer (dayOfMonth, monthStamp)
+        test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch = calVer.Patch && release.Build.IsSome @>
+        
+    [<Fact>]
+    let ``Nightly CalendarVersion when release to nightly changes day/number and keeps the same Patch when the same Year, Month, Patch and the day is differed`` () =        
+        let calVer = { Year = 2023us; Month = 11uy; Patch = Some 4u; Build = Some (Build.Nightly { Day = 1uy; Number = 1us }) }
+        let dayOfMonth = 2uy
+        let monthStamp = { Year = 2023us; Month = 11uy }
         let release = nightly calVer (dayOfMonth, monthStamp)
         test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch = calVer.Patch && release.Build.IsSome @>
         
@@ -285,7 +293,7 @@ module NightlyTests =
         let dayOfMonth = 2uy
         let monthStamp = { Year = 2023us; Month = 11uy }
         let release = nightly calVer (dayOfMonth, monthStamp)
-        test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch > calVer.Patch && release.Build.IsSome @>
+        test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch = calVer.Patch && release.Build.IsSome @>
         
     [<Fact>]
     let ``Nightly CalendarVersion when release to nightly keeps the same Year, Month, Day and increases Build's Number when the year, month, day are the same`` () =        

@@ -182,11 +182,10 @@ let nightly (currentVersion: CalendarVersion) (dayOfMonth: DayOfMonth, monthStam
               Build = build }
         else
             match currentVersion with
-            | { Patch = currentVersionPatch; Build = Some (Build.Nightly { Day = day; Number = number }) }
-                when dayOfMonth = day ->
+            | { Build = Some (Build.Nightly _) } ->
                 { Year = currentVersion.Year
                   Month = currentVersion.Month
-                  Patch = currentVersionPatch
+                  Patch = currentVersion.Patch
                   Build = build }
             | _ ->
                 { Year = currentVersion.Year
