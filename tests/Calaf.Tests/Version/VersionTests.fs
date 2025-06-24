@@ -210,12 +210,18 @@ module StableTests =
         test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch = calVer.Patch && release.Build.IsNone @>
         
     [<Fact>]
-    let ``Nightly CalendarVersion when release to stable change the Year, Month and removes Patch when the year and month are differed`` () =        
+    let ``Nightly CalendarVersion when release to stable changes the Year, Month and removes Patch when the year and month are differed`` () =        
         let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us }) }
         let monthStamp = { Year = 2023us; Month = 11uy }
         let release = stable calVer monthStamp
         test <@ release.Year = monthStamp.Year && release.Month = monthStamp.Month && release.Patch.IsNone && release.Build.IsNone @>
         
+    [<Fact>]
+    let ``Stable CalendarVersion when release to stable changes Patch, when the year and month are the same`` () =
+        let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = None }        
+        let monthStamp = { Year = 2023us; Month = 10uy }
+        let release = stable calVer monthStamp
+        test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch > calVer.Patch && release.Build.IsNone @>        
     
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
     let ``CalendarVersion stable release Year when the MonthStamp Year is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement) =
