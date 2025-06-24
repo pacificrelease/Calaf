@@ -132,6 +132,19 @@ let private tryParse (cleanVersion: CleanString) : Version option =
     match segments with
     | Some segments -> segments |> tryCreateVersion |> Result.toOption |> Option.flatten
     | None -> Some Unsupported
+    
+let private patchRelease (currentVersion: CalendarVersion) (build: Build option) =
+    match currentVersion with
+    | { Build = Some (Build.Nightly _) } ->
+        { Year = currentVersion.Year
+          Month = currentVersion.Month
+          Patch = currentVersion.Patch
+          Build = build }
+    | _ ->
+        { Year = currentVersion.Year
+          Month = currentVersion.Month
+          Patch = currentVersion.Patch |> Patch.release |> Some
+          Build = build }
 
 let toString (calVer: CalendarVersion) : string =
     let calVerStr =
@@ -165,66 +178,42 @@ let toCommitMessage (calVer: CalendarVersion) : string =
     
 let nightly (currentVersion: CalendarVersion) (dayOfMonth: DayOfMonth, monthStamp: MonthStamp) : CalendarVersion =
     let build = Build.nightly currentVersion.Build dayOfMonth |> Some
-    let shouldChangeYear = shouldChange (currentVersion.Year, monthStamp.Year)
-    if shouldChangeYear
+    let yearRelease = shouldChange (currentVersion.Year, monthStamp.Year)
+    if yearRelease
     then
         { Year = monthStamp.Year
           Month = monthStamp.Month
           Patch = None
           Build = build }
     else
-        let changeMonth = shouldChange (currentVersion.Month, monthStamp.Month)
-        if changeMonth
+        let monthRelease = shouldChange (currentVersion.Month, monthStamp.Month)
+        if monthRelease
         then
             { Year = currentVersion.Year
               Month = monthStamp.Month
               Patch = None
               Build = build }
         else
-            match currentVersion with
-            | { Build = Some (Build.Nightly _) } ->
-                { Year = currentVersion.Year
-                  Month = currentVersion.Month
-                  Patch = currentVersion.Patch
-                  Build = build }
-            | _ ->
-                { Year = currentVersion.Year
-                  Month = currentVersion.Month
-                  Patch = currentVersion.Patch |> Patch.release |> Some
-                  Build = build }
+            patchRelease currentVersion build
 
 let stable (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : CalendarVersion =
-    let changeYear = shouldChange (currentVersion.Year, monthStamp.Year)
-    if changeYear
+    let yearRelease = shouldChange (currentVersion.Year, monthStamp.Year)
+    if yearRelease
     then
         { Year = monthStamp.Year
           Month = monthStamp.Month
           Patch = None
           Build = None }
     else
-        let changeMonth = shouldChange (currentVersion.Month, monthStamp.Month)
-        if changeMonth
+        let monthRelease = shouldChange (currentVersion.Month, monthStamp.Month)
+        if monthRelease
         then
             { Year = currentVersion.Year
               Month = monthStamp.Month
               Patch = None
               Build = None }
         else
-            match currentVersion with
-            | { Build = Some (Build.Nightly _) } ->
-                { Year = currentVersion.Year
-                  Month = currentVersion.Month
-                  Patch = currentVersion.Patch
-                  Build = None }
-            | _ ->
-                let patch =
-                    if currentVersion.Build.IsSome
-                    then currentVersion.Patch
-                    else currentVersion.Patch |> Patch.release |> Some
-                { Year = currentVersion.Year
-                  Month = currentVersion.Month
-                  Patch = patch
-                  Build = None }
+            patchRelease currentVersion None
 
 let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
     match versions with
