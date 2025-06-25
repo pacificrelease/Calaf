@@ -90,7 +90,7 @@ module internal Make =
     let private input (console: IConsole) (arguments: string[]) =
         Arguments.read console arguments
         
-    let output (console: IConsole) result =
+    let private output (console: IConsole) result =
         match result with
         | Error error ->
             Console.error console error
@@ -99,7 +99,7 @@ module internal Make =
             Console.ok console workspace
             result
             
-    let exit result =
+    let private exit result =
         match result with
         | Ok    _ -> 0
         | Error _ -> 1
