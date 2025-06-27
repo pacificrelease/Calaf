@@ -51,10 +51,13 @@ type DirectoryInfo = {
     Projects: ProjectXmlFileInfo list
 }
 
-type WorkspaceSummary = {
+
+// Summaries
+type ReleaseSummary = {    
     Directory: string
-    TotalProjectsCount: int
     VersionedProjectsCount: int
-    PreviousVersion: string
-    CurrentVersion: string
+    TotalProjectsCount: int
+    UsesGit: bool
+    PreviousRelease: string
+    CurrentRelease: string
 }
