@@ -37,14 +37,6 @@ jobs:
               run: |
                 git config --global user.name "${{ vars.GIT_USERNAME }}"
                 git config --global user.email "${{ vars.GIT_EMAIL }}"
-
-            - name: Feed
-              run: |
-                dotnet nuget add source "${{ env.FEED }}" \
-                  --username "${{ github.repository_owner }}" \
-                  --password "${{ secrets.GITHUB_TOKEN }}" \
-                  --store-password-in-clear-text \
-                  --name github
   
             - name: Tool
               run: dotnet tool install --global Calaf
