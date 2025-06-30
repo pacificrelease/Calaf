@@ -2,19 +2,34 @@
 
 # Calaf
 
-Calaf is a command-line tool for managing the Calendar Versioning (https://calver.org) of .NET projects, written in F#.
+Calaf is a command-line tool for managing Calendar Versioning ([CalVer](https://calver.org)) of .NET projects, written in F#.
 
-## Supported Scheme
+## Features
+
+- Automatic versioning based on current date
+- Support for stable and nightly builds
+- Works with csproj/fsproj projects formats
+- Tool installation via dotnet CLI
+
+## Requirements
+
+- .NET 8.0 or later
+
+## Versioning Scheme
 
 The current supported scheme has a format:
 
-| Stable part     | Build part          |
-|-----------------|---------------------|
-| YYYY.MM(.PATCH) | (-BUILD.DAY.NUMBER) |
+| Component part | Build            | Example      | Required |
+|----------------|------------------|--------------|----------|
+| Year           | YYYY             | 2025         | ✅       |
+| Month          | MM               | 1, 12        | ✅       |
+| Patch          | PATCH            | 1, 2, 999    | ❌       |
+| Build          | BUILD.DAY.NUMBER | nightly.15.1 | ❌       |
 
-YYYY - A year of the version. Essential.
 
-MM - A month of the version. Essential.
+YYYY - A year of the version. Always required.
+
+MM - A month of the version. Always required.
 
 PATCH - A patch number in the version's month.
 
@@ -22,34 +37,34 @@ BUILD.DAY.NUMBER - A type of the build with the day of the month, and number of 
 
 Currently available type of the build is: `nightly`
 
+## Installation
+
+```bash
+dotnet tool install -g Calaf
+```
+
 ## Getting Started
 
-To get started, please initialize your projects first by adding the version tag to your projects.
+1. Add init version to your projects files:
 
 ```xml
 <PropertyGroup>
-    <Version>2025.1</Version>
+    <Version>2025.6</Version>
 </PropertyGroup>
 ```
 
-then, install the Calaf:
+2. Manage project versioning using Calaf:
 
 ```bash
-dotnet tool install -g Calaf 
+# Create stable version (e.g., 2025.6 → 2025.6.1)
+calaf make stable
 ```
 
-Done. You can easily bump the version by the command:
-
-## Commands
+Updates the project version to a stable Calendar Version based on the current UTC date.
 
 ```bash
-calaf make stable 
-```
-
-Creates a stable Calendar Version according to the running environment UTC date and time.
-
-```bash
+# Create nightly build (e.g., 2025.6 → 2025.6.1-nightly.30.1)
 calaf make nightly 
 ```
 
-Creates a nightly build of the project. This command will update the version of the project to a nightly version, which is based on the current date.
+Updates the project version to a nightly build version based on the current date and day of the month.
