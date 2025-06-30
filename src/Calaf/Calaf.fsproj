@@ -14,8 +14,14 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/pacificrelease/Calaf</PackageProjectUrl>    
     <Authors>mikhailovdv</Authors>
     <Owners>pacificrelease</Owners>
+
+    <RepositoryUrl>https://github.com/pacificrelease/Calaf</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
   </PropertyGroup>
   
   <ItemGroup>
