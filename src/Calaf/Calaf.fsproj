@@ -12,6 +12,10 @@
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Authors>mikhailovdv</Authors>
+    <Owners>pacificrelease</Owners>
   </PropertyGroup>
   
   <ItemGroup>
