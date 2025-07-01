@@ -1,4 +1,4 @@
-name: GitHub Package Nightly Release
+name: GitHub Nightly Release
 
 on:
     workflow_dispatch:

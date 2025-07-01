@@ -1,4 +1,4 @@
-name: NuGet Package Stable Release
+name: NuGet Stable Release
 
 on:
   workflow_dispatch:

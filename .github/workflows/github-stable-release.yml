@@ -1,4 +1,4 @@
-name: GitHub Package Stable Release
+name: GitHub Stable Release
 
 on:
   workflow_dispatch:
