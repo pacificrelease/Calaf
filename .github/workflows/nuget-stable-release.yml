@@ -22,7 +22,7 @@ env:
 
 jobs:
   publish:
-    name: NuGet Stable Release
+    name: Stable Release
     runs-on: ubuntu-latest
     
     steps:
