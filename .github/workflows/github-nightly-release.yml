@@ -45,16 +45,31 @@ jobs:
             - name: Version
               id: version
               run: |
+                BEFORE_COMMIT=$(git rev-parse HEAD)
+                
                 calaf make nightly
-                echo "VERSION_CHANGED=$(git diff --quiet HEAD || echo 'true')" >> $GITHUB_OUTPUT
+                
+                AFTER_COMMIT=$(git rev-parse HEAD)
+                
+                if ! git diff --quiet || ! git diff --cached --quiet || [ "$BEFORE_COMMIT" != "$AFTER_COMMIT" ];
+                then
+                  echo "VERSION_CHANGED=true" >> $GITHUB_OUTPUT
+                  echo "Changes detected"
+                else
+                  echo "VERSION_CHANGED=false" >> $GITHUB_OUTPUT
+                  echo "No changes detected"
+                fi
               continue-on-error: false
             
             - name: Push
               if: steps.version.outputs.VERSION_CHANGED == 'true'
               run: |
-                git push
-                git push --tags
-              continue-on-error: true
+                git status
+                git log --oneline -2
+                git tag -l | tail -3
+                
+                git push origin ${{ github.ref_name }}
+                git push origin --tags
             
             - name: Restore
               run: dotnet restore ${{ vars.SOLUTION }}
