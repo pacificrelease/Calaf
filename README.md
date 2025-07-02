@@ -19,23 +19,18 @@ Calaf is a command-line tool for managing Calendar Versioning ([CalVer](https://
 
 The current supported scheme has a format:
 
-| Component part | Build            | Example      | Required |
-|----------------|------------------|--------------|----------|
-| Year           | YYYY             | 2025         | ✅       |
-| Month          | MM               | 1, 12        | ✅       |
-| Patch          | PATCH            | 1, 2, 999    | ❌       |
-| Build          | BUILD.DAY.NUMBER | nightly.15.1 | ❌       |
+YYYY.MM[.PATCH][.BUILD.DAY.NUMBER]
 
 
-YYYY - A year of the version. Always required.
+Where:
 
-MM - A month of the version. Always required.
+YYYY - A full year of the version, always required - e.g., `2001`, `2025`, `2150`. Values range: `1970` to `9999`.
 
-PATCH - A patch number in the version's month.
+MM - A short month of the version, always required - e.g., `1`, `6`, `12`. Values range: `1` to `12`.
 
-BUILD.DAY.NUMBER - A type of the build with the day of the month, and number of the build in this day.
+PATCH - A patch number in the version's month optional - e.g., `1`, `2`, `3`. Values range: `1` to`4294967295`.
 
-Currently available type of the build is: `nightly`
+BUILD.DAY.NUMBER - A type of the build with the day of the month, and number of the build in this day, optional - e.g., `nightly.2.1`, `nightly.31.2`. Values range: `nightly` for nightly builds, and `1` to `99999` for the number of builds in a day.
 
 ## Installation
 
