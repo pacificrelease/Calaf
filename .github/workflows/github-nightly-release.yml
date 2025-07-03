@@ -61,15 +61,15 @@ jobs:
                 fi
               continue-on-error: false
             
-            - name: Push
-              if: steps.version.outputs.VERSION_CHANGED == 'true'
-              run: |
-                git status
-                git log --oneline -2
-                git tag -l | tail -3
-                
-                git push origin ${{ github.ref_name }}
-                git push origin --tags
+#            - name: Push
+#              if: steps.version.outputs.VERSION_CHANGED == 'true'
+#              run: |
+#                git status
+#                git log --oneline -2
+#                git tag -l | tail -3
+#                
+#                git push origin ${{ github.ref_name }}
+#                git push origin --tags
             
             - name: Restore
               run: dotnet restore ${{ vars.SOLUTION }}
