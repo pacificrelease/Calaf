@@ -63,6 +63,8 @@
     <Compile Include="Infrastructure\Adapters\Clock.fs" />    
     <Compile Include="Infrastructure\Adapters\Console.fs" />    
     <Compile Include="Infrastructure\Context.fs" />    
+    <Compile Include="Response.fs" />    
+    <Compile Include="Cli.fs" />    
     <Compile Include="Program.fs" />    
   </ItemGroup>
   <ItemGroup>
