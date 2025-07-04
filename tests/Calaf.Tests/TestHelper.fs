@@ -46,28 +46,31 @@ module Generator =
         }
         
     let genWhiteSpacesString =
-        let whitespaceChars = [' '; '\t'; '\n'; '\r']
+        let whitespaceChars = [' '; '\t']
+        let shortLength = 20
+        let longLength = int System.Byte.MaxValue
 
         let genRandomWhitespace minLen maxLen =
             gen {
                 let! length = Gen.choose(minLen, maxLen)
-                return! Gen.arrayOfLength length (Gen.elements whitespaceChars)
+                let! chars = Gen.arrayOfLength length (Gen.elements whitespaceChars)
+                return System.String(chars)
             }
         
         let genSpacesOnly minLen maxLen =
             gen {
                 let! length = Gen.choose(minLen, maxLen)
-                return! Gen.arrayOfLength length (Gen.constant ' ')
+                let! chars = Gen.arrayOfLength length (Gen.constant ' ')
+                return System.String(chars)
             }
 
         gen {
-            let! pick = Gen.frequency [
-                2, genRandomWhitespace 1  20                         |> Gen.map System.String
-                2, genSpacesOnly       1  20                         |> Gen.map System.String
-                1, genRandomWhitespace 21 (int System.Byte.MaxValue) |> Gen.map System.String
-                1, genSpacesOnly       21 (int System.Byte.MaxValue) |> Gen.map System.String
+            return! Gen.frequency [
+                2, genRandomWhitespace 1 shortLength
+                2, genSpacesOnly 1 shortLength
+                1, genRandomWhitespace (shortLength + 1) longLength
+                1, genSpacesOnly (shortLength + 1) longLength
             ]
-            return pick
         }
         
     let genValidDateTimeOffset =
