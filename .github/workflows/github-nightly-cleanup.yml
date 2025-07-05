@@ -1,44 +1,56 @@
-name: GitHub Nightly Release
+name: GitHub Nightly Cleanup
 
 on:
-    workflow_dispatch:
-      
+    workflow_dispatch:      
     schedule:
         - cron: ${{ vars.NIGHTLY_CRON_CLEANUP }}
-          
+
+permissions:
+  contents: read
+  packages: write
+  
 concurrency:
     group: nightly
     cancel-in-progress: true
     
 env:
-    PATH: "/user/packages/nuget/Calaf/versions"
-    VERSION: "2022-11-28"
-    ACCEPT: "application/vnd.github+json"
+    PACKAGE_PATH: "/user/packages/nuget/Calaf/versions"
+    API_VERSION: "2022-11-28"
+    ACCEPT_HEADER: "application/vnd.github+json"
 
 jobs:    
-    nightly-release:
-        name: Nightly Release
+    nightly-cleanup:
+        name: Cleanup Old Packages
         runs-on: ubuntu-latest
         steps:
+          - name: Checkout
+            uses: actions/checkout@v4
+            
           - name: Cleanup Old Packages
             run: |
               # Get package versions sorted by creation date (newest first)
               VERSIONS=$(gh api \
-                -H "Accept: ${{ env.ACCEPT }} " \
-                -H "X-GitHub-Api-Version: ${{ env.VERSION }}" \
-                ${{ env.PATH }} \
-                --jq '.[] | select(.metadata.container == null) | {id: .id, created_at: .created_at}' \
-                | jq -s 'sort_by(.created_at) | reverse | .[5:] | .[].id')
-              
+                -H "Accept: ${{ env.ACCEPT_HEADER }}" \
+                -H "X-GitHub-Api-Version: ${{ env.API_VERSION }}" \
+                "${{ env.PACKAGE_PATH }}" \
+                --jq '.[] | select(.metadata.container == null) | .id' \
+                | jq -s 'sort | .[5:][]')
+
               # Delete packages beyond the 5 most recent
-              for VERSION_ID in $VERSIONS; do
-                echo "Deleting package version ID: $VERSION_ID"
-                gh api \
-                  --method DELETE \
-                  -H "Accept: ${{ env.ACCEPT }}" \
-                  -H "X-GitHub-Api-Version: ${{ env.VERSION }}" \
-                  ${{ env.PATH }}/$VERSION_ID
-              done
+              if [ -n "$VERSIONS" ]; then
+                echo "$VERSIONS" | while read VERSION_ID; do
+                  if [ -n "$VERSION_ID" ]; then
+                    echo "Deleting package version ID: $VERSION_ID"
+                    gh api \
+                      --method DELETE \
+                      -H "Accept: ${{ env.ACCEPT_HEADER }}" \
+                      -H "X-GitHub-Api-Version: ${{ env.API_VERSION }}" \
+                      "${{ env.PACKAGE_PATH }}/$VERSION_ID"
+                  fi
+                done
+              else
+                echo "No packages to delete"
+              fi
             env:
               GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            continue-on-error: false
+            continue-on-error: true
