@@ -3,7 +3,7 @@ name: GitHub Nightly Release
 on:
     workflow_dispatch:      
     schedule:
-        - cron: ${{ vars.NIGHTLY_CRON_RELEASE }}
+        - cron: "5 0 * * *"
           
 permissions:
     contents: write
