@@ -30,7 +30,7 @@ module internal Cli =
         | _  ->
             $"{flags.Head}" |> buildFlagNotRecognized |> Error   
                 
-    let private toCommand (inputCommandResult: ParseResults<InputCommand>) =
+    let private map (inputCommandResult: ParseResults<InputCommand>) =
         let inputCommands = inputCommandResult.GetAllResults()
         match inputCommands with
         | [ Make makeFlagsResults ] ->
@@ -50,4 +50,4 @@ module internal Cli =
             argumentsFatal exn.Message |> Error            
     
     let tryCreateCommand (args: string[]) =
-        args |> parse |> Result.bind toCommand
+        args |> parse |> Result.bind map

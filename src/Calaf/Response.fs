@@ -10,22 +10,24 @@ type ReleaseSummary = {
     CurrentRelease: string
 }
 
-
 // Response
-type internal Response = {
+type internal CliResponse = {
     ExitCode: int
     Text: string
 }
 
 module internal CliErrorResponses =
-    let buildFlagNotRecognized (flag: string) : Response =
-        { ExitCode = 1
+    [<Literal>]
+    let MisuseShellCommandOrInvalidArgumentsExitCode = 2
+    
+    let buildFlagNotRecognized (flag: string) : CliResponse =
+        { ExitCode = MisuseShellCommandOrInvalidArgumentsExitCode
           Text = $"Build flag '{flag}' is not recognized." }
         
-    let commandNotRecognized (command: string) : Response =
-        { ExitCode = 1
+    let commandNotRecognized (command: string) : CliResponse =
+        { ExitCode = MisuseShellCommandOrInvalidArgumentsExitCode
           Text = $"Command '{command}' is not recognized." }
         
-    let argumentsFatal (message: string) : Response =
-        { ExitCode = 1
+    let argumentsFatal (message: string) : CliResponse =
+        { ExitCode = MisuseShellCommandOrInvalidArgumentsExitCode
           Text = message }
