@@ -4,7 +4,7 @@ on:
     workflow_dispatch:
       
     schedule:
-        - cron: ${{ vars.NIGHTLY_CRON_RELEASE }}
+        - cron: '${{ vars.NIGHTLY_CRON_RELEASE }}'
           
 permissions:
     contents: write

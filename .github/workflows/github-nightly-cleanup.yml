@@ -3,7 +3,7 @@ name: GitHub Nightly Cleanup
 on:
     workflow_dispatch:      
     schedule:
-        - cron: ${{ vars.NIGHTLY_CRON_CLEANUP }}
+        - cron: '${{ vars.NIGHTLY_CRON_CLEANUP }}'
 
 permissions:
   contents: read
