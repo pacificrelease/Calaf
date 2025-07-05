@@ -17,6 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		.github\workflows\github-stable-release.yml = .github\workflows\github-stable-release.yml
 		.github\workflows\nuget-stable-release.yml = .github\workflows\nuget-stable-release.yml
 		.github\workflows\github-nightly-release.yml = .github\workflows\github-nightly-release.yml
+		.github\workflows\github-nightly-cleanup.yml = .github\workflows\github-nightly-cleanup.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{612D13F6-F6D3-4F92-9B76-A11E2B0F7AAB}"

@@ -1,0 +1,44 @@
+name: GitHub Nightly Release
+
+on:
+    workflow_dispatch:
+      
+    schedule:
+        - cron: ${{ vars.NIGHTLY_CRON_CLEANUP }}
+          
+concurrency:
+    group: nightly
+    cancel-in-progress: true
+    
+env:
+    PATH: "/user/packages/nuget/Calaf/versions"
+    VERSION: "2022-11-28"
+    ACCEPT: "application/vnd.github+json"
+
+jobs:    
+    nightly-release:
+        name: Nightly Release
+        runs-on: ubuntu-latest
+        steps:
+          - name: Cleanup Old Packages
+            run: |
+              # Get package versions sorted by creation date (newest first)
+              VERSIONS=$(gh api \
+                -H "Accept: ${{ env.ACCEPT }} " \
+                -H "X-GitHub-Api-Version: ${{ env.VERSION }}" \
+                ${{ env.PATH }} \
+                --jq '.[] | select(.metadata.container == null) | {id: .id, created_at: .created_at}' \
+                | jq -s 'sort_by(.created_at) | reverse | .[5:] | .[].id')
+              
+              # Delete packages beyond the 5 most recent
+              for VERSION_ID in $VERSIONS; do
+                echo "Deleting package version ID: $VERSION_ID"
+                gh api \
+                  --method DELETE \
+                  -H "Accept: ${{ env.ACCEPT }}" \
+                  -H "X-GitHub-Api-Version: ${{ env.VERSION }}" \
+                  ${{ env.PATH }}/$VERSION_ID
+              done
+            env:
+              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            continue-on-error: false
