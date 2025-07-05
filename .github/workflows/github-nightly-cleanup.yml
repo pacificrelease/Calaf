@@ -3,11 +3,11 @@ name: GitHub Nightly Cleanup
 on:
     workflow_dispatch:      
     schedule:
-        - cron: '10 0 * * *'
+        - cron: ${{ vars.NIGHTLY_CRON_CLEANUP }}
 
 permissions:
-  contents: read
-  packages: write
+    contents: read
+    packages: write
   
 concurrency:
     group: nightly
@@ -17,6 +17,7 @@ env:
     PACKAGE_PATH: "/user/packages/nuget/Calaf/versions"
     API_VERSION: "2022-11-28"
     ACCEPT_HEADER: "application/vnd.github+json"
+    QTY: 2
 
 jobs:    
     nightly-cleanup:
@@ -34,7 +35,7 @@ jobs:
                 -H "X-GitHub-Api-Version: ${{ env.API_VERSION }}" \
                 "${{ env.PACKAGE_PATH }}" \
                 --jq '.[] | select(.metadata.container == null) | .id' \
-                | jq -s 'sort | .[5:][]')
+                | jq -s 'sort | .[${{ env.QTY }}:][]')
 
               # Delete packages beyond the 5 most recent
               if [ -n "$VERSIONS" ]; then
