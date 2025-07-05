@@ -64,3 +64,28 @@ calaf make nightly
 ```
 
 Updates the project version to a nightly build version based on the current date and day of the month.
+
+## Further Use
+
+The following example illustrates how to integrate Calaf into a CI/CD pipeline for automated Calendar Versioning:
+
+```yaml
+jobs:
+    release:
+        name: Release
+        runs-on: ubuntu-latest
+        steps:
+            ...
+            - name: Install Calaf
+              run: dotnet tool install -g Calaf
+
+            - name: Make Version
+              run: |
+                calaf make stable
+              continue-on-error: false
+            
+            - name: Push Version
+              run: |                
+                git push origin ${{ github.ref_name }}
+                git push origin --tags
+            ...
