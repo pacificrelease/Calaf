@@ -30,16 +30,15 @@ jobs:
           - name: Cleanup Old Packages
             run: |
               # Get package versions sorted by creation date (newest first)
-              VERSIONS=$(gh api \
+              VERSIONS_TO_DELETE=$(gh api \
                 -H "Accept: ${{ env.ACCEPT_HEADER }}" \
                 -H "X-GitHub-Api-Version: ${{ env.API_VERSION }}" \
                 "${{ env.PACKAGE_PATH }}" \
-                --jq '.[] | select(.metadata.container == null) | .id' \
-                | jq -s 'sort | .[${{ env.QTY }}:][]')
-
+                --jq '[.[] | select(.metadata.container == null) | {id: .id, created: .created_at}] | sort_by(.created) | reverse | .[${{ env.QTY }}:] | .[].id')
+              
               # Delete packages beyond the 5 most recent
-              if [ -n "$VERSIONS" ]; then
-                echo "$VERSIONS" | while read VERSION_ID; do
+              if [ -n "$VERSIONS_TO_DELETE" ]; then
+                echo "$VERSIONS_TO_DELETE" | while read VERSION_ID; do
                   if [ -n "$VERSION_ID" ]; then
                     echo "Deleting package version ID: $VERSION_ID"
                     gh api \
@@ -50,7 +49,7 @@ jobs:
                   fi
                 done
               else
-                echo "No packages to delete"
+                echo "No old packages to delete"
               fi
             env:
               GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
