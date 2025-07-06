@@ -50,14 +50,3 @@ type DirectoryInfo = {
     Directory: string
     Projects: ProjectXmlFileInfo list
 }
-
-
-// Summaries
-type ReleaseSummary = {    
-    Directory: string
-    VersionedProjectsCount: int
-    TotalProjectsCount: int
-    UsesGit: bool
-    PreviousRelease: string
-    CurrentRelease: string
-}
