@@ -1,5 +1,6 @@
 [![Build Solution](https://github.com/mikhailovdv/Calaf/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/mikhailovdv/Calaf/actions/workflows/build.yml)
 [![NuGet](https://img.shields.io/nuget/v/Calaf.svg)](https://www.nuget.org/packages/Calaf/)
+[![Nuget](https://img.shields.io/nuget/dt/Calaf.svg)](https://www.nuget.org/packages/Calaf/)
 
 # Calaf
 
