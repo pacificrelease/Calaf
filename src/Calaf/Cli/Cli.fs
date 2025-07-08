@@ -3,7 +3,7 @@
 open Argu
 
 open Calaf.Contracts
-open Calaf.CliErrorResponses
+open Calaf.CliError
 
 type private MakeFlag =    
     | [<CliPrefix(CliPrefix.None)>] Stable
@@ -21,8 +21,13 @@ type private InputCommand =
             match command with
             | Make _ -> "Make a workspace version."
     
-module internal Cli =    
-    let private reduceMakeFlags (flags: MakeFlag list) =
+module internal Cli =
+    let private toDirectory path =        
+        if System.String.IsNullOrWhiteSpace path
+        then "."
+        else path
+        
+    let private tryMakeFlag (flags: MakeFlag list) =
         match flags with
         | [ Nightly ] -> Ok MakeType.Nightly
         | [ Stable ]  -> Ok MakeType.Stable
@@ -30,12 +35,12 @@ module internal Cli =
         | _  ->
             $"{flags.Head}" |> buildFlagNotRecognized |> Error   
                 
-    let private map (inputCommandResult: ParseResults<InputCommand>) =
+    let private tryCommand (inputCommandResult: ParseResults<InputCommand>) =
         let inputCommands = inputCommandResult.GetAllResults()
         match inputCommands with
         | [ Make makeFlagsResults ] ->
             let makeFlags = makeFlagsResults.GetAllResults()
-            makeFlags |> reduceMakeFlags |> Result.map Command.Make
+            makeFlags |> tryMakeFlag |> Result.map Command.Make
         | [] -> MakeType.Stable |> Command.Make |> Ok
         | commands ->
             $"{commands.Head}" |> commandNotRecognized |> Error
@@ -50,4 +55,4 @@ module internal Cli =
             argumentsFatal exn.Message |> Error            
     
     let tryCreateCommand (args: string[]) =
-        args |> parse |> Result.bind map
+        args |> parse |> Result.bind tryCommand

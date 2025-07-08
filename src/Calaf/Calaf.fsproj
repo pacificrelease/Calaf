@@ -57,14 +57,15 @@
     <Compile Include="Application\Ports\Clock.fs" />
     <Compile Include="Application\Ports\Console.fs" />
     <Compile Include="Application\Context.fs" />
-    <Compile Include="Application\Make.fs" />
+    <Compile Include="Application\UseCases\Make.fs" />
+    <Compile Include="Application\Api.fs" />
     <Compile Include="Infrastructure\Adapters\Git.fs" />    
     <Compile Include="Infrastructure\Adapters\FileSystem.fs" />    
     <Compile Include="Infrastructure\Adapters\Clock.fs" />    
     <Compile Include="Infrastructure\Adapters\Console.fs" />    
     <Compile Include="Infrastructure\Context.fs" />    
-    <Compile Include="Response.fs" />    
-    <Compile Include="Cli.fs" />    
+    <Compile Include="Cli\Response.fs" />    
+    <Compile Include="Cli\Cli.fs" />    
     <Compile Include="Program.fs" />    
   </ItemGroup>
   <ItemGroup>

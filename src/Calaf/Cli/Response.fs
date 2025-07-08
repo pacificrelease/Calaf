@@ -11,12 +11,12 @@ type ReleaseSummary = {
 }
 
 // Response
-type internal CliResponse = {
+type CliResponse = {
     ExitCode: int
     Text: string
 }
 
-module internal CliErrorResponses =
+module CliError =
     [<Literal>]
     let MisuseShellCommandOrInvalidArgumentsExitCode = 2
     

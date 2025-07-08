@@ -5,7 +5,7 @@ open Xunit
 
 open Calaf.Contracts
 open Calaf.Cli
-open Calaf.CliErrorResponses
+open Calaf.CliError
 
 module CommandTests =
     [<Fact>]
