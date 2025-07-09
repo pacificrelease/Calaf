@@ -10,7 +10,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="TestHelper.fs" />
+    <Compile Include="TestDatakit\Internals.fs" />
+    <Compile Include="TestDatakit\Generator.fs" />
+    <Compile Include="TestDatakit\Arbitrary.fs" />
     <Compile Include="Version\DayTests.fs" />
     <Compile Include="Version\BuildTests.fs" />
     <Compile Include="Version\PatchTests.fs" />
@@ -24,7 +26,7 @@
     <Compile Include="Git\RepositoryTests.fs" />
     <Compile Include="MakeTests.fs" />
     <Compile Include="CliTests.fs" />
-    <Compile Include="Program.fs" />
+    <Compile Include="Program.fs" />    
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Bogus" Version="35.6.3" />

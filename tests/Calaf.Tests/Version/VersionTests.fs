@@ -195,13 +195,7 @@ module TryMaxTests =
         calendarVersions
         |> Array.forall (fun v -> compare v max.Value <= 0)
         
-module StableTests =
-    let private increment (monthStamp: MonthStamp, incr: MonthStampIncrement ) =
-        match incr with
-        | Year -> { monthStamp with Year = monthStamp.Year + 1us }
-        | Month -> { monthStamp with Month = monthStamp.Month + byte 1 }
-        | Both -> { Year = monthStamp.Year + 1us; Month = monthStamp.Month + byte 1 }
-        
+module StableTests =        
     [<Fact>]
     let ``Nightly CalendarVersion when release to stable keeps the same Year, Month and Patch when the year and month are the same`` () =        
         let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us }) }
@@ -223,40 +217,43 @@ module StableTests =
         let release = stable calVer monthStamp
         test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch > calVer.Patch && release.Build.IsNone @>        
     
-    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
-    let ``CalendarVersion stable release Year when the MonthStamp Year is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement) =
-        let monthStamp = increment (monthStamp, incr)
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``Stable CalendarVersion releases expected Year`` (calVer: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
+        let monthStamp = Internals.uniqueMonthStamp (calVer, dateTimeOffset)
         let release = stable calVer monthStamp
         release.Year = uint16 monthStamp.Year
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
-    let ``CalendarVersion stable release Month when the MonthStamp Month is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement) =
-        let monthStamp = increment (monthStamp, incr)
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
+    let ``CalendarVersion stable release Month when the MonthStamp Month is greater``
+        (calVer: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
+        let monthStamp = Internals.uniqueMonthStamp (calVer, dateTimeOffset)
         let release = stable calVer monthStamp
         release.Month = byte monthStamp.Month
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatchMonthStamp> |])>]
-    let ``Three-part CalendarVersion stable release only Patch when the MonthStamp has the same Year and Month`` (calVer: CalendarVersion, monthStamp: MonthStamp) =
-        let release = stable calVer monthStamp
-        release.Patch > calVer.Patch &&
-        release.Month = calVer.Month &&
-        release.Year = calVer.Year
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatch> |])>]
+    let ``Three-part CalendarVersion stable release only Patch when the MonthStamp has the same Year and Month`` (calVerWithPatch: CalendarVersion) =
+        let monthStamp = { Year = calVerWithPatch.Year; Month = calVerWithPatch.Month }
+        let release = stable calVerWithPatch monthStamp
+        release.Patch > calVerWithPatch.Patch &&
+        release.Month = calVerWithPatch.Month &&
+        release.Year = calVerWithPatch.Year
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatchMonthStamp> |])>]
-    let ``CalendarVersion preserves Year and Month when the MonthStamp has the same Year and Month`` (calVer: CalendarVersion, monthStamp: MonthStamp)=
-        let release = stable calVer monthStamp
-        release.Year = calVer.Year &&
-        release.Month = calVer.Month
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatch> |])>]
+    let ``CalendarVersion preserves Year and Month when the MonthStamp has the same Year and Month`` (calVerWithPatch: CalendarVersion)=
+        let monthStamp = { Year = calVerWithPatch.Year; Month = calVerWithPatch.Month }
+        let release = stable calVerWithPatch monthStamp
+        release.Year = calVerWithPatch.Year &&
+        release.Month = calVerWithPatch.Month
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatchMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
-    let ``Three-part CalendarVersion reset Patch when the MonthStamp Year and/or Month is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement)=
-        let timeStamp = increment (monthStamp, incr)
-        let release = stable calVer timeStamp
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatch> |])>]
+    let ``Three-part CalendarVersion reset Patch when the MonthStamp Year and/or Month is different`` (calVerWithPatch: CalendarVersion, dateTimeOffset: System.DateTimeOffset)=
+        let monthStamp = Internals.uniqueMonthStamp (calVerWithPatch, dateTimeOffset)
+        let release = stable calVerWithPatch monthStamp
         release.Patch = None
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionShortMonthStamp>; typeof<Arbitrary.monthStampIncrement> |])>]
-    let ``Two-part CalendarVersion still has None Patch when the MonthStamp Year and/or Month is greater`` ((calVer: CalendarVersion, monthStamp: MonthStamp), incr: MonthStampIncrement) =
-        let monthStamp = increment (monthStamp, incr)
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionShort> |])>]
+    let ``Two-part CalendarVersion still has None Patch when the MonthStamp Year and/or Month is greater`` (calVer: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
+        let monthStamp = Internals.uniqueMonthStamp (calVer, dateTimeOffset)
         let release = stable calVer monthStamp
         release.Patch = None
         
