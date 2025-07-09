@@ -13,19 +13,19 @@
     <Compile Include="TestDatakit\Internals.fs" />
     <Compile Include="TestDatakit\Generator.fs" />
     <Compile Include="TestDatakit\Arbitrary.fs" />
-    <Compile Include="Version\DayTests.fs" />
-    <Compile Include="Version\BuildTests.fs" />
-    <Compile Include="Version\PatchTests.fs" />
-    <Compile Include="Version\MonthTests.fs" />
-    <Compile Include="Version\YearTests.fs" />
-    <Compile Include="Version\DateStewardTests.fs" />
-    <Compile Include="Version\VersionTests.fs" />
-    <Compile Include="Git\CommitTests.fs" />
-    <Compile Include="Git\TagTests.fs" />
-    <Compile Include="Git\HeadTests.fs" />
-    <Compile Include="Git\RepositoryTests.fs" />
-    <Compile Include="MakeTests.fs" />
-    <Compile Include="CliTests.fs" />
+    <Compile Include="Domain\Version\DayTests.fs" />
+    <Compile Include="Domain\Version\BuildTests.fs" />
+    <Compile Include="Domain\Version\PatchTests.fs" />
+    <Compile Include="Domain\Version\MonthTests.fs" />
+    <Compile Include="Domain\Version\YearTests.fs" />
+    <Compile Include="Domain\Version\DateStewardTests.fs" />
+    <Compile Include="Domain\Version\VersionTests.fs" />
+    <Compile Include="Domain\Git\CommitTests.fs" />
+    <Compile Include="Domain\Git\TagTests.fs" />
+    <Compile Include="Domain\Git\HeadTests.fs" />
+    <Compile Include="Domain\Git\RepositoryTests.fs" />
+    <Compile Include="Application\UseCases\MakeTests.fs" />
+    <Compile Include="Cli\CliTests.fs" />
     <Compile Include="Program.fs" />    
   </ItemGroup>
   <ItemGroup>
