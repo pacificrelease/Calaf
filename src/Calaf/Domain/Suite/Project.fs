@@ -7,11 +7,13 @@ open Calaf.Contracts
 open Calaf.Domain.DomainTypes.Values
 open Calaf.Domain.DomainTypes.Entities
 
-module private XmlSchema =    
+module XmlSchema =
     [<Literal>]
-    let private VersionXElementName = "Version"
+    let ProjectXElementName = "Project"
     [<Literal>]
-    let private PropertyGroupXElementName = "PropertyGroup"    
+    let VersionXElementName = "Version"
+    [<Literal>]
+    let PropertyGroupXElementName = "PropertyGroup"    
     
     // TODO: Use ERROR instead of option?
     let tryExtractVersionElement (content: System.Xml.Linq.XElement) =

@@ -1,9 +1,14 @@
 ﻿module internal Calaf.Domain.Language
 
 open Calaf.Domain.DomainTypes.Values
+
+[<Literal>]
+let internal FSharpProjExtension = ".fsproj"
+[<Literal>]
+let internal CSharpProjExtension = ".csproj"
  
- let tryParse ext : Language option =
+let tryParse ext : Language option =
     match ext with
-    | ".fsproj" -> Language.FSharp |> Some
-    | ".csproj" -> Language.CSharp |> Some
+    | FSharpProjExtension -> Language.FSharp |> Some
+    | CSharpProjExtension -> Language.CSharp |> Some
     | _         -> None
