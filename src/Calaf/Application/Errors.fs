@@ -4,7 +4,7 @@ open Calaf.Domain
 
 type InputError =
     | CommandNotRecognized   of command: string
-    | BuildFlagNotRecognized of flag: string    
+    | BuildFlagNotRecognized of flag: string
     
 
 type ValidationError =
