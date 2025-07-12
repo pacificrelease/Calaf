@@ -70,8 +70,9 @@ module internal Make =
             let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatternStr                
             let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
             let! repo = dependencies.Git.tryRead dependencies.Directory tagCount Version.versionPrefixes timeStamp                
-            let! workspace,  _ = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
-            let! workspace', _ =
+            let! workspace, captureEvents =
+                Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
+            let! workspace', releaseEvents =
                 Version.nightly workspace.Version (dayOfMonth, monthStamp)
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain
@@ -86,7 +87,7 @@ module internal Make =
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
-            return workspace'
+            return (workspace', captureEvents @ releaseEvents)
         }
         
     // TODO: Remove this type after refactoring
@@ -126,8 +127,8 @@ module internal Make =
             let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatternStr                
             let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
             let! repo = dependencies.Git.tryRead dependencies.Directory tagCount Version.versionPrefixes timeStamp                
-            let! workspace,  _ = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
-            let! workspace', _ =
+            let! workspace, captureEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
+            let! workspace', releaseEvents =
                 Version.stable workspace.Version monthStamp
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain                
@@ -142,7 +143,7 @@ module internal Make =
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
-            return workspace'
+            return (workspace', captureEvents @ releaseEvents)
         }
     
     let private directory path =        
@@ -174,8 +175,8 @@ module internal Make =
             Clock = context.Clock
         |}
         match context.Type with
-        | Stable  -> stable2 dependencies
-        | Nightly -> nightly2 dependencies      
+        | MakeType.Stable  -> stable2 dependencies
+        | MakeType.Nightly -> nightly2 dependencies      
         
     let run path arguments context settings  =
         let apply path arguments context settings =
@@ -183,7 +184,7 @@ module internal Make =
                 let! settings = settings
                 let! cmd = input context.Console arguments
                 match cmd with
-                | Make strategy ->
+                | Command.Make strategy ->
                     match strategy with
                     | MakeType.Nightly ->
                         return! nightly path context settings

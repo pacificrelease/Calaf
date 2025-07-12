@@ -50,3 +50,18 @@ type DirectoryInfo = {
     Directory: string
     Projects: ProjectXmlFileInfo list
 }
+
+// Summaries
+type ReleaseType = | Stable | Nightly
+type ReleaseSummary = {    
+    Directory: string    
+    VersionedProjectsCount: int
+    TotalProjectsCount: int
+    UsesGit: bool
+    ReleaseType: ReleaseType
+    PreviousRelease: string
+    CurrentRelease: string
+}
+
+type CalafSummary =
+    | Make of ReleaseSummary

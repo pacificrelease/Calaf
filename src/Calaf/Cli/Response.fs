@@ -1,18 +1,9 @@
 ﻿namespace Calaf
 
-// Summaries
-type ReleaseSummary = {    
-    Directory: string
-    VersionedProjectsCount: int
-    TotalProjectsCount: int
-    UsesGit: bool
-    PreviousRelease: string
-    CurrentRelease: string
-}
-
 // Response
 type CliResponse = {
     ExitCode: int
+    IsError: bool
     Text: string
 }
 
@@ -22,12 +13,15 @@ module CliError =
     
     let buildFlagNotRecognized (flag: string) : CliResponse =
         { ExitCode = MisuseShellCommandOrInvalidArgumentsExitCode
+          IsError = true
           Text = $"Build flag '{flag}' is not recognized." }
         
     let commandNotRecognized (command: string) : CliResponse =
         { ExitCode = MisuseShellCommandOrInvalidArgumentsExitCode
+          IsError = true
           Text = $"Command '{command}' is not recognized." }
         
     let argumentsFatal (message: string) : CliResponse =
         { ExitCode = MisuseShellCommandOrInvalidArgumentsExitCode
+          IsError = true
           Text = message }

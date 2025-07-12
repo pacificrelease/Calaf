@@ -25,5 +25,6 @@ module Api =
                     Git = git
                     Clock = clock
                 }
-                return Make.run2 ctx
+                let! summary = Make.run2 ctx
+                return summary
         }
