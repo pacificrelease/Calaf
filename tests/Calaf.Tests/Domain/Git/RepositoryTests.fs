@@ -26,7 +26,10 @@ module TryCreatePropertiesTests =
         | Ok (Damaged path, events) ->
             path = directory &&
             events.Length = 1 &&
-            events.Head = (RepositoryCaptured { Version = None; State = RepositoryState.Damaged } |> DomainEvent.Repository)
+            events.Head =
+                ({ Version = None; State = RepositoryState.Damaged }
+                |> RepositoryEvent.StateCaptured
+                |> DomainEvent.Repository)
         | _ -> false
         
     [<Property(Arbitrary = [| typeof<Arbitrary.directoryPathString> |])>]
@@ -37,7 +40,10 @@ module TryCreatePropertiesTests =
         | Ok (Unborn path, events) ->
             path = directory &&
             events.Length = 1 &&
-            events.Head = (RepositoryCaptured { Version = None; State = RepositoryState.Unborn } |> DomainEvent.Repository)
+            events.Head =
+                ({ Version = None; State = RepositoryState.Unborn }
+                |> RepositoryEvent.StateCaptured
+                |> DomainEvent.Repository)
         | _ -> false
         
     [<Property(Arbitrary = [| typeof<Arbitrary.directoryPathString> |])>]
@@ -53,5 +59,8 @@ module TryCreatePropertiesTests =
         | Ok (Unborn path, events) ->
             path = directory &&
             events.Length = 1 &&
-            events.Head = (RepositoryCaptured { Version = None; State = RepositoryState.Unborn } |> DomainEvent.Repository)
+            events.Head =
+                ({ Version = None; State = RepositoryState.Unborn }
+                |> RepositoryEvent.StateCaptured
+                |> DomainEvent.Repository)
         | _ -> false

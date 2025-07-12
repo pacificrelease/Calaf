@@ -12,25 +12,25 @@ module Events =
     let toSuiteCaptured suite =
         match suite with        
         | StandardSet (version, projects) ->
-            SuiteCaptured {
-                CalendarVersion = version
-                CalendarVersionProjectsCount = chooseCalendarVersioned projects |> Seq.length |> uint16
-                TotalProjectsCount = projects |> Seq.length |> uint16
-            } |> DomainEvent.Suite
+            { CalendarVersion = version
+              CalendarVersionProjectsCount = chooseCalendarVersioned projects |> Seq.length |> uint16
+              TotalProjectsCount = projects |> Seq.length |> uint16 }
+            |> SuiteEvent.StateCaptured
+            |> DomainEvent.Suite
             
     let toSuiteReleased suite previousVersion bumpedProjects =
         match suite with        
         | StandardSet (version, projects) ->
-            SuiteReleased {
-                PreviousCalendarVersion = previousVersion
-                NewCalendarVersion = version
-                ProjectsBumpedCount = bumpedProjects |> Seq.length |> uint16
-                TotalProjectsCount = projects |> Seq.length |> uint16
-            } |> DomainEvent.Suite
+            { PreviousCalendarVersion = previousVersion
+              NewCalendarVersion = version
+              ProjectsBumpedCount = bumpedProjects |> Seq.length |> uint16
+              TotalProjectsCount = projects |> Seq.length |> uint16 }
+            |> SuiteEvent.ReleaseCreated
+            |> DomainEvent.Suite
             
-let private chooseCalendarVersionedProjects suite =
+let private chooseCalendarVersionedProjects suite _ =
     match suite with
-    | StandardSet (_, projects) ->
+    | StandardSet (e, projects) ->
         projects
         |> chooseCalendarVersioned
         |> Seq.toList

@@ -10,21 +10,21 @@ open Calaf.Domain.DomainEvents
 
 module Events =
     let toWorkspaceCaptured (workspace: Workspace) =
-        WorkspaceCaptured {
-            Directory = workspace.Directory
-            Version = workspace.Version
-            RepositoryExist = workspace.Repository |> Option.isSome
-            RepositoryVersion = workspace.Repository |> Option.bind Repository.tryGetCalendarVersion
-            SuiteVersion = Suite.getCalendarVersion workspace.Suite
-        } |> DomainEvent.Workspace
+        { Directory = workspace.Directory
+          Version = workspace.Version
+          RepositoryExist = workspace.Repository |> Option.isSome
+          RepositoryVersion = workspace.Repository |> Option.bind Repository.tryGetCalendarVersion
+          SuiteVersion = Suite.getCalendarVersion workspace.Suite }
+        |> WorkspaceEvent.StateCaptured
+        |> DomainEvent.Workspace
         
     let toWorkspaceReleased (workspace: Workspace) previousVersion =
-        WorkspaceReleased {
-            Directory = workspace.Directory
-            PreviousCalendarVersion = previousVersion
-            NewCalendarVersion = workspace.Version
-            RepositoryExist = workspace.Repository |> Option.isSome
-        } |> DomainEvent.Workspace
+        { Directory = workspace.Directory
+          PreviousCalendarVersion = previousVersion
+          NewCalendarVersion = workspace.Version
+          RepositoryExist = workspace.Repository |> Option.isSome }
+        |> WorkspaceEvent.ReleaseCreated
+        |> DomainEvent.Workspace
     
 let private combineVersions suite repoOption =
     [

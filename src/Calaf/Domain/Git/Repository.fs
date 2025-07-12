@@ -22,15 +22,15 @@ module Events =
             | Dirty (_, _, _, calendarVersion)
             | Ready (_, _, _, calendarVersion) -> Option.map CalVer calendarVersion
             | _ -> None
-        RepositoryCaptured { Version = version; State = state } |> DomainEvent.Repository
+        { Version = version; State = state }
+        |> RepositoryEvent.StateCaptured
+        |> DomainEvent.Repository
         
     let toRepositoryBumped repo version signature =
         let state = toState repo        
-        RepositoryBumped {
-            Version = version
-            Signature = signature
-            State = state
-        } |> DomainEvent.Repository
+        { Version = version; Signature = signature; State = state}
+        |> RepositoryEvent.ReleaseProvided
+        |> DomainEvent.Repository
 
 let tryCapture (repoInfo: GitRepositoryInfo) =
     let tryValidatePath path =

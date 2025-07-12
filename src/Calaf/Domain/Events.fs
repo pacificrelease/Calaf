@@ -3,30 +3,30 @@ namespace Calaf.Domain.DomainEvents
 open Calaf.Domain.DomainTypes.Values
 
 // Repository events
-type RepositoryCaptured = {    
+type RepositoryStateCaptured = {    
     Version: Version option
     State: RepositoryState
 }
 
-type RepositoryCalendarVersionBumped = {
+type RepositoryReleaseProvided = {
     Version: CalendarVersion
     Signature: Signature
     State: RepositoryState
 }
 
 type RepositoryEvent =
-    | RepositoryCaptured of RepositoryCaptured
-    | RepositoryBumped   of RepositoryCalendarVersionBumped
+    | StateCaptured   of RepositoryStateCaptured
+    | ReleaseProvided of RepositoryReleaseProvided
 
     
 // Suite events
-type SuiteCaptured = {
+type SuiteStateCaptured = {
     CalendarVersion: CalendarVersion
     CalendarVersionProjectsCount: uint16
     TotalProjectsCount: uint16
 }
 
-type SuiteReleased = {
+type SuiteReleaseCreated = {
     PreviousCalendarVersion: CalendarVersion
     NewCalendarVersion: CalendarVersion
     ProjectsBumpedCount: uint16
@@ -34,11 +34,11 @@ type SuiteReleased = {
 }
 
 type SuiteEvent =
-    | SuiteCaptured of SuiteCaptured
-    | SuiteReleased of SuiteReleased
+    | StateCaptured  of SuiteStateCaptured
+    | ReleaseCreated of SuiteReleaseCreated
     
 // Workspace events
-type WorkspaceCaptured = {
+type WorkspaceStateCaptured = {
     Directory: string
     Version: CalendarVersion
     RepositoryExist: bool
@@ -46,7 +46,7 @@ type WorkspaceCaptured = {
     SuiteVersion: CalendarVersion
 }
 
-type WorkspaceReleased = {
+type WorkspaceReleaseCreated = {
     Directory: string
     PreviousCalendarVersion: CalendarVersion
     NewCalendarVersion: CalendarVersion
@@ -54,8 +54,8 @@ type WorkspaceReleased = {
 }
 
 type WorkspaceEvent =
-    | WorkspaceCaptured of WorkspaceCaptured
-    | WorkspaceReleased of WorkspaceReleased
+    | StateCaptured  of WorkspaceStateCaptured
+    | ReleaseCreated of WorkspaceReleaseCreated
     
 type DomainEvent =
     | Repository of RepositoryEvent
