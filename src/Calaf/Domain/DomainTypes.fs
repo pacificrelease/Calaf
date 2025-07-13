@@ -6,12 +6,18 @@ module Values =
     type Patch = uint32
     type DayOfMonth = uint8
     type BuildNumber = uint16
+    // 2025.5[.1]-nightly.4.1
     type NightlyBuild = {
         Day:    DayOfMonth
         Number: BuildNumber
     }
+    // 2025.5[.1]-beta.1
+    type BetaBuild = {
+        Number: BuildNumber
+    }
     type Build =
         | Nightly of NightlyBuild
+        | Beta    of BetaBuild
     // SemVer
     type Major = uint32
     type Minor = uint32

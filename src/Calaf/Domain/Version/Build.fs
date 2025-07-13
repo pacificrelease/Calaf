@@ -12,63 +12,98 @@ let internal NumberStartValue = 1us
 [<Literal>]
 let private NightlyBuildType = "nightly"
 [<Literal>]
+let private BetaBuildType = "beta"
+[<Literal>]
 let internal BuildTypeDayDivider = "."
 [<Literal>]
 let internal DayNumberDivider = "."
+[<Literal>]
+let internal BuildTypeNumberDivider = "."
 let private allowedNightlyBuildRegexString =
     $@"^(?i:({NightlyBuildType}))\{BuildTypeDayDivider}([1-9]|[12][0-9]|3[0-1])\{DayNumberDivider}([1-9][0-9]{{0,4}})$"
-let private matchBuildRegex (input: string) =
+let private allowedBetaBuildRegexString =
+    $@"^(?i:({BetaBuildType}))\{BuildTypeNumberDivider}([1-9][0-9]{{0,4}})$"
+let private matchNightlyBuildRegex (input: string) =
     System.Text.RegularExpressions.Regex.Match(input, allowedNightlyBuildRegexString)
     
-type private BuildSegments = {
-    BuildType:   string
-    BuildDay:    string
-    BuildNumber: string
-}
+let private matchBetaBuildRegex (input: string) =
+    System.Text.RegularExpressions.Regex.Match(input, allowedBetaBuildRegexString)
 
 let private isEmptyString (build: string) =
     String.IsNullOrWhiteSpace(build)
     
-let private isNightlyString (buildType: string) =
-    String.Equals(buildType, NightlyBuildType, StringComparison.InvariantCultureIgnoreCase)    
+let private (|Nightly|_|) (input: string) =
+    let m = matchNightlyBuildRegex input
+    if m.Success then
+        let daySegment    = m.Groups[2].Value
+        let numberSegment = m.Groups[3].Value
+        Some (daySegment, numberSegment)
+    else
+        None
+        
+let private (|Beta|_|) (input: string) =
+    let m = matchBetaBuildRegex input
+    if m.Success then
+        let numberSegment = m.Groups[2].Value
+        Some numberSegment
+    else
+        None
+        
+let private tryCreateNightlyBuild (dayString: string, numberString: string) =
+    match (Byte.TryParse dayString, UInt16.TryParse numberString) with
+    | (true, buildDay), (true, buildNumber) ->
+        let nightly = Build.Nightly { Day = buildDay; Number = buildNumber }
+        Ok nightly
+    | _ -> Error BuildInvalidString
     
-let private tryCreateBuildSegments (buildString: string) =
+let private tryCreateBetaBuild (numberString: string) =
+    match UInt16.TryParse numberString with
+    | true, buildNumber ->
+        let beta = Build.Beta { Number = buildNumber }
+        Ok beta
+    | _ -> Error BuildInvalidString
+
+let private tryCreateBuild (buildString: string) =
     result {
         if isEmptyString buildString
         then
             return None
         else
-            let m = matchBuildRegex buildString
-            if m.Success
-            then
-                let segments =
-                    { BuildType   = m.Groups[1].Value
-                      BuildDay    = m.Groups[2].Value
-                      BuildNumber = m.Groups[3].Value }
-                return Some segments                
-            else        
+            // let nightlyBuild = matchNightlyBuildRegex buildString
+            // let betaBuild    = matchBetaBuildRegex buildString
+            //
+            // match (nightlyBuild.Success, betaBuild.Success) with
+            // | true, false ->
+            //     let daySegment = nightlyBuild.Groups[2].Value
+            //     let numberSegment = nightlyBuild.Groups[3].Value
+            //     let! nightlyBuild = tryCreateNightlyBuild (daySegment, numberSegment)
+            //     return Some nightlyBuild
+            // | false, true ->
+            //     let numberSegment = betaBuild.Groups[2].Value
+            //     let! betaBuild = tryCreateBetaBuild numberSegment                
+            //     return Some betaBuild
+            // | _ ->
+            //     return! Error BuildInvalidString
+            match buildString with
+            | Nightly (day, number) ->
+                let! nightlyBuild = tryCreateNightlyBuild (day, number)
+                return Some nightlyBuild
+            | Beta number ->
+                let! betaBuild = tryCreateBetaBuild number
+                return Some betaBuild
+            | _ ->
                 return! Error BuildInvalidString
     }
-
-let private tryParseFromBuildSegments segments =
-    match segments with    
-    | Some { BuildType = buildType; BuildDay = day; BuildNumber = number }
-        when buildType |> isNightlyString ->
-        match (Byte.TryParse day, UInt16.TryParse number) with
-        | (true, buildDay), (true, buildNumber) ->
-            let nightly = { Day = buildDay; Number = buildNumber } |> Build.Nightly
-            nightly |> Some |> Ok
-        | _ -> Error BuildInvalidString
-    | None -> Ok None
-    | _ -> Error BuildInvalidString
     
 let toString (build: Build) : string =    
     match build with
     | Build.Nightly { Day = day; Number = number } ->
         $"{NightlyBuildType}{BuildTypeDayDivider}{day}{DayNumberDivider}{number}"
+    | Build.Beta { Number = number } ->
+        $"{BetaBuildType}{BuildTypeNumberDivider}{number}"
     
 let tryParseFromString (build: string) =
-    build |> tryCreateBuildSegments |> Result.bind tryParseFromBuildSegments 
+    tryCreateBuild build
 
 let nightly (currentBuild: Build option) (dayOfMonth: DayOfMonth) : Build =
     let nextNumber currentNumber =
