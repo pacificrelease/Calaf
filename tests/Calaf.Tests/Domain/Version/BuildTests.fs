@@ -44,49 +44,61 @@ module NightlyTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyBuildOption>; typeof<Arbitrary.Day.inRangeByteDay> |])>]
     let ``Nightly always returns a Nightly build type`` (build: Build option, dayOfMonth: DayOfMonth) =
         let nightly = nightly build dayOfMonth
-        test <@ match nightly with | Build.Nightly _ -> true @>
+        test <@ match nightly with | Build.Nightly _ -> true | _ -> false @>
         
     // Day is correctly assigned
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyBuildOption>; typeof<Arbitrary.Day.inRangeByteDay> |])>]
-    let ``The day of the month is correctly assigned to the Nightly build`` (nightlyBuild: Build option, dayOfMonth: DayOfMonth) =
+    let ``The day of the month is correctly assigned to the Nightly build`` (nightlyBuild: Build option, dayOfMonth: DayOfMonth) =        
         let nightlyBuild' = nightly nightlyBuild dayOfMonth
-        let dayOfMonth' = match nightlyBuild' with | Build.Nightly { Day = day } -> day
-        test <@ dayOfMonth' = dayOfMonth @>
+        match nightlyBuild' with
+        | Build.Nightly { Day = actualDay } ->
+            test <@ actualDay = dayOfMonth @>
+        | _ -> test <@ false @>
         
     // Number starts at NumberStartValue if no current build
     [<Property(Arbitrary = [| typeof<Arbitrary.Day.inRangeByteDay> |])>]
     let ``Nightly build starts at NumberStartValue if no current build`` (dayOfMonth: DayOfMonth) =
         let nightlyBuild = nightly None dayOfMonth
-        let buildNumber = match nightlyBuild with | Build.Nightly { Number = number } -> number
-        test <@ buildNumber = NumberStartValue @>
+        match nightlyBuild with
+        | Build.Nightly { Number = number } ->
+            test <@ number = NumberStartValue @>
+        | _ -> test <@ false @>
         
     //Number increments for the same day build with no overflow
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.numberNoUpperBoundaryNightlyBuild> |])>]
     let ``Nightly build with no upper boundary number increments the number for the same day nightly build`` (nightlyBuild: Build) =
-        let dayOfMonth = match nightlyBuild with | Build.Nightly { Day = day } -> day
-        let nightlyBuild' = nightly (Some nightlyBuild) dayOfMonth
-        let number  = match nightlyBuild  with | Build.Nightly { Number = number } -> number
-        let number' = match nightlyBuild' with | Build.Nightly { Number = number } -> number
-        let difference = number' - number        
-        test <@ difference = NumberIncrementStep @>
+        match nightlyBuild with
+        | Build.Nightly { Day = dayOfMonth; Number = number } ->
+            let nightlyBuild' = nightly (Some nightlyBuild) dayOfMonth            
+            match nightlyBuild' with
+            | Build.Nightly { Number = number' } ->
+                test <@ number' - number = NumberIncrementStep @>
+            | _ -> test <@ false  @>
+        | _ -> test <@ false @>
         
     // Number resets to NumberStartValue on overflow
     [<Property(Arbitrary = [| typeof<Arbitrary.Day.inRangeByteDay> |])>]
     let ``Nightly build resets the number to NumberStartValue on overflow`` (dayOfMonth: DayOfMonth) =
         let nightlyBuild = Build.Nightly { Day = dayOfMonth; Number = BuildNumber.MaxValue } |> Some                
-        let nightlyBuild' = nightly nightlyBuild dayOfMonth
-        let number' = match nightlyBuild' with | Build.Nightly { Number = number } -> number
-        test <@ number' = NumberStartValue @>
+        let nightlyBuild' = nightly nightlyBuild dayOfMonth        
+        match nightlyBuild' with
+        | Build.Nightly { Number = number } ->
+            test <@ number = NumberStartValue @>
+        | _ -> test <@ false @>
         
     // New day resets the number to the NumberStartValue
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyBuild> |])>]
     let ``Nightly build with different day resets the number to NumberStartValue``
         (nightlyBuild: Build, dateTimeOffset: System.DateTimeOffset) =
-        let nightlyBuildDay = match nightlyBuild with | Build.Nightly { Day = day } -> day
-        let dayOfMonth =
-            if nightlyBuildDay = byte dateTimeOffset.Day
-            then dateTimeOffset.AddDays(1).Day |> byte
-            else dateTimeOffset.Day |> byte
-        let nightlyBuild' = nightly (Some nightlyBuild) dayOfMonth
-        let number' = match nightlyBuild' with | Build.Nightly { Number = number } -> number        
-        test <@ number' = NumberStartValue @>
+        match nightlyBuild with
+        | Build.Nightly { Day = dayOfMonth; Number = _ } ->
+            let differentDay =
+                if dayOfMonth = byte dateTimeOffset.Day
+                then dateTimeOffset.AddDays(1).Day |> byte
+                else byte dateTimeOffset.Day
+            let nightlyBuild' = nightly (Some nightlyBuild) differentDay
+            match nightlyBuild' with
+            | Build.Nightly { Number = number' } ->
+                test <@ number' = NumberStartValue @>
+            | _ -> test <@ false @>            
+        | _ -> test <@ false @>
