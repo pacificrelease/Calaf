@@ -19,10 +19,22 @@ let internal BuildTypeDayDivider = "."
 let internal DayNumberDivider = "."
 [<Literal>]
 let internal BuildTypeNumberDivider = "."
+[<Literal>]
+let internal BetaNightlyDivider = "."
+let private nightlyBuildPattern =        
+    $@"(?i:({NightlyBuildType}))\{BuildTypeDayDivider}([1-9]|[12][0-9]|3[0-1])\{DayNumberDivider}([1-9][0-9]{{0,4}})$"
+let private betaBuildPattern =        
+    $@"(?i:({BetaBuildType}))\{BuildTypeNumberDivider}([1-9][0-9]{{0,4}})$"
+let private betaNightlyBuildPattern =        
+    $@"{betaBuildPattern}\{BetaNightlyDivider}{nightlyBuildPattern}"
+    
 let private allowedNightlyBuildRegexString =
-    $@"^(?i:({NightlyBuildType}))\{BuildTypeDayDivider}([1-9]|[12][0-9]|3[0-1])\{DayNumberDivider}([1-9][0-9]{{0,4}})$"
+    $@"^{nightlyBuildPattern}"
 let private allowedBetaBuildRegexString =
-    $@"^(?i:({BetaBuildType}))\{BuildTypeNumberDivider}([1-9][0-9]{{0,4}})$"
+    $@"^{betaBuildPattern}"
+let private allowedBetaNightlyBuildRegexString =
+    $@"^{betaNightlyBuildPattern}"
+    
 let private matchNightlyBuildRegex (input: string) =
     System.Text.RegularExpressions.Regex.Match(input, allowedNightlyBuildRegexString)
     
@@ -69,21 +81,6 @@ let private tryCreateBuild (buildString: string) =
         then
             return None
         else
-            // let nightlyBuild = matchNightlyBuildRegex buildString
-            // let betaBuild    = matchBetaBuildRegex buildString
-            //
-            // match (nightlyBuild.Success, betaBuild.Success) with
-            // | true, false ->
-            //     let daySegment = nightlyBuild.Groups[2].Value
-            //     let numberSegment = nightlyBuild.Groups[3].Value
-            //     let! nightlyBuild = tryCreateNightlyBuild (daySegment, numberSegment)
-            //     return Some nightlyBuild
-            // | false, true ->
-            //     let numberSegment = betaBuild.Groups[2].Value
-            //     let! betaBuild = tryCreateBetaBuild numberSegment                
-            //     return Some betaBuild
-            // | _ ->
-            //     return! Error BuildInvalidString
             match buildString with
             | Nightly (day, number) ->
                 let! nightlyBuild = tryCreateNightlyBuild (day, number)
@@ -115,5 +112,7 @@ let nightly (currentBuild: Build option) (dayOfMonth: DayOfMonth) : Build =
     match currentBuild with
     | Some (Build.Nightly { Day = currentDay; Number = number }) when currentDay = dayOfMonth ->
         Build.Nightly { Day = dayOfMonth; Number = nextNumber number }
+    | Some (Build.Beta _) ->
+        Build.Nightly { Day = dayOfMonth; Number = NumberStartValue }
     | _ ->
         Build.Nightly { Day = dayOfMonth; Number = NumberStartValue }
