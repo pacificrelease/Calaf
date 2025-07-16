@@ -15,9 +15,10 @@ module Values =
     type BetaBuild = {
         Number: BuildNumber
     }
+    // Proposed format: 2025.5[.1]-beta.3+nightly.4.1
     type Build =
-        | Nightly of NightlyBuild
-        | Beta    of BetaBuild
+        | Nightly     of NightlyBuild
+        | Beta        of BetaBuild
     // SemVer
     type Major = uint32
     type Minor = uint32
