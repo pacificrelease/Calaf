@@ -48,15 +48,35 @@ Write-Host "🧪 Absolute Output path is: $AbsoluteOutputPath"
 
 Write-Host "⭐ [1/5] Restoring solution packages $SolutionPath ..."
 dotnet restore $SolutionPath
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "❌ Package restoration failed"
+    exit $LASTEXITCODE
+}
 
 Write-Host "⭐ [2/5] Building solution $SolutionPath ..."
 dotnet build $SolutionPath --no-restore --configuration $Configuration --verbosity detailed
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "❌ Solution building failed"
+    exit $LASTEXITCODE
+}
 
 Write-Host "⭐ [3/5] Running tests ..."
 dotnet test $SolutionPath --no-build --configuration $Configuration --verbosity detailed --collect:"XPlat Code Coverage" --results-directory:"$CoverageResultDirectoryPath" -- RunConfiguration.FailFast=true
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "❌ Running tests failed"
+    exit $LASTEXITCODE
+}
 
 Write-Host "⭐ [4/5] Saving tests reports ..."
 reportgenerator -reports:"$CoverageResultDirectoryPath/**/coverage.cobertura.xml" -targetdir:"$CoverageReportDirectoryPath" -reporttypes:Cobertura,Html
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "❌ Tests report did not saved"
+    exit $LASTEXITCODE
+}
 
 Write-Host "⭐ [5/5] Packing to $AbsoluteOutputPath ..."
 dotnet pack $SolutionPath --no-build --configuration $Configuration --output $OutputPath
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "❌ Pack artefact failed"
+    exit $LASTEXITCODE
+}
