@@ -7,7 +7,7 @@ open Calaf.Infrastructure
 [<Literal>]
 let private supportedFilesPattern = "*.?sproj"
 [<Literal>]
-let private loadTenTags = 1uy
+let private loadTenTags = 10uy
 
 [<EntryPoint>]
 let main args =
