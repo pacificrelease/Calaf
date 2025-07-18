@@ -41,7 +41,7 @@ module internal Make =
             let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
             let (TagQuantity tagCount) = settings.TagsToLoad
             let! repo = context.Git.tryRead path tagCount Version.versionPrefixes timeStamp                
-            let! workspace,  _ = Workspace.tryCapture (dir, repo)                        |> Result.mapError CalafError.Domain
+            let! workspace,  _ = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
             let! workspace', _ =
                 Version.nightly workspace.Version (dayOfMonth, monthStamp)
                 |> Workspace.tryRelease workspace

@@ -30,7 +30,7 @@ module Events =
             
 let private chooseCalendarVersionedProjects suite _ =
     match suite with
-    | StandardSet (e, projects) ->
+    | StandardSet (_, projects) ->
         projects
         |> chooseCalendarVersioned
         |> Seq.toList
