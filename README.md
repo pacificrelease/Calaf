@@ -1,6 +1,7 @@
-[![Build Solution](https://github.com/mikhailovdv/Calaf/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/mikhailovdv/Calaf/actions/workflows/build.yml)
+[![Build Solution](https://github.com/pacificrelease/Calaf/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/pacificrelease/Calaf/actions/workflows/build.yml)
 [![NuGet](https://img.shields.io/nuget/v/Calaf.svg)](https://www.nuget.org/packages/Calaf/)
-[![Nuget](https://img.shields.io/nuget/dt/Calaf.svg)](https://www.nuget.org/packages/Calaf/)
+[![Nuget](https://img.shields.io/nuget/dt/Calaf.svg?color=black)](https://www.nuget.org/packages/Calaf/)
+[![GitHub license](https://img.shields.io/badge/license-Apache%202-navy.svg)](https://raw.githubusercontent.com/pacificrelease/Calaf/main/LICENSE)
 
 # Calaf
 
