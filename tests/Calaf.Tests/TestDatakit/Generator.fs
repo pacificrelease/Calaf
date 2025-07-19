@@ -174,14 +174,40 @@ module Generator =
             return $"{first}.{second}.{third}"
         }
         
-    module Build =            
+    module Build =
+        let private genBetaBuild =
+            gen {
+                let! number = genUInt16
+                return { Number = number }
+            }
+            
+        let private genNightlyBuild =
+            gen {
+                let! day = genDay
+                let! number = genUInt16
+                return { Day = day; Number = number } 
+            }
+            
+        let private genBetaNightlyBuild =
+            gen {
+                let! betaBuild = genBetaBuild
+                let! nightlyBuild = genNightlyBuild
+                return (betaBuild, nightlyBuild)
+            }
+        
+        let betaString =
+            gen {
+                let! beta = Gen.elements ["beta"; "BETA"; "Beta"; "BeTa"; "bEtA"; "bETA"; "beTA"; "betA"; "BEta"; "BETa"]                
+                let! b = genBetaBuild
+                return $"{beta}{Calaf.Domain.Build.BuildTypeNumberDivider}{b.Number}"
+            }
+            
         let nightlyString =
             gen {
                 let! nightly = Gen.elements ["nightly"; "NIGHTLY"; "Nightly"; "NiGhTlY"; "nIgHtLy"; "NIGHTly"; "nightLY"]
-                let! day = genDay
-                let! number = genUInt16
-                return $"{nightly}{Calaf.Domain.Build.BuildTypeDayDivider}{day}{Calaf.Domain.Build.DayNumberDivider}{number}"
-            }            
+                let! n = genNightlyBuild
+                return $"{nightly}{Calaf.Domain.Build.BuildTypeDayDivider}{n.Day}{Calaf.Domain.Build.DayNumberDivider}{n.Number}"
+            }
             
         let wrongString =
             let letterChars = ['a'..'z'] @ ['A'..'Z']
@@ -222,17 +248,22 @@ module Generator =
                 return choice
             }
             
+        let betaNightlyBuild =
+            gen {
+                let! bn = genBetaNightlyBuild
+                return Build.BetaNightly bn
+            }
+            
         let betaBuild =
             gen {
-                let! number = genUInt16
-                return Build.Beta { Number = number }
+                let! b = genBetaBuild
+                return Build.Beta b
             }
             
         let nightlyBuild =
             gen {
-                let! day = genDay
-                let! number = genUInt16
-                return Build.Nightly { Day = day; Number = number }
+                let! n = genNightlyBuild
+                return Build.Nightly n
             }
             
         let numberNoUpperBoundaryNightlyBuild =
