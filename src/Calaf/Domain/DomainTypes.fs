@@ -16,7 +16,7 @@ module Values =
     type Build =
         | Nightly     of NightlyBuild
         | Beta        of BetaBuild
-        | NightlyBeta of beta: BetaBuild * nightly: NightlyBuild
+        | BetaNightly of beta: BetaBuild * nightly: NightlyBuild
     // SemVer
     type Major = uint32
     type Minor = uint32

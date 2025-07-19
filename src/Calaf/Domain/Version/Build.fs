@@ -74,11 +74,11 @@ let private (|BetaNightly|_|) (input: string) =
     else
         None
     
-let private tryCreateNightlyBetaBuild (betaNumberString: string, nightlyDayString: string, nightlyNumberString: string) =
+let private tryCreateBetaNightlyBuild (betaNumberString: string, nightlyDayString: string, nightlyNumberString: string) =
     match (UInt16.TryParse betaNumberString, Byte.TryParse nightlyDayString, UInt16.TryParse nightlyNumberString) with
     | (true, betaNumber), (true, nightlyDay), (true, nightlyNumber) ->
-        let nightlyBeta = Build.NightlyBeta ({ Number = betaNumber }, { Day = nightlyDay; Number = nightlyNumber })
-        Ok nightlyBeta
+        let betaNightly = Build.BetaNightly ({ Number = betaNumber }, { Day = nightlyDay; Number = nightlyNumber })
+        Ok betaNightly
     | _ -> Error BuildInvalidString
     
 let private tryCreateBetaBuild (numberString: string) =
@@ -103,7 +103,7 @@ let private tryCreateBuild (buildString: string) =
         else
             match buildString with            
             | BetaNightly (betaNumber, nightlyDay, nightlyNumber) ->                
-                let! betaNightlyBuild = tryCreateNightlyBetaBuild (betaNumber, nightlyDay, nightlyNumber)
+                let! betaNightlyBuild = tryCreateBetaNightlyBuild (betaNumber, nightlyDay, nightlyNumber)
                 return Some betaNightlyBuild
             | Beta number ->
                 let! betaBuild = tryCreateBetaBuild number
@@ -117,7 +117,7 @@ let private tryCreateBuild (buildString: string) =
     
 let toString (build: Build) : string =
     match build with
-    | Build.NightlyBeta ({ Number = betaNumber }, { Day = nightlyDay; Number = nightlyNumber }) ->
+    | Build.BetaNightly ({ Number = betaNumber }, { Day = nightlyDay; Number = nightlyNumber }) ->
         $"{BetaBuildType}{BuildTypeNumberDivider}{betaNumber}{BetaNightlyDivider}{nightlyDay}{DayNumberDivider}{nightlyNumber}"
     | Build.Beta { Number = number } ->
         $"{BetaBuildType}{BuildTypeNumberDivider}{number}"
@@ -129,21 +129,23 @@ let tryParseFromString (build: string) =
 
 let nightly (currentBuild: Build option) (dayOfMonth: DayOfMonth) : Build =
     let nextNumber currentNumber =
-        let overflowPossible = currentNumber = BuildNumber.MaxValue
-        if overflowPossible
+        let isOverflowPossible = currentNumber = BuildNumber.MaxValue
+        if isOverflowPossible
         then NumberStartValue
         else currentNumber + NumberIncrementStep
     
-    match currentBuild with    
-    | Some (Build.Beta { Number = betaNumber }) ->
-        Build.NightlyBeta ({ Number = betaNumber }, { Day = dayOfMonth; Number = NumberStartValue })
-    | Some (Build.NightlyBeta ({ Number = betaNumber }, { Day = nightlyDay; Number = nightlyNumber }))
-        when nightlyDay = dayOfMonth  ->
-        Build.NightlyBeta ({ Number = betaNumber }, { Day = nightlyDay; Number = nextNumber nightlyNumber })
-    | Some (Build.NightlyBeta ({ Number = betaNumber }, { Day = nightlyDay; Number = nightlyNumber })) ->
-        Build.NightlyBeta ({ Number = betaNumber }, { Day = dayOfMonth; Number = NumberStartValue })
-    | Some (Build.Nightly { Day = currentDay; Number = number })
-        when currentDay = dayOfMonth ->
-        Build.Nightly { Day = dayOfMonth; Number = nextNumber number }
-    | _ ->
+    match currentBuild with
+    | None ->
         Build.Nightly { Day = dayOfMonth; Number = NumberStartValue }
+    | Some build ->
+        match build with
+        | Build.Beta { Number = betaNumber } ->
+            Build.BetaNightly ({ Number = betaNumber }, { Day = dayOfMonth; Number = NumberStartValue })
+        | Build.BetaNightly ({ Number = betaNumber }, { Day = nightlyDay; Number = nightlyNumber }) when nightlyDay = dayOfMonth  ->
+            Build.BetaNightly ({ Number = betaNumber }, { Day = nightlyDay; Number = nextNumber nightlyNumber })
+        | Build.BetaNightly ({ Number = betaNumber }, _) ->
+            Build.BetaNightly ({ Number = betaNumber }, { Day = dayOfMonth; Number = NumberStartValue })
+        | Build.Nightly { Day = currentDay; Number = number } when currentDay = dayOfMonth ->
+            Build.Nightly { Day = dayOfMonth; Number = nextNumber number }
+        | Build.Nightly _ ->
+            Build.Nightly { Day = dayOfMonth; Number = NumberStartValue }
