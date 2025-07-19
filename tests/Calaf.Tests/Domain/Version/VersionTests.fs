@@ -257,7 +257,7 @@ module StableTests =
         let release = stable calVer monthStamp
         release.Patch = None
         
-module NightlyTests =
+module NightlyTests =   
     [<Fact>]
     let ``Stable CalendarVersion when release to nightly keeps the same Year, Month, increase Patch and adds Build when the year and month are the same`` () =        
         let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = None }
@@ -273,7 +273,23 @@ module NightlyTests =
         let monthStamp = { Year = 2023us; Month = 10uy }
         let release = nightly calVer (dayOfMonth, monthStamp)
         test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch.IsSome && release.Build.IsSome @>
+    
+    [<Fact>]
+    let ``Nightly CalendarVersion when release to nightly changes month and remove patch and keeps the same Year when the year is the same but month is different`` () =        
+        let calVer = { Year = 2025us; Month = 6uy; Patch = Some 4u; Build = Some (Build.Nightly { Day = 1uy; Number = 1us }) }
+        let dayOfMonth = 2uy
+        let monthStamp = { Year = 2025us; Month = 8uy }
+        let release = nightly calVer (dayOfMonth, monthStamp)
+        test <@ release.Year = calVer.Year && release.Month = monthStamp.Month && release.Patch.IsNone && release.Build.Value.IsNightly @>
         
+    [<Fact>]
+    let ``Nightly CalendarVersion when release to nightly changes year, month and remove patch when the year is different`` () =        
+        let calVer = { Year = 2024us; Month = 1uy; Patch = Some 10u; Build = Some (Build.Nightly { Day = 7uy; Number = 2us }) }
+        let dayOfMonth = 15uy
+        let monthStamp = { Year = 2025us; Month = 7uy }
+        let release = nightly calVer (dayOfMonth, monthStamp)
+        test <@ release.Year = monthStamp.Year && release.Month = monthStamp.Month && release.Patch.IsNone && release.Build.Value.IsNightly @>
+            
     [<Fact>]
     let ``Nightly CalendarVersion when release to nightly keeps the same Year, Month, the same Patch, the same Day and increases Build's Number when the year, month, patch, day are the same`` () =
         let dayOfMonth = 31uy
