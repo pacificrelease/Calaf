@@ -11,13 +11,11 @@ open Calaf.Tests
 module ToStringPropertyTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyBuild> |])>]
     let ``Nightly build converts to non-empty string`` (nightlyBuild: Build) =
-        //nightly.04.162+vnexsfsyhuzfedzkvtzslis - THIS STRING IS INVALID
         test <@ toString nightlyBuild |> System.String.IsNullOrWhiteSpace |> not @>
             
 module TryParseFromStringPropertyTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyString> |])>]
     let ``Nightly string recognizes correctly to the Nightly with number and hash`` (nightlyString: string) =
-        //nightly.04.162+vnexsfsyhuzfedzkvtzslis - THIS STRING IS INVALID
         test <@
             let result = nightlyString |> tryParseFromString
             match result with

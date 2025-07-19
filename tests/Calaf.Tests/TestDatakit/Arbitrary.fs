@@ -44,6 +44,11 @@ module Arbitrary =
             static member containingNightlyBadString() =
                 Arb.fromGen Generator.Build.containingNightlyBadString
                 
+        type betaBuild =
+            static member betaBuild() =
+                Arb.fromGen Generator.Build.betaBuild
+                
+                
         type nightlyBuild =
             static member nightlyBuild() =
                 Arb.fromGen Generator.Build.nightlyBuild
@@ -51,6 +56,10 @@ module Arbitrary =
         type numberNoUpperBoundaryNightlyBuild =
             static member numberNoUpperBoundaryNightlyBuild() =
                 Arb.fromGen Generator.Build.numberNoUpperBoundaryNightlyBuild
+        
+        type betaBuildOption =
+            static member betaBuildOption() =
+                Arb.fromGen Generator.Build.betaBuildOption
                 
         type nightlyBuildOption =
             static member nightlyBuildOption() =
@@ -144,6 +153,10 @@ module Arbitrary =
         type internal calendarVersionPatch =
             static member calendarVersionPatch() =
                 Arb.fromGen Generator.CalendarVersion.calendarVersionPatch
+                
+        type internal calendarVersionShortBetaBuild =
+            static member calendarVersionShortBetaBuild() =
+                Arb.fromGen Generator.CalendarVersion.calendarVersionShortBetaBuild
                 
         type internal calendarVersionShortNightlyBuild =
             static member calendarVersionShortNightlyBuild() =

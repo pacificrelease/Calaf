@@ -353,13 +353,21 @@ module NightlyTests =
         // prepare data
         let dayOfMonth =
             if calendarVersion.Build
-               |> Option.map (function | Build.Nightly { Day = day } -> day = byte dateTimeOffset.Day)
+               |> Option.map (function
+                    | Build.BetaNightly (_, { Day = day }) -> day = byte dateTimeOffset.Day
+                    | Build.Nightly { Day = day } -> day = byte dateTimeOffset.Day
+                    | _ -> false)
                |> Option.defaultValue false
             then byte (dateTimeOffset.AddDays(1).Day)
             else byte dateTimeOffset.Day
         let monthStamp = { Year = uint16 dateTimeOffset.Year; Month = byte dateTimeOffset.Month }
         let nightly = nightly calendarVersion (dayOfMonth, monthStamp)
-        test <@ nightly.Build |> Option.map (function | Build.Nightly { Day = day } -> day = dayOfMonth) |> Option.defaultValue false @>    
+        test <@ nightly.Build
+                |> Option.map (function
+                    | Build.BetaNightly (_, { Day = day }) -> day = dayOfMonth
+                    | Build.Nightly { Day = day } -> day = dayOfMonth
+                    | _ -> false)
+                |> Option.defaultValue false @>    
     
     // Patch is reset
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]

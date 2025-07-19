@@ -222,6 +222,12 @@ module Generator =
                 return choice
             }
             
+        let betaBuild =
+            gen {
+                let! number = genUInt16
+                return Build.Beta { Number = number }
+            }
+            
         let nightlyBuild =
             gen {
                 let! day = genDay
@@ -234,6 +240,15 @@ module Generator =
                 let! day = genDay
                 let! number = Gen.choose(int 1, int (System.UInt16.MaxValue - 1us)) |> Gen.map uint16
                 return Build.Nightly { Day = day; Number = number }                
+            }
+            
+        let betaBuildOption =
+            gen {
+                let! choice = Gen.frequency [
+                    1, Gen.constant None
+                    3, betaBuild |> Gen.map Some
+                ]
+                return choice
             }
             
         let nightlyBuildOption =
@@ -451,6 +466,20 @@ module Generator =
                 return { shortCalendarVersion with Patch = Some patch }
             }
             
+        let calendarVersionShortBetaBuild =
+            gen {
+                let! shortCalendarVersion = calendarVersionShort
+                let! betaBuild = Build.betaBuild
+                return { shortCalendarVersion with Build = Some betaBuild }
+            }
+            
+        let calendarVersionPatchBetaBuild =
+            gen {
+                let! patchCalendarVersion = calendarVersionPatch
+                let! betaBuild = Build.betaBuild
+                return { patchCalendarVersion with Build = Some betaBuild }
+            }
+            
         let calendarVersionShortNightlyBuild =
             gen {
                 let! shortCalendarVersion = calendarVersionShort
@@ -472,6 +501,8 @@ module Generator =
                     1, calendarVersionPatch
                     1, calendarVersionShortNightlyBuild
                     1, calendarVersionPatchNightlyBuild
+                    1, calendarVersionShortBetaBuild
+                    1, calendarVersionPatchBetaBuild
                 ]
                 return choice
             }
