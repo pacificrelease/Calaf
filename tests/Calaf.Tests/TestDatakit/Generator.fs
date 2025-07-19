@@ -197,7 +197,7 @@ module Generator =
         
         let betaString =
             gen {
-                let! beta = Gen.elements ["beta"; "BETA"; "Beta"; "BeTa"; "bEtA"; "bETA"; "beTA"; "betA"; "BEta"; "BETa"]                
+                let! beta = Gen.elements ["beta"; "BETA"; "Beta"; "BeTa"; "bEtA"; "bETA"; "beTA"; "betA"; "BEta"; "BETa"]
                 let! b = genBetaBuild
                 return $"{beta}{Calaf.Domain.Build.BuildTypeNumberDivider}{b.Number}"
             }
@@ -207,6 +207,13 @@ module Generator =
                 let! nightly = Gen.elements ["nightly"; "NIGHTLY"; "Nightly"; "NiGhTlY"; "nIgHtLy"; "NIGHTly"; "nightLY"]
                 let! n = genNightlyBuild
                 return $"{nightly}{Calaf.Domain.Build.BuildTypeDayDivider}{n.Day}{Calaf.Domain.Build.DayNumberDivider}{n.Number}"
+            }
+            
+        let betaNightlyString =
+            gen {
+                let! beta = Gen.elements ["beta"; "BETA"; "Beta"; "BeTa"; "bEtA"; "bETA"; "beTA"; "betA"; "BEta"; "BETa"]
+                let! b, n = genBetaNightlyBuild
+                return $"{beta}{Calaf.Domain.Build.BuildTypeNumberDivider}{b.Number}{Calaf.Domain.Build.BetaNightlyDivider}{n.Day}{Calaf.Domain.Build.DayNumberDivider}{n.Number}"
             }
             
         let wrongString =
@@ -225,7 +232,28 @@ module Generator =
                 let! length = Gen.choose(64, 512)
                 let! chars = Gen.arrayOfLength length (Gen.elements specialChars)
                 return System.String(chars)
-            } 
+            }
+            
+        let containingBetaBadString =
+            gen {
+                let! betaString = betaString
+                let! specialCharacters = wrongString2
+                let! leadingWhiteSpaces = genWhiteSpacesString
+                let! choice = Gen.frequency [
+                    1, Gen.constant $"{Calaf.Domain.Build.BuildTypeDayDivider}{betaString}"
+                    1, Gen.constant $"{betaString}{Calaf.Domain.Build.BuildTypeDayDivider}"
+                    1, Gen.constant $"{betaString}{wrongString}{betaString}"
+                    1, Gen.constant $"{specialCharacters}{betaString}{specialCharacters}"
+                    1, Gen.constant $"{specialCharacters}{betaString}"
+                    1, Gen.constant $"{betaString}{specialCharacters}"
+                    1, Gen.constant $"{betaString}{leadingWhiteSpaces}"
+                    1, Gen.constant $"{leadingWhiteSpaces}{betaString}"
+                    1, Gen.constant $"{leadingWhiteSpaces}{betaString}{leadingWhiteSpaces}"
+                    1, Gen.constant $"{betaString}{betaString}"
+                    1, Gen.constant $"{betaString}{betaString}{betaString}"                    
+                ]
+                return choice
+            }
             
         let containingNightlyBadString =
             gen {
@@ -248,10 +276,25 @@ module Generator =
                 return choice
             }
             
-        let betaNightlyBuild =
+        let containingBetaNightlyBadString =
             gen {
-                let! bn = genBetaNightlyBuild
-                return Build.BetaNightly bn
+                let! betaNightlyString = betaNightlyString
+                let! specialCharacters = wrongString2
+                let! leadingWhiteSpaces = genWhiteSpacesString
+                let! choice = Gen.frequency [
+                    1, Gen.constant $"{Calaf.Domain.Build.BuildTypeDayDivider}{betaNightlyString}"
+                    1, Gen.constant $"{betaNightlyString}{Calaf.Domain.Build.BuildTypeDayDivider}"
+                    1, Gen.constant $"{betaNightlyString}{wrongString}{betaNightlyString}"
+                    1, Gen.constant $"{specialCharacters}{betaNightlyString}{specialCharacters}"
+                    1, Gen.constant $"{specialCharacters}{betaNightlyString}"
+                    1, Gen.constant $"{betaNightlyString}{specialCharacters}"
+                    1, Gen.constant $"{betaNightlyString}{leadingWhiteSpaces}"
+                    1, Gen.constant $"{leadingWhiteSpaces}{betaNightlyString}"
+                    1, Gen.constant $"{leadingWhiteSpaces}{betaNightlyString}{leadingWhiteSpaces}"
+                    1, Gen.constant $"{betaNightlyString}{betaNightlyString}"
+                    1, Gen.constant $"{betaNightlyString}{betaNightlyString}{betaNightlyString}"                    
+                ]
+                return choice
             }
             
         let betaBuild =
@@ -266,11 +309,31 @@ module Generator =
                 return Build.Nightly n
             }
             
+        let betaNightlyBuild =
+            gen {
+                let! bn = genBetaNightlyBuild
+                return Build.BetaNightly bn
+            }
+            
+        let numberNoUpperBoundaryBetaBuild =
+            gen {
+                let! number = Gen.choose(int 1, int (System.UInt16.MaxValue - 1us)) |> Gen.map uint16
+                return Build.Beta { Number = number }                
+            }
+            
         let numberNoUpperBoundaryNightlyBuild =
             gen {
                 let! day = genDay
                 let! number = Gen.choose(int 1, int (System.UInt16.MaxValue - 1us)) |> Gen.map uint16
                 return Build.Nightly { Day = day; Number = number }                
+            }
+            
+        let numberNoUpperBoundaryBetaNightlyBuild =
+            gen {
+                let! betaNumber = Gen.choose(int 1, int (System.UInt16.MaxValue - 1us)) |> Gen.map uint16
+                let! nightlyDay = genDay
+                let! nightlyNumber = Gen.choose(int 1, int (System.UInt16.MaxValue - 1us)) |> Gen.map uint16
+                return Build.BetaNightly({ Number = betaNumber }, { Day = nightlyDay; Number = nightlyNumber })                
             }
             
         let betaBuildOption =
@@ -287,6 +350,15 @@ module Generator =
                 let! choice = Gen.frequency [
                     1, Gen.constant None
                     3, nightlyBuild |> Gen.map Some
+                ]
+                return choice
+            }
+            
+        let betaNightlyBuildOption =
+            gen {
+                let! choice = Gen.frequency [
+                    1, Gen.constant None
+                    3, betaNightlyBuild |> Gen.map Some
                 ]
                 return choice
             }
@@ -432,7 +504,59 @@ module Generator =
                 return choice
             }
             
-    module CalendarVersion =
+    module CalendarVersion =            
+        let calendarVersionShortBetaBuildStr =
+            gen {
+                let! year  = Year.inRangeUInt16Year
+                let! month = Month.inRangeByteMonth
+                let! betaBuild = Build.betaString
+                return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{betaBuild}"                 
+            }
+            
+        let calendarVersionPatchBetaBuildStr =
+            gen {
+                let! year  = Year.inRangeUInt16Year
+                let! month = Month.inRangeByteMonth
+                let! patch = validPatchUInt32
+                let! betaBuild = Build.betaString
+                return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.MonthPatchDivider}{patch}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{betaBuild}"                 
+            }
+            
+        let calendarVersionBetaBuildStr =
+            gen {
+                let! choice = Gen.frequency [
+                    1, calendarVersionShortBetaBuildStr
+                    1, calendarVersionPatchBetaBuildStr
+                ]
+                return choice
+            }
+            
+        let calendarVersionShortBetaNightlyBuildStr =
+            gen {
+                let! year  = Year.inRangeUInt16Year
+                let! month = Month.inRangeByteMonth
+                let! betaNightlyBuild = Build.betaNightlyString
+                return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{betaNightlyBuild}"                 
+            }
+            
+        let calendarVersionPatchBetaNightlyBuildStr =
+            gen {
+                let! year  = Year.inRangeUInt16Year
+                let! month = Month.inRangeByteMonth
+                let! patch = validPatchUInt32
+                let! betaNightlyBuild = Build.betaNightlyString
+                return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.MonthPatchDivider}{patch}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{betaNightlyBuild}"                 
+            }
+            
+        let calendarVersionNightlyBetaBuildStr =
+            gen {
+                let! choice = Gen.frequency [
+                    1, calendarVersionShortBetaNightlyBuildStr
+                    1, calendarVersionPatchBetaNightlyBuildStr
+                ]
+                return choice
+            }
+            
         let calendarVersionShortNightlyBuildStr =
             gen {
                 let! year  = Year.inRangeUInt16Year
@@ -523,6 +647,20 @@ module Generator =
                 let! patchCalendarVersion = calendarVersionPatch
                 let! nightlyBuild = Build.nightlyBuild
                 return { patchCalendarVersion with Build = Some nightlyBuild }
+            }
+            
+        let calendarVersionShortBetaNightlyBuild =
+            gen {
+                let! shortCalendarVersion = calendarVersionShort
+                let! betaNightlyBuild = Build.betaNightlyBuild
+                return { shortCalendarVersion with Build = Some betaNightlyBuild }
+            }
+            
+        let calendarVersionPatchBetaNightlyBuild =
+            gen {
+                let! patchCalendarVersion = calendarVersionPatch
+                let! betaNightlyBuild = Build.betaNightlyBuild
+                return { patchCalendarVersion with Build = Some betaNightlyBuild }
             }
             
         let calendarVersion =
