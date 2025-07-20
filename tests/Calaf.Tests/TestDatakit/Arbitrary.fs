@@ -204,9 +204,29 @@ module Arbitrary =
             static member calendarVersionShortNightlyBuild() =
                 Arb.fromGen Generator.CalendarVersion.calendarVersionShortNightlyBuild
                 
+        type internal calendarVersionShortBetaNightlyBuild =
+            static member calendarVersionShortBetaNightlyBuild() =
+                Arb.fromGen Generator.CalendarVersion.calendarVersionShortBetaNightlyBuild
+                
         type internal calendarVersions =
             static member calendarVersions() =
-                Arb.fromGen Generator.CalendarVersion.calendarVersions
+                Arb.fromGen Generator.CalendarVersion.calendarVersions        
+        
+        type stableCalendarVersionTagStr =
+            static member stableCalendarVersionTagStr() =
+                Arb.fromGen Generator.CalendarVersion.stableCalendarVersionTagStr
+                
+        type internal betaCalendarVersionTagStr =
+            static member betaCalendarVersionTagStr() =
+                Arb.fromGen Generator.CalendarVersion.betaCalendarVersionTagStr        
+            
+        type internal nightlyCalendarVersionTagStr =
+            static member nightlyCalendarVersionTagStr() =
+                Arb.fromGen Generator.CalendarVersion.nightlyCalendarVersionTagStr
+        
+        type internal betaNightlyCalendarVersionTagStr =
+            static member betaNightlyCalendarVersionTagStr() =
+                Arb.fromGen Generator.CalendarVersion.betaNightlyCalendarVersionTagStr
                 
         type internal calendarVersionTagStr =
             static member calendarVersionTagStr() =

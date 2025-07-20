@@ -92,6 +92,33 @@ module TryParseFromTagTests =
         | Some (CalVer _) -> true
         | _               -> false
         
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.stableCalendarVersionTagStr> |], MaxTest = 200)>]
+    let ``Stable tag string always parses to CalVer without Build`` (stableCalendarVersionTagStr: string) =
+        match tryParseFromTag stableCalendarVersionTagStr with
+        | Some (CalVer c) -> c.Build.IsNone
+        | _   -> false
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.nightlyCalendarVersionTagStr> |], MaxTest = 200)>]
+    let ``Nightly tag string always parses to Nightly CalVer`` (nightlyCalendarVersionTagStr: string) =
+        match tryParseFromTag nightlyCalendarVersionTagStr with
+        | Some (CalVer c) ->
+            c.Build |> Option.map(function | Nightly _ -> true | _ -> false) |> Option.defaultValue false
+        | _   -> false
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.betaCalendarVersionTagStr> |], MaxTest = 200)>]
+    let ``Beta tag string always parses to Beta CalVer`` (betaCalendarVersionTagStr: string) =
+        match tryParseFromTag betaCalendarVersionTagStr with
+        | Some (CalVer c) ->
+            c.Build |> Option.map(function | Beta _ -> true | _ -> false) |> Option.defaultValue false
+        | _   -> false
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.betaNightlyCalendarVersionTagStr> |], MaxTest = 200)>]
+    let ``BetaNightly tag string always parses to BetaNightly CalVer`` (betaNightlyCalendarVersionTagStr: string) =
+        match tryParseFromTag betaNightlyCalendarVersionTagStr with
+        | Some (CalVer c) ->
+            c.Build |> Option.map(function | BetaNightly _ -> true | _ -> false) |> Option.defaultValue false
+        | _   -> false
+        
     [<Property(Arbitrary = [| typeof<Arbitrary.SematicVersion.semanticVersionStr> |], MaxTest = 200)>]
     let ``Correct prefix + valid SemVer string parses to Some SemVer`` (semanticVersionStr: string) =
         match tryParseFromTag semanticVersionStr with
@@ -124,7 +151,26 @@ module TryParseFromTagTests =
         
 module TryMaxTests =
     [<Fact>]
-    let ``Same date release, nightly versions return nightly build with higher number and hash (hash may be sorted alphabetically)`` () =
+    let ``Same date release, beta, nightly, beta-nightly versions return beta-nightly build with the highest number if the same year, month, patch`` () =
+        let versions = [
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = None }
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 100us }) }
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us   }) }
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us   }) }
+            { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 2us   }) }
+            { Year = 2023us; Month = 11uy; Patch = Some 2u; Build = Some (Build.Nightly { Day = 31uy; Number = 3us   }) }
+            { Year = 2023us; Month = 12uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us   }) }
+            { Year = 2023us; Month = 12uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us   }) }            
+            { Year = 2023us; Month = 12uy; Patch = Some 1u; Build = Some (Build.Beta    { Number = 9999us }) }
+            { Year = 2023us; Month = 12uy; Patch = Some 2u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us   }) }
+            { Year = 2023us; Month = 12uy; Patch = Some 2u; Build = Some (Build.Beta    { Number = 1us }) }
+            { Year = 2023us; Month = 12uy; Patch = Some 2u; Build = Some (Build.BetaNightly ({ Number = 1us }, {Day = 1uy; Number = 1us})) }
+        ]
+        let max = versions |> tryMax
+        test <@ max |> Option.map (fun v -> v = versions[11]) |> Option.defaultValue false @>
+        
+    [<Fact>]
+    let ``Same date release, beta, nightly versions return beta build with the highest number`` () =
         let versions = [
             { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = None }
             { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 30uy; Number = 100us }) }
@@ -133,14 +179,34 @@ module TryMaxTests =
             { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 2us   }) }
             { Year = 2023us; Month = 11uy; Patch = Some 2u; Build = Some (Build.Nightly { Day = 31uy; Number = 3us   }) }
             { Year = 2023us; Month = 12uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us   }) }
+            { Year = 2023us; Month = 12uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us   }) }            
+            { Year = 2023us; Month = 12uy; Patch = Some 1u; Build = Some (Build.Beta { Number = 9999us   }) }
+            { Year = 2023us; Month = 12uy; Patch = Some 2u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us   }) }
+            { Year = 2023us; Month = 12uy; Patch = Some 2u; Build = Some (Build.Beta { Number = 1us   }) }
         ]
+        let max = versions |> tryMax
+        test <@ max |> Option.map (fun v -> v = versions[10]) |> Option.defaultValue false @>
+        
+    [<Fact>]
+    let ``Same date release, nightly versions return nightly build with higher number and day`` () =
+        let versions =
+            [|
+                { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = None }
+                { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 29uy; Number = 100us }) }
+                { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 30uy; Number = 99us   }) }
+                { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us   }) }
+                { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 2us   }) }
+                { Year = 2023us; Month = 11uy; Patch = Some 2u; Build = Some (Build.Nightly { Day = 31uy; Number = 3us   }) }
+                { Year = 2023us; Month = 12uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us   }) }
+            |]
         let max = versions |> tryMax
         test <@ max |> Option.map (fun v -> v = versions[6]) |> Option.defaultValue false @>
         
     [<Fact>]
     let ``Different release and nightly calendar versions return max expected value`` () =
         let versions = 
-            [| { Year = 2024us; Month = 11uy; Patch = Some 10u; Build = None }
+            [|
+               { Year = 2024us; Month = 11uy; Patch = Some 10u; Build = None }
                { Year = 2024us; Month = 11uy; Patch = Some 11u; Build = Some (Build.Nightly { Day = 31uy; Number = 35us }) }
                { Year = 2025us; Month = 11uy; Patch = None;     Build = None }
                { Year = 2025us; Month = 10uy; Patch = Some 10u; Build = None }
@@ -195,7 +261,21 @@ module TryMaxTests =
         calendarVersions
         |> Array.forall (fun v -> compare v max.Value <= 0)
         
-module StableTests =        
+module StableTests =
+    [<Fact>]
+    let ``Beta CalendarVersion when release to stable keeps the same Year, Month and Patch when the year and month are the same`` () =        
+        let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Beta { Number = 1us }) }
+        let monthStamp = { Year = 2023us; Month = 10uy }
+        let release = stable calVer monthStamp
+        test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch = calVer.Patch && release.Build.IsNone @>
+        
+    [<Fact>]
+    let ``Beta CalendarVersion when release to stable changes the Year, Month and removes Patch when the year and month are differed`` () =        
+        let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Beta { Number = 1us }) }
+        let monthStamp = { Year = 2023us; Month = 11uy }
+        let release = stable calVer monthStamp
+        test <@ release.Year = monthStamp.Year && release.Month = monthStamp.Month && release.Patch.IsNone && release.Build.IsNone @>
+        
     [<Fact>]
     let ``Nightly CalendarVersion when release to stable keeps the same Year, Month and Patch when the year and month are the same`` () =        
         let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us }) }
@@ -206,6 +286,20 @@ module StableTests =
     [<Fact>]
     let ``Nightly CalendarVersion when release to stable changes the Year, Month and removes Patch when the year and month are differed`` () =        
         let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Nightly { Day = 31uy; Number = 1us }) }
+        let monthStamp = { Year = 2023us; Month = 11uy }
+        let release = stable calVer monthStamp
+        test <@ release.Year = monthStamp.Year && release.Month = monthStamp.Month && release.Patch.IsNone && release.Build.IsNone @>
+        
+    [<Fact>]
+    let ``BetaNightly CalendarVersion when release to stable keeps the same Year, Month and Patch when the year and month are the same`` () =        
+        let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.BetaNightly ({ Number = 1us }, { Day = 31uy; Number = 1us })) }
+        let monthStamp = { Year = 2023us; Month = 10uy }
+        let release = stable calVer monthStamp
+        test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch = calVer.Patch && release.Build.IsNone @>
+        
+    [<Fact>]
+    let ``BetaNightly CalendarVersion when release to stable changes the Year, Month and removes Patch when the year and month are differed`` () =        
+        let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.BetaNightly ({ Number = 1us }, { Day = 31uy; Number = 1us } )) }
         let monthStamp = { Year = 2023us; Month = 11uy }
         let release = stable calVer monthStamp
         test <@ release.Year = monthStamp.Year && release.Month = monthStamp.Month && release.Patch.IsNone && release.Build.IsNone @>
@@ -417,12 +511,32 @@ module ToStringPropertiesTests =
         calVerString.Contains(calendarVersion.Patch.Value |> string)
       
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionShortNightlyBuild> |])>]
-    let ``CalendarVersion with Build contains it's Build in the string representation`` (calendarVersion: CalendarVersion) =
+    let ``CalendarVersion with Nightly Build contains it's Build in the string representation`` (calendarVersion: CalendarVersion) =
         let calVerString = calendarVersion |> toString
         let contains = match calendarVersion with
                         | { Build = Some (Build.Nightly { Day = day; Number = number }) } ->
                             calVerString.Contains($"{day}") &&
                             calVerString.Contains($"{number}")
+                        | _ -> failwith "CalendarVersion with Build should have a Build"
+        test <@ contains @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionShortBetaBuild> |])>]
+    let ``CalendarVersion with Beta Build contains it's Build in the string representation`` (calendarVersion: CalendarVersion) =
+        let calVerString = calendarVersion |> toString
+        let contains = match calendarVersion with
+                        | { Build = Some (Build.Beta { Number = number }) } ->                            
+                            calVerString.Contains($"{number}")
+                        | _ -> failwith "CalendarVersion with Build should have a Build"
+        test <@ contains @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionShortBetaNightlyBuild> |])>]
+    let ``CalendarVersion with BetaNightly Build contains it's Build in the string representation`` (calendarVersion: CalendarVersion) =
+        let calVerString = calendarVersion |> toString
+        let contains = match calendarVersion with
+                        | { Build = Some (Build.BetaNightly ({ Number = bn }, { Day = nd; Number = nn })) } ->
+                            calVerString.Contains($"{bn}") &&
+                            calVerString.Contains($"{nd}") &&
+                            calVerString.Contains($"{nn}")
                         | _ -> failwith "CalendarVersion with Build should have a Build"
         test <@ contains @>
         

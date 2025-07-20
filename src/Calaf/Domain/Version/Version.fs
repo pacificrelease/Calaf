@@ -130,7 +130,8 @@ let private tryCreateVersion (segments: VersionSegments) =
 let private tryParse (cleanVersion: CleanString) : Version option =    
     let segments = cleanVersion |> tryCreateVersionSegments
     match segments with
-    | Some segments -> segments |> tryCreateVersion |> Result.toOption |> Option.flatten
+    | Some segments ->
+        segments |> tryCreateVersion |> Result.toOption |> Option.flatten
     | None -> Some Unsupported
     
 let private patchRelease (currentVersion: CalendarVersion, build: Build option) =

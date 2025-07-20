@@ -686,6 +686,8 @@ module Generator =
                     1, calendarVersionPatchNightlyBuild
                     1, calendarVersionShortBetaBuild
                     1, calendarVersionPatchBetaBuild
+                    1, calendarVersionShortBetaNightlyBuild
+                    1, calendarVersionPatchBetaNightlyBuild
                 ]
                 return choice
             }
@@ -703,17 +705,55 @@ module Generator =
                 return choice
             }
             
-        let calendarVersionTagStr =
+        let stableCalendarVersionTagStr =
             gen {
                 let! versionPrefix = genTagVersionPrefix
                 let! choice = Gen.frequency [
                     1, calendarVersionShortStr
                     1, calendarVersionPatchStr
-                    //1, calendarVersionShortNightlyBuildStr
-                    //1, calendarVersionPatchNightlyBuildStr                    
                 ]
                 return $"{versionPrefix}{choice}"
             }
+            
+        let betaCalendarVersionTagStr =
+            gen {
+                let! versionPrefix = genTagVersionPrefix
+                let! choice = Gen.frequency [
+                    1, calendarVersionShortBetaBuildStr
+                    1, calendarVersionPatchBetaBuildStr
+                ]
+                return $"{versionPrefix}{choice}"
+            }        
+            
+        let nightlyCalendarVersionTagStr =
+            gen {
+                let! versionPrefix = genTagVersionPrefix
+                let! choice = Gen.frequency [
+                    1, calendarVersionShortNightlyBuildStr
+                    1, calendarVersionPatchNightlyBuildStr
+                ]
+                return $"{versionPrefix}{choice}"
+            }
+            
+        let betaNightlyCalendarVersionTagStr =
+            gen {
+                let! versionPrefix = genTagVersionPrefix
+                let! choice = Gen.frequency [
+                    1, calendarVersionShortBetaNightlyBuildStr
+                    1, calendarVersionPatchBetaNightlyBuildStr
+                ]
+                return $"{versionPrefix}{choice}"
+            }
+            
+        let calendarVersionTagStr =
+            gen {
+                return! Gen.frequency [
+                    1, stableCalendarVersionTagStr
+                    1, betaCalendarVersionTagStr
+                    1, nightlyCalendarVersionTagStr
+                    1, betaNightlyCalendarVersionTagStr
+                ]
+            }        
             
         let calendarVersionShortTagStr =
             gen {
