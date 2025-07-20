@@ -43,23 +43,16 @@ jobs:
         
       - name: Test
         run: dotnet test ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --verbosity normal --collect:"XPlat Code Coverage" -- RunConfiguration.FailFast=true
-        
-      - name: Install ReportGenerator
-        run: dotnet tool install --global dotnet-reportgenerator-globaltool
-        
-      - name: Convert Coverage to Cobertura
-        run: reportgenerator -reports:**/coverage.cobertura.xml -targetdir:coverage-report -reporttypes:Cobertura
 
+      - name: ReportGenerator
+        uses: danielpalme/ReportGenerator-GitHub-Action@v5
+        with:
+          reports: 'coverage.xml'
+          targetdir: 'coverage-report'
+          reporttypes: 'HtmlInline;Cobertura'
+          
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
         with:
           name: cobertura-report
           path: coverage-report
-          
-      - name: Upload Coverage to Codecov
-        if: false
-        uses: codecov/codecov-action@v3
-        with:
-          files: coverage-report/Cobertura.xml
-          fail_ci_if_error: true
-          verbose: true
