@@ -44,6 +44,10 @@ module Arbitrary =
             type containingBetaBadString =
                 static member containingBetaBadString() =
                     Arb.fromGen Generator.Build.Beta.containingBetaBadString
+            
+            type beta =
+                static member beta() =
+                    Arb.fromGen Generator.Build.Beta.beta
                     
             type betaBuild =
                 static member betaBuild() =
@@ -65,6 +69,10 @@ module Arbitrary =
             type containingNightlyBadString =
                 static member containingNightlyBadString() =
                     Arb.fromGen Generator.Build.Nightly.containingNightlyBadString
+            
+            type nightly =
+                static member nightly() =
+                    Arb.fromGen Generator.Build.Nightly.nightly
                     
             type nightlyBuild =
                 static member nightlyBuild() =

@@ -44,6 +44,12 @@ let private matchBetaBuildRegex (input: string) =
 let private matchBetaNightlyRegex (input: string) =
     System.Text.RegularExpressions.Regex.Match(input, allowedBetaNightlyBuildRegexString)
 
+let private nextNumber currentNumber : BuildNumber =
+    let isOverflowPossible = currentNumber = BuildNumber.MaxValue
+    if isOverflowPossible then
+        NumberStartValue
+    else currentNumber + NumberIncrementStep
+
 let private isEmptyString (build: string) =
     String.IsNullOrWhiteSpace(build)
     
@@ -53,16 +59,14 @@ let private (|Nightly|_|) (input: string) =
         let daySegment    = m.Groups[2].Value
         let numberSegment = m.Groups[3].Value
         Some (daySegment, numberSegment)
-    else
-        None
+    else None
         
 let private (|Beta|_|) (input: string) =
     let m = matchBetaBuildRegex input
     if m.Success then
         let numberSegment = m.Groups[2].Value
         Some numberSegment
-    else
-        None
+    else None
         
 let private (|BetaNightly|_|) (input: string) =
     let m = matchBetaNightlyRegex input
@@ -71,8 +75,7 @@ let private (|BetaNightly|_|) (input: string) =
         let nightlyDaySegment    = m.Groups[3].Value
         let nightlyNumberSegment = m.Groups[4].Value
         Some (betaNumberSegment, nightlyDaySegment, nightlyNumberSegment)
-    else
-        None
+    else None
     
 let private tryCreateBetaNightlyBuild (betaNumberString: string, nightlyDayString: string, nightlyNumberString: string) =
     match (UInt16.TryParse betaNumberString, Byte.TryParse nightlyDayString, UInt16.TryParse nightlyNumberString) with
@@ -126,14 +129,20 @@ let toString (build: Build) : string =
     
 let tryParseFromString (build: string) =
     tryCreateBuild build
-
-let nightly (currentBuild: Build option) (dayOfMonth: DayOfMonth) : Build =
-    let nextNumber currentNumber =
-        let isOverflowPossible = currentNumber = BuildNumber.MaxValue
-        if isOverflowPossible
-        then NumberStartValue
-        else currentNumber + NumberIncrementStep
     
+let beta (currentBuild: Build option) : Build =
+    match currentBuild with
+    | None ->
+        Build.Beta { Number = NumberStartValue }
+    | Some build ->
+        match build with
+        | Build.BetaNightly ({ Number = betaNumber }, _)
+        | Build.Beta { Number = betaNumber } ->
+            Build.Beta { Number = nextNumber betaNumber }
+        | Build.Nightly _ ->
+            Build.Beta { Number = NumberStartValue }    
+
+let nightly (currentBuild: Build option) (dayOfMonth: DayOfMonth) : Build =    
     match currentBuild with
     | None ->
         Build.Nightly { Day = dayOfMonth; Number = NumberStartValue }

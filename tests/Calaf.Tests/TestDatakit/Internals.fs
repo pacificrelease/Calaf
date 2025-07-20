@@ -3,6 +3,16 @@
 module internal Internals =
     open Calaf.Domain.DomainTypes.Values
     
+    let internal preventNumberOverflow (number: BuildNumber) =
+        if number = BuildNumber.MaxValue then
+            number - Calaf.Domain.Build.NumberIncrementStep
+        else number
+    
+    let internal uniqueDay (dayOfMonth: DayOfMonth, dateTimeOffset: System.DateTimeOffset) =
+        if dayOfMonth = byte dateTimeOffset.Day then
+            byte (dateTimeOffset.AddDays(1).Day)
+        else byte dateTimeOffset.Day
+    
     let internal uniqueMonthStamp (calVer: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =        
         let incrStep = 1
         

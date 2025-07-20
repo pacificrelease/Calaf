@@ -247,6 +247,8 @@ module Generator =
                     ]
                     return choice
                 }
+            let beta =
+                genBetaBuild
                 
             let betaBuild =
                 gen {
@@ -297,6 +299,9 @@ module Generator =
                     ]
                     return choice
                 }
+            
+            let nightly =
+                genNightlyBuild
                 
             let nightlyBuild =
                 gen {
