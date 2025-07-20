@@ -9,12 +9,35 @@ open Calaf.Domain.Build
 open Calaf.Tests
 
 module ToStringPropertyTests =
-    [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyBuild> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Beta.betaBuild> |])>]
+    let ``Beta build converts to non-empty string`` (betaBuild: Build) =
+        test <@ toString betaBuild |> System.String.IsNullOrWhiteSpace |> not @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Beta.betaBuild> |])>]
+    let ``Beta build string starts with the right build type prefix`` (betaBuild: Build) =
+        let betaBuildString = toString betaBuild
+        test <@ betaBuildString.StartsWith BetaBuildType @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.nightlyBuild> |])>]
     let ``Nightly build converts to non-empty string`` (nightlyBuild: Build) =
         test <@ toString nightlyBuild |> System.String.IsNullOrWhiteSpace |> not @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.nightlyBuild> |])>]
+    let ``Nightly build string starts with the right build type prefix`` (nightlyBuild: Build) =
+        let nightlyBuildString = toString nightlyBuild
+        test <@ nightlyBuildString.StartsWith NightlyBuildType @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.BetaNightly.betaNightlyBuild> |])>]
+    let ``BetaNightly build converts to non-empty string`` (betaNightlyBuild: Build) =
+        test <@ toString betaNightlyBuild |> System.String.IsNullOrWhiteSpace |> not @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.BetaNightly.betaNightlyBuild> |])>]
+    let ``BetaNightly build string starts with the right build type prefix`` (betaNightlyBuild: Build) =
+        let betaNightlyBuildString = toString betaNightlyBuild
+        test <@ betaNightlyBuildString.StartsWith BetaBuildType @>
             
 module TryParseFromStringPropertyTests =
-    [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyString> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.nightlyString> |])>]
     let ``Nightly string recognizes correctly to the Nightly with number and hash`` (nightlyString: string) =
         test <@
             let result = nightlyString |> tryParseFromString
@@ -32,20 +55,20 @@ module TryParseFromStringPropertyTests =
         wrongStringBuild
         |> tryParseFromString = Error BuildInvalidString
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.Build.containingNightlyBadString> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.containingNightlyBadString> |])>]
     let ``String containing Nightly parses to BuildInvalidString error`` (containingNightlyBadString: string) =
         let result = containingNightlyBadString |> tryParseFromString
         result = Error BuildInvalidString    
 
 module NightlyTests =
     // Result is always Build.Nightly
-    [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyBuildOption>; typeof<Arbitrary.Day.inRangeByteDay> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.nightlyBuildOption>; typeof<Arbitrary.Day.inRangeByteDay> |])>]
     let ``Nightly always returns a Nightly build type`` (build: Build option, dayOfMonth: DayOfMonth) =
         let nightly = nightly build dayOfMonth
         test <@ match nightly with | Build.Nightly _ -> true | _ -> false @>
         
     // Day is correctly assigned
-    [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyBuildOption>; typeof<Arbitrary.Day.inRangeByteDay> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.nightlyBuildOption>; typeof<Arbitrary.Day.inRangeByteDay> |])>]
     let ``The day of the month is correctly assigned to the Nightly build`` (nightlyBuild: Build option, dayOfMonth: DayOfMonth) =        
         let nightlyBuild' = nightly nightlyBuild dayOfMonth
         match nightlyBuild' with
@@ -63,7 +86,7 @@ module NightlyTests =
         | _ -> test <@ false @>
         
     //Number increments for the same day build with no overflow
-    [<Property(Arbitrary = [| typeof<Arbitrary.Build.numberNoUpperBoundaryNightlyBuild> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.numberNoUpperBoundaryNightlyBuild> |])>]
     let ``Nightly build with no upper boundary number increments the number for the same day nightly build`` (nightlyBuild: Build) =
         match nightlyBuild with
         | Build.Nightly { Day = dayOfMonth; Number = number } ->
@@ -85,7 +108,7 @@ module NightlyTests =
         | _ -> test <@ false @>
         
     // New day resets the number to the NumberStartValue
-    [<Property(Arbitrary = [| typeof<Arbitrary.Build.nightlyBuild> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.nightlyBuild> |])>]
     let ``Nightly build with different day resets the number to NumberStartValue``
         (nightlyBuild: Build, dateTimeOffset: System.DateTimeOffset) =
         match nightlyBuild with

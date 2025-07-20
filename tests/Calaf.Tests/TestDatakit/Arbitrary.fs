@@ -31,71 +31,73 @@ module Arbitrary =
         static member directoryPathString() =
             Arb.fromGen Generator.directoryPathString
             
-    module internal Build =
-        type betaString =
-            static member betaString() =
-                Arb.fromGen Generator.Build.betaString
-                
-        type betaNightlyString =
-            static member betaNightlyString() =
-                Arb.fromGen Generator.Build.betaNightlyString
-                
-        type nightlyString =
-            static member nightlyString() =
-                Arb.fromGen Generator.Build.nightlyString
-                
+    module Build =
         type wrongString =
             static member wrongString() =
                 Arb.fromGen Generator.Build.wrongString
                 
-        type containingBetaBadString =
-            static member containingBetaBadString() =
-                Arb.fromGen Generator.Build.containingBetaBadString
+        module Beta =            
+            type betaString =
+                static member betaString() =
+                    Arb.fromGen Generator.Build.Beta.betaString
+                    
+            type containingBetaBadString =
+                static member containingBetaBadString() =
+                    Arb.fromGen Generator.Build.Beta.containingBetaBadString
+                    
+            type betaBuild =
+                static member betaBuild() =
+                    Arb.fromGen Generator.Build.Beta.betaBuild
+                    
+            type betaBuildOption =
+                static member betaBuildOption() =
+                    Arb.fromGen Generator.Build.Beta.betaBuildOption
+                    
+            type numberNoUpperBoundaryBetaBuild =
+                static member numberNoUpperBoundaryBetaBuild() =
+                    Arb.fromGen Generator.Build.Beta.numberNoUpperBoundaryBetaBuild
+                    
+        module Nightly =
+            type nightlyString =
+                static member nightlyString() =
+                    Arb.fromGen Generator.Build.Nightly.nightlyString
+                    
+            type containingNightlyBadString =
+                static member containingNightlyBadString() =
+                    Arb.fromGen Generator.Build.Nightly.containingNightlyBadString
+                    
+            type nightlyBuild =
+                static member nightlyBuild() =
+                    Arb.fromGen Generator.Build.Nightly.nightlyBuild
+                    
+            type nightlyBuildOption =
+                static member nightlyBuildOption() =
+                    Arb.fromGen Generator.Build.Nightly.nightlyBuildOption
+                    
+            type numberNoUpperBoundaryNightlyBuild =
+                static member numberNoUpperBoundaryNightlyBuild() =
+                    Arb.fromGen Generator.Build.Nightly.numberNoUpperBoundaryNightlyBuild
+                    
+        module BetaNightly =
+            type betaNightlyString =
+                static member betaNightlyString() =
+                    Arb.fromGen Generator.Build.BetaNightly.betaNightlyString
+                    
+            type containingBetaNightlyBadString =
+                static member containingBetaNightlyBadString() =
+                    Arb.fromGen Generator.Build.BetaNightly.containingBetaNightlyBadString
                 
-        type containingNightlyBadString =
-            static member containingNightlyBadString() =
-                Arb.fromGen Generator.Build.containingNightlyBadString
+            type betaNightlyBuild =
+                static member betaNightlyBuild() =
+                    Arb.fromGen Generator.Build.BetaNightly.betaNightlyBuild
+                    
+            type betaNightlyBuildOption =
+                static member betaNightlyBuildOption() =
+                    Arb.fromGen Generator.Build.BetaNightly.betaNightlyBuildOption
                 
-        type containingBetaNightlyBadString =
-            static member containingBetaNightlyBadString() =
-                Arb.fromGen Generator.Build.containingBetaNightlyBadString
-                
-        type betaBuild =
-            static member betaBuild() =
-                Arb.fromGen Generator.Build.betaBuild
-                
-                
-        type nightlyBuild =
-            static member nightlyBuild() =
-                Arb.fromGen Generator.Build.nightlyBuild
-                
-        type betaNightlyBuild =
-            static member betaNightlyBuild() =
-                Arb.fromGen Generator.Build.betaNightlyBuild
-        
-        type numberNoUpperBoundaryBetaBuild =
-            static member numberNoUpperBoundaryBetaBuild() =
-                Arb.fromGen Generator.Build.numberNoUpperBoundaryBetaBuild
-                
-        type numberNoUpperBoundaryNightlyBuild =
-            static member numberNoUpperBoundaryNightlyBuild() =
-                Arb.fromGen Generator.Build.numberNoUpperBoundaryNightlyBuild
-                
-        type numberNoUpperBoundaryBetaNightlyBuild =
-            static member numberNoUpperBoundaryBetaNightlyBuild() =
-                Arb.fromGen Generator.Build.numberNoUpperBoundaryBetaNightlyBuild
-        
-        type betaBuildOption =
-            static member betaBuildOption() =
-                Arb.fromGen Generator.Build.betaBuildOption
-                
-        type nightlyBuildOption =
-            static member nightlyBuildOption() =
-                Arb.fromGen Generator.Build.nightlyBuildOption
-                
-        type betaNightlyBuildOption =
-            static member betaNightlyBuildOption() =
-                Arb.fromGen Generator.Build.betaNightlyBuildOption
+            type numberNoUpperBoundaryBetaNightlyBuild =
+                static member numberNoUpperBoundaryBetaNightlyBuild() =
+                    Arb.fromGen Generator.Build.BetaNightly.numberNoUpperBoundaryBetaNightlyBuild 
                 
     module internal Day =
         type inRangeByteDay =

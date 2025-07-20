@@ -10,9 +10,9 @@ let internal NumberIncrementStep = 1us
 [<Literal>]
 let internal NumberStartValue = 1us
 [<Literal>]
-let private NightlyBuildType = "nightly"
+let internal NightlyBuildType = "nightly"
 [<Literal>]
-let private BetaBuildType = "beta"
+let internal BetaBuildType = "beta"
 [<Literal>]
 let internal BuildTypeDayDivider = "."
 [<Literal>]
