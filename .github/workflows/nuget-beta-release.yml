@@ -2,6 +2,10 @@ name: NuGet Beta Release
 
 on:
   workflow_dispatch:
+    
+permissions:
+  contents: read
+  packages: write
 
 concurrency:
   group: beta
