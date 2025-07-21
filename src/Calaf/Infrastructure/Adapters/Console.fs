@@ -27,7 +27,8 @@ module internal ConsoleInputGateway =
     let toMakeType (flags: MakeFlag list) =
         match flags with
             | [ Nightly ] -> Ok MakeType.Nightly
-            | [ Stable ] -> Ok MakeType.Stable
+            | [ Beta ] -> Ok MakeType.Beta
+            | [ Stable ] -> Ok MakeType.Stable            
             | [] -> Ok MakeType.Stable
             | _  ->
                 $"{flags.Head}"
@@ -44,7 +45,8 @@ module internal ConsoleInput =
         match results.GetAllResults() with
         | [ Make makeFlagsResults ] ->
             makeFlagsResults.GetAllResults()
-            |> ConsoleInputGateway.toMakeType |> Result.map Command.Make
+            |> ConsoleInputGateway.toMakeType
+            |> Result.map Command.Make
         | [] -> MakeType.Stable |> Command.Make |> Ok
         | commands ->
             $"{commands.Head}"
