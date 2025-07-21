@@ -75,7 +75,10 @@ jobs:
   
             - name: Build
               run: dotnet build ${{ vars.SOLUTION }} --no-restore --configuration ${{ vars.CONFIGURATION }}
-  
+
+            - name: Run Tests
+              run: dotnet test ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --verbosity normal
+
             - name: Pack
               run: |
                 dotnet pack ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --output ./nupkgs
