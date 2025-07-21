@@ -97,4 +97,3 @@ jobs:
                   --source github \
                   --api-key "${{ secrets.GITHUB_TOKEN }}" \
                   --skip-duplicate
-              continue-on-error: true
