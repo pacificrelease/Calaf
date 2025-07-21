@@ -38,11 +38,13 @@ jobs:
           git config --global user.email "${{ vars.GIT_EMAIL }}"
 
       - name: Install Calaf Tool
+        if: false
         run: |
           dotnet nuget add source "${{ env.GITHUB_FEED }}" --name "github" --username "${{ github.actor }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
           dotnet tool install --global Calaf --add-source "github" --prerelease
 
       - name: Generate a Beta Version
+        if: false
         id: version
         run: |
           BEFORE_COMMIT=$(git rev-parse HEAD)
@@ -61,7 +63,8 @@ jobs:
           fi
       
       - name: Push Version Changes
-        if: steps.version.outputs.VERSION_CHANGED == 'true'
+        if: false
+#        if: steps.version.outputs.VERSION_CHANGED == 'true'
         run: |
           git push origin ${{ github.ref_name }}
           git push origin --tags
@@ -69,20 +72,20 @@ jobs:
       - name: Restore Dependencies
         run: dotnet restore ${{ vars.SOLUTION }}
 
-      - name: Build Solution
+      - name: Build Solution        
         run: dotnet build ${{ vars.SOLUTION }} --no-restore --configuration ${{ vars.CONFIGURATION }}
 
-      - name: Run Tests
+      - name: Run Tests        
         run: dotnet test ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --verbosity normal
         
-      - name: Pack NuGet Package
+      - name: Pack NuGet Package        
         run: |
           dotnet pack ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --output ${{ env.TEMP_OUTPUT }}
 
       - name: Publish to NuGet
-        if: steps.version.outputs.VERSION_CHANGED == 'true'
+#        if: steps.version.outputs.VERSION_CHANGED == 'true'
         run: |
-          dotnet nuget push ${{ env.TEMP_OUTPUT }}/*.nupkg
-            --source ${{ env.NUGET_FEED }}
-            --api-key "${{ secrets.NUGET_API_KEY }}"
+          dotnet nuget push ${{ env.TEMP_OUTPUT }}/*.nupkg \
+            --source ${{ env.NUGET_FEED }} \
+            --api-key "${{ secrets.NUGET_API_KEY }}" \
             --skip-duplicate
