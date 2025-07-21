@@ -1,0 +1,88 @@
+name: NuGet Beta Release
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: beta
+  cancel-in-progress: true
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  FEED: "https://api.nuget.org/v3/index.json"
+  TEMP_OUTPUT: "./nupkgs"
+
+jobs:
+  beta-release:
+    name: Beta Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "${{ vars.GIT_USERNAME }}"
+          git config --global user.email "${{ vars.GIT_EMAIL }}"
+          
+      - name: Add Nightly NuGet Feed
+        run: |
+          dotnet nuget add source "${{ env.FEED }}" \
+            --username "${{ github.repository_owner }}" \
+            --password "${{ secrets.GITHUB_TOKEN }}" \
+            --store-password-in-clear-text \
+            --name github
+
+      - name: Install Calaf Tool
+        run: dotnet tool install --global Calaf --prerelease
+
+      - name: Generate a Beta Version
+        id: version
+        run: |
+          BEFORE_COMMIT=$(git rev-parse HEAD)
+          
+          calaf make beta
+          
+          AFTER_COMMIT=$(git rev-parse HEAD)
+          
+          if ! git diff --quiet || ! git diff --cached --quiet || [ "$BEFORE_COMMIT" != "$AFTER_COMMIT" ];
+          then
+            echo "VERSION_CHANGED=true" >> $GITHUB_OUTPUT
+            echo "Changes detected"
+          else
+            echo "VERSION_CHANGED=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+          fi
+      
+      - name: Push Version Changes
+        if: steps.version.outputs.VERSION_CHANGED == 'true'
+        run: |
+          git push origin ${{ github.ref_name }}
+          git push origin --tags
+
+      - name: Restore Dependnecies
+        run: dotnet restore ${{ vars.SOLUTION }}
+
+      - name: Build Solution
+        run: dotnet build ${{ vars.SOLUTION }} --no-restore --configuration ${{ vars.CONFIGURATION }}
+
+      - name: Run Tests
+        run: dotnet test ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --verbosity normal
+        
+      - name: Pack NuGet Package
+        run: |
+          dotnet pack ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --output ${{ env.TEMP_OUTPUT }}
+
+      - name: Publish to NuGet
+        run: |
+          dotnet nuget push ${{ env.TEMP_OUTPUT }}/*.nupkg \
+            --source ${{ env.FEED }} \
+            --api-key "${{ secrets.NUGET_API_KEY }}"
+            --skip-duplicate
