@@ -260,6 +260,31 @@ module TryMaxTests =
         let max = calendarVersions |> tryMax                
         calendarVersions
         |> Array.forall (fun v -> compare v max.Value <= 0)
+
+module BetaTests =
+    [<Fact>]
+    let ``Beta CalendarVersion releases to beta uncreases beta number but keeps the same Year, Month, Patch when the year and month are same`` () =        
+        let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Beta { Number = 1us }) }
+        let dateStamp = System.DateOnly (2023, 10, 31)
+        let release = beta calVer dateStamp
+        let betaNumber = match release.Build.Value with | Beta b -> Some b.Number | _ -> None
+        test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch = calVer.Patch && betaNumber > (Some 1us) @>
+        
+    [<Fact>]
+    let ``Stable CalendarVersion releases to beta keeps the same Year, Month, increase Patch and adds Build when the year and month are same`` () =        
+        let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = None }
+        let dateStamp = System.DateOnly(2023, 10, 31)
+        let release = beta calVer dateStamp
+        let betaNumber = match release.Build.Value with | Beta b -> Some b.Number | _ -> None
+        test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch > calVer.Patch && betaNumber = (Some Calaf.Domain.Build.NumberStartValue) @>
+        
+    [<Fact>]
+    let ``BetaNightly CalendarVersion releases to beta switch to beta, uncreases beta number but keeps the same Year, Month, Patch when the year and month are same`` () =        
+        let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.BetaNightly ({ Number = 5us },{ Day = byte 31; Number = 2us } ) ) }
+        let dateStamp = System.DateOnly (2023, 10, 31)
+        let release = beta calVer dateStamp
+        let betaNumber = match release.Build.Value with | Beta b -> Some b.Number | _ -> None
+        test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch = calVer.Patch && betaNumber > (Some 5us) @>
         
 module StableTests =
     [<Fact>]
