@@ -4,5 +4,5 @@ open Calaf.Application
 
 type Clock() =
     interface IClock with
-        member _.now() =
+        member _.utcNow() =
             System.DateTimeOffset.UtcNow

@@ -29,18 +29,45 @@ module internal Make =
             | _ -> ()            
                     
         let error (console: IConsole) e =            
-            console.error $"{e}"    
+            console.error $"{e}"
+            
+    // TODO: Remove this type after refactoring
+    let private beta path (context: MakeContext) settings =
+        result {
+            let dateTimeOffset = context.Clock.utcNow()
+            let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
+            let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
+            let (TagQuantity tagCount) = settings.TagsToLoad
+            let! repo = context.Git.tryRead path tagCount Version.versionPrefixes dateTimeOffset                
+            let! workspace,  _ = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
+            let! workspace', _ =
+                Version.beta workspace.Version dateTimeOffset
+                |> Workspace.tryRelease workspace
+                |> Result.mapError CalafError.Domain
+            let profile = Workspace.profile workspace'
+            do! profile.Projects
+                |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
+                |> Result.map ignore                
+            do! profile.Repository
+                |> Option.map (fun p ->
+                    let signature = { Name = p.Signature.Name; Email = p.Signature.Email; When = p.Signature.When }
+                    context.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName signature
+                    |> Result.map ignore
+                    |> Result.mapError id)
+                |> Option.defaultValue (Ok ())                                
+            return workspace'
+        }
     
     // TODO: Remove this type after refactoring
     let private nightly path (context: MakeContext) settings =
         result {
-            let timeStamp = context.Clock.now()
-            let! dayOfMonth = timeStamp |> DateSteward.tryCreateDayOfMonth |> Result.mapError CalafError.Domain
-            let! monthStamp = timeStamp |> DateSteward.tryCreateMonthStamp |> Result.mapError CalafError.Domain                
+            let dateTimeOffset = context.Clock.utcNow()
+            let! dayOfMonth = dateTimeOffset |> DateSteward.tryCreateDayOfMonth |> Result.mapError CalafError.Domain
+            let! monthStamp = dateTimeOffset |> DateSteward.tryCreateMonthStamp |> Result.mapError CalafError.Domain                
             let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
             let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
             let (TagQuantity tagCount) = settings.TagsToLoad
-            let! repo = context.Git.tryRead path tagCount Version.versionPrefixes timeStamp                
+            let! repo = context.Git.tryRead path tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace,  _ = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
             let! workspace', _ =
                 Version.nightly workspace.Version (dayOfMonth, monthStamp)
@@ -63,13 +90,13 @@ module internal Make =
     let private nightly2
         (dependencies: {| Directory: string; Settings: MakeSettings; FileSystem: IFileSystem; Git: IGit; Clock: IClock |}) =
         result {
-            let timeStamp = dependencies.Clock.now()
-            let! dayOfMonth = timeStamp |> DateSteward.tryCreateDayOfMonth |> Result.mapError CalafError.Domain
-            let! monthStamp = timeStamp |> DateSteward.tryCreateMonthStamp |> Result.mapError CalafError.Domain                
+            let dateTimeOffset = dependencies.Clock.utcNow()
+            let! dayOfMonth = dateTimeOffset |> DateSteward.tryCreateDayOfMonth |> Result.mapError CalafError.Domain
+            let! monthStamp = dateTimeOffset |> DateSteward.tryCreateMonthStamp |> Result.mapError CalafError.Domain                
             let (DotNetXmlFilePattern searchPatternStr) = dependencies.Settings.ProjectsSearchPattern
             let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatternStr                
             let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
-            let! repo = dependencies.Git.tryRead dependencies.Directory tagCount Version.versionPrefixes timeStamp                
+            let! repo = dependencies.Git.tryRead dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, captureEvents =
                 Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
             let! workspace', releaseEvents =
@@ -93,12 +120,12 @@ module internal Make =
     // TODO: Remove this type after refactoring
     let private stable path (context: MakeContext) settings =
         result {
-            let timeStamp = context.Clock.now()            
-            let! monthStamp = timeStamp |> DateSteward.tryCreateMonthStamp |> Result.mapError CalafError.Domain                
+            let dateTimeOffset = context.Clock.utcNow()            
+            let! monthStamp = dateTimeOffset |> DateSteward.tryCreateMonthStamp |> Result.mapError CalafError.Domain                
             let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
             let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
             let (TagQuantity tagCount) = settings.TagsToLoad
-            let! repo = context.Git.tryRead path tagCount Version.versionPrefixes timeStamp                
+            let! repo = context.Git.tryRead path tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace,  _ = Workspace.tryCapture (dir, repo)          |> Result.mapError CalafError.Domain
             let! workspace', _ =
                 Version.stable workspace.Version monthStamp
@@ -121,12 +148,12 @@ module internal Make =
     let private stable2
         (dependencies: {| Directory: string; Settings: MakeSettings; FileSystem: IFileSystem; Git: IGit; Clock: IClock |}) =
         result {
-            let timeStamp = dependencies.Clock.now()            
-            let! monthStamp = timeStamp |> DateSteward.tryCreateMonthStamp |> Result.mapError CalafError.Domain                
+            let dateTimeOffset = dependencies.Clock.utcNow()            
+            let! monthStamp = dateTimeOffset |> DateSteward.tryCreateMonthStamp |> Result.mapError CalafError.Domain                
             let (DotNetXmlFilePattern searchPatternStr) = dependencies.Settings.ProjectsSearchPattern
             let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatternStr                
             let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
-            let! repo = dependencies.Git.tryRead dependencies.Directory tagCount Version.versionPrefixes timeStamp                
+            let! repo = dependencies.Git.tryRead dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, captureEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
             let! workspace', releaseEvents =
                 Version.stable workspace.Version monthStamp
@@ -176,6 +203,7 @@ module internal Make =
         |}
         match context.Type with
         | MakeType.Stable  -> stable2 dependencies
+        | MakeType.Beta    -> failwith "not implemented yet"
         | MakeType.Nightly -> nightly2 dependencies      
         
     let run path arguments context settings  =
@@ -188,6 +216,8 @@ module internal Make =
                     match strategy with
                     | MakeType.Nightly ->
                         return! nightly path context settings
+                    | MakeType.Beta ->
+                        return! beta path context settings
                     | MakeType.Stable ->
                         return! stable path context settings
             }

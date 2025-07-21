@@ -1,5 +1,5 @@
 namespace Calaf.Application
 
 type IClock =
-    abstract now:
+    abstract utcNow:
         unit -> System.DateTimeOffset

@@ -178,22 +178,22 @@ let toTagName (calVer: CalendarVersion) : string =
 let toCommitMessage (calVer: CalendarVersion) : string =
     $"{commitVersionPrefix}{toString calVer}"
     
-let beta (currentVersion: CalendarVersion) (dateStamp: System.DateOnly) : CalendarVersion =
+let beta (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.DateTimeOffset) : CalendarVersion =
     let build = Build.beta currentVersion.Build |> Some
     
-    let shouldReleaseYear = shouldChange (currentVersion.Year, uint16 dateStamp.Year)
+    let shouldReleaseYear = shouldChange (currentVersion.Year, uint16 dateTimeOffsetStamp.Year)
     if shouldReleaseYear
     then
-        { Year  = uint16 dateStamp.Year
-          Month = byte dateStamp.Month
+        { Year  = uint16 dateTimeOffsetStamp.Year
+          Month = byte dateTimeOffsetStamp.Month
           Patch = None
           Build = build }
     else
-        let shouldReleaseMonth = shouldChange (currentVersion.Month, byte dateStamp.Month)
+        let shouldReleaseMonth = shouldChange (currentVersion.Month, byte dateTimeOffsetStamp.Month)
         if shouldReleaseMonth
         then
             { Year  = currentVersion.Year
-              Month = byte dateStamp.Month
+              Month = byte dateTimeOffsetStamp.Month
               Patch = None
               Build = build }
         else

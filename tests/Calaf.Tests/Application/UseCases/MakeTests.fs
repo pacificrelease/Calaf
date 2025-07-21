@@ -113,7 +113,8 @@ module Run2Tests =
             
         type StubClock(fixedTime: System.DateTimeOffset) =
             interface IClock with
-                member _.now() = fixedTime
+                member _.utcNow() =
+                    fixedTime
 
     [<Fact>]
     let ``run2 with Stable type should execute stable workflow successfully`` () =

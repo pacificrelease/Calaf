@@ -7,11 +7,13 @@ open Calaf.Contracts
 
 type MakeFlag =    
     | [<CliPrefix(CliPrefix.None)>] Stable
+    | [<CliPrefix(CliPrefix.None)>] Beta
     | [<CliPrefix(CliPrefix.None)>] Nightly
     interface IArgParserTemplate with
         member flag.Usage =
             match flag with
             | Stable  -> "Make a stable version"
+            | Beta    -> "Make a beta version"
             | Nightly -> "Make a nightly version"
 
 type InputCommand = 

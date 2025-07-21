@@ -1,8 +1,9 @@
 ﻿namespace Calaf.Contracts
 
 // Incoming commands
-type MakeType =
+type MakeType =    
     | Stable
+    | Beta
     | Nightly
     
 type Command =
