@@ -15,7 +15,7 @@ concurrency:
     
 env:
     DOTNET_VERSION: '9.0.x'
-    FEED: "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+    GITHUB_FEED: "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
 
 jobs:    
     nightly-release:
@@ -27,21 +27,25 @@ jobs:
               with:
                 fetch-depth: 0
   
-            - name: Setup
+            - name: Setup .NET
               uses: actions/setup-dotnet@v4
               with:
                 dotnet-version: ${{ env.DOTNET_VERSION }}
               
-            - name: Configure
+            - name: Configure Git
               run: |
                 git config --global user.name "${{ vars.GIT_USERNAME }}"
                 git config --global user.email "${{ vars.GIT_EMAIL }}"
-  
-            - name: Tool
-              run: dotnet tool install --global Calaf
-              continue-on-error: true
+                
+            - name: Add a GitHub NuGet Feed Source
+              run: |
+                dotnet nuget add source "${{ env.GITHUB_FEED }}" --name "github" --username "${{ github.actor }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
 
-            - name: Version
+            - name: Install Calaf Tool
+              run: |
+                dotnet tool install --global Calaf --add-source "github" --prerelease
+                
+            - name: Generate a Nightly Version
               id: version
               run: |
                 BEFORE_COMMIT=$(git rev-parse HEAD)
@@ -60,38 +64,20 @@ jobs:
                 fi
               continue-on-error: false
             
-#            - name: Push
-#              if: steps.version.outputs.VERSION_CHANGED == 'true'
-#              run: |
-#                git status
-#                git log --oneline -2
-#                git tag -l | tail -3
-#                
-#                git push origin ${{ github.ref_name }}
-#                git push origin --tags
-            
-            - name: Restore
+            - name: Restore Dependencies
               run: dotnet restore ${{ vars.SOLUTION }}
   
-            - name: Build
+            - name: Build Solution
               run: dotnet build ${{ vars.SOLUTION }} --no-restore --configuration ${{ vars.CONFIGURATION }}
 
             - name: Run Tests
               run: dotnet test ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --verbosity normal
 
-            - name: Pack
+            - name: Pack NuGet Package
               run: |
                 dotnet pack ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --output ./nupkgs
                 
-            - name: Add Nightly Feed Source
-              run: |
-                dotnet nuget add source "${{ env.FEED }}" \
-                  --username "${{ github.repository_owner }}" \
-                  --password "${{ secrets.GITHUB_TOKEN }}" \
-                  --store-password-in-clear-text \
-                  --name github
-                
-            - name: Publish
+            - name: Publish to the GitHub NuGet Feed
               run: |
                 dotnet nuget push ./nupkgs/*.nupkg \
                   --source github \
