@@ -25,7 +25,7 @@ module ToStringPropertyTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.nightlyBuild> |])>]
     let ``Nightly build string starts with the right build type prefix`` (nightlyBuild: Build) =
         let nightlyBuildString = toString nightlyBuild
-        test <@ nightlyBuildString.StartsWith NightlyBuildType @>
+        test <@ nightlyBuildString.StartsWith (NightlyZeroPrefix.ToString()) @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.BetaNightly.betaNightlyBuild> |])>]
     let ``BetaNightly build converts to non-empty string`` (betaNightlyBuild: Build) =
@@ -44,8 +44,8 @@ module TryParseFromStringPropertyTests =
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.nightlyString> |])>]
     let ``Nightly string recognizes correctly to the Nightly with day and number`` (nightlyString: string) =
-        let result = nightlyString |> tryParseFromString
-        test <@ match result with | Ok (Some (Build.Nightly _)) -> true | _ -> false @>
+        let build = tryParseFromString nightlyString
+        test <@ match build with | Ok (Some (Build.Nightly _)) -> true | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.BetaNightly.betaNightlyString> |])>]
     let ``BetaNightly string recognizes correctly to the Beta with number`` (betaNightlyString: string) =

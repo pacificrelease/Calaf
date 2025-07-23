@@ -10,9 +10,13 @@ let internal NumberIncrementStep = 1us
 [<Literal>]
 let internal NumberStartValue = 1us
 [<Literal>]
+let internal NightlyZeroPrefix = 0
+[<Literal>]
 let internal NightlyBuildType = "nightly"
 [<Literal>]
 let internal BetaBuildType = "beta"
+[<Literal>]
+let internal NightlyZeroBuildTypeDivider = "."
 [<Literal>]
 let internal BuildTypeDayDivider = "."
 [<Literal>]
@@ -22,7 +26,7 @@ let internal BuildTypeNumberDivider = "."
 [<Literal>]
 let internal BetaNightlyDivider = "."
 let private nightlyBuildPattern =        
-    $@"(?i:({NightlyBuildType}))\{BuildTypeDayDivider}([1-9]|[12][0-9]|3[0-1])\{DayNumberDivider}([1-9][0-9]{{0,4}})$"
+    $@"{NightlyZeroPrefix}\{NightlyZeroBuildTypeDivider}(?i:({NightlyBuildType}))\{BuildTypeDayDivider}([1-9]|[12][0-9]|3[0-1])\{DayNumberDivider}([1-9][0-9]{{0,4}})$"
 let private betaBuildPattern =        
     $@"(?i:({BetaBuildType})){BuildTypeNumberDivider}([1-9][0-9]{{0,4}})$"
 let private betaNightlyBuildPattern =        
@@ -125,7 +129,7 @@ let toString (build: Build) : string =
     | Build.Beta { Number = number } ->
         $"{BetaBuildType}{BuildTypeNumberDivider}{number}"
     | Build.Nightly { Day = day; Number = number } ->
-        $"{NightlyBuildType}{BuildTypeDayDivider}{day}{DayNumberDivider}{number}"
+        $"{NightlyZeroPrefix}{NightlyZeroBuildTypeDivider}{NightlyBuildType}{BuildTypeDayDivider}{day}{DayNumberDivider}{number}"
     
 let tryParseFromString (build: string) =
     tryCreateBuild build

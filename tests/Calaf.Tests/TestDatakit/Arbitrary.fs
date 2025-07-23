@@ -172,78 +172,117 @@ module Arbitrary =
                 Arb.fromGen Generator.Year.wrongStringYear
                 
     module internal CalendarVersion =
-        type internal calendarVersionNightlyBuildStr =
-            static member calendarVersionNightlyBuildStr() =
-                Arb.fromGen Generator.CalendarVersion.calendarVersionNightlyBuildStr
-                
-        type internal calendarVersionPatchStr =
-            static member calendarVersionPatchStr() =
-                Arb.fromGen Generator.CalendarVersion.calendarVersionPatchStr
-                
-        type internal calendarVersionShortStr =
-            static member calendarVersionShortStr() =
-                Arb.fromGen Generator.CalendarVersion.calendarVersionShortStr
-                
-        type internal calendarVersion =
-            static member calendarVersion() =
-                Arb.fromGen Generator.CalendarVersion.calendarVersion
-
-        type internal calendarVersionShort =
-            static member calendarVersionShort() =
-                Arb.fromGen Generator.CalendarVersion.calendarVersionShort
-                
-        type internal calendarVersionPatch =
-            static member calendarVersionPatch() =
-                Arb.fromGen Generator.CalendarVersion.calendarVersionPatch
-                
-        type internal calendarVersionShortBetaBuild =
-            static member calendarVersionShortBetaBuild() =
-                Arb.fromGen Generator.CalendarVersion.calendarVersionShortBetaBuild
-                
-        type internal calendarVersionShortNightlyBuild =
-            static member calendarVersionShortNightlyBuild() =
-                Arb.fromGen Generator.CalendarVersion.calendarVersionShortNightlyBuild
-                
-        type internal calendarVersionShortBetaNightlyBuild =
-            static member calendarVersionShortBetaNightlyBuild() =
-                Arb.fromGen Generator.CalendarVersion.calendarVersionShortBetaNightlyBuild
-                
-        type internal calendarVersions =
-            static member calendarVersions() =
-                Arb.fromGen Generator.CalendarVersion.calendarVersions        
-        
-        type stableCalendarVersionTagStr =
-            static member stableCalendarVersionTagStr() =
-                Arb.fromGen Generator.CalendarVersion.stableCalendarVersionTagStr
-                
-        type internal betaCalendarVersionTagStr =
-            static member betaCalendarVersionTagStr() =
-                Arb.fromGen Generator.CalendarVersion.betaCalendarVersionTagStr        
+        module Stable =                    
+            type internal String =
+                static member String() =
+                    Arb.fromGen Generator.CalendarVersion.Stable.String
+                    
+            type internal TagString =
+                static member TagString() =
+                    Arb.fromGen Generator.CalendarVersion.Stable.TagString
+                    
+            type internal Short =
+                static member calendarVersionShort() =
+                    Arb.fromGen Generator.CalendarVersion.Stable.Short
+                    
+            type internal Patch =
+                static member Patch() =
+                    Arb.fromGen Generator.CalendarVersion.Stable.Patch
+                    
+        module Beta =
+            type internal String =
+                static member String() =
+                    Arb.fromGen Generator.CalendarVersion.Beta.String
+                    
+            type internal TagString =
+                static member TagString() =
+                    Arb.fromGen Generator.CalendarVersion.Beta.TagString
+                    
+            type internal Short =
+                static member calendarVersionShort() =
+                    Arb.fromGen Generator.CalendarVersion.Beta.Short
+                    
+            type internal Patch =
+                static member Patch() =
+                    Arb.fromGen Generator.CalendarVersion.Beta.Patch
             
-        type internal nightlyCalendarVersionTagStr =
-            static member nightlyCalendarVersionTagStr() =
-                Arb.fromGen Generator.CalendarVersion.nightlyCalendarVersionTagStr
-        
-        type internal betaNightlyCalendarVersionTagStr =
-            static member betaNightlyCalendarVersionTagStr() =
-                Arb.fromGen Generator.CalendarVersion.betaNightlyCalendarVersionTagStr
+        module Nightly =
+            type internal String =
+                static member String() =
+                    Arb.fromGen Generator.CalendarVersion.Nightly.String
+                    
+            type internal TagString =
+                static member TagString() =
+                    Arb.fromGen Generator.CalendarVersion.Nightly.TagString
                 
-        type internal calendarVersionTagStr =
-            static member calendarVersionTagStr() =
-                Arb.fromGen Generator.CalendarVersion.calendarVersionTagStr
+            type internal Short =
+                static member Short() =
+                    Arb.fromGen Generator.CalendarVersion.Nightly.Short
+                    
+            type internal Patch =
+                static member Patch() =
+                    Arb.fromGen Generator.CalendarVersion.Nightly.Patch
+                    
+        module BetaNightly =
+            type internal String =
+                static member String() =
+                    Arb.fromGen Generator.CalendarVersion.BetaNightly.String
+                    
+            type internal TagString =
+                static member TagString() =
+                    Arb.fromGen Generator.CalendarVersion.BetaNightly.TagString
                 
-        type internal calendarVersionShortTagStr =
-            static member calendarVersionShortTagStr() =
-                Arb.fromGen Generator.CalendarVersion.calendarVersionShortTagStr
+            type internal Short =
+                static member Short() =
+                    Arb.fromGen Generator.CalendarVersion.BetaNightly.Short
+                    
+            type internal Patch =
+                static member Patch() =
+                    Arb.fromGen Generator.CalendarVersion.BetaNightly.Patch        
         
-        type internal whiteSpaceLeadingTrailingCalendarVersionStr =
-            static member whiteSpaceLeadingTrailingCalendarVersionStr() =
-                Arb.fromGen Generator.CalendarVersion.whiteSpaceLeadingTrailingCalendarVersionStr
+        type internal ShortString =
+            static member ShortString() =
+                Arb.fromGen Generator.CalendarVersion.ShortString
                 
-        type internal whiteSpaceLeadingTrailingCalendarVersionTagStr =
-            static member whiteSpaceLeadingTrailingCalendarVersionTagStr() =
-                Arb.fromGen Generator.CalendarVersion.whiteSpaceLeadingTrailingCalendarVersionTagStr
+        type internal PatchString =
+            static member PatchString() =
+                Arb.fromGen Generator.CalendarVersion.PatchString
+                
+        type internal String =
+            static member String() =
+                Arb.fromGen Generator.CalendarVersion.String
         
+        type internal ShortTagString =
+            static member ShortTagString() =
+                Arb.fromGen Generator.CalendarVersion.ShortTagString
+        
+        type internal PatchTagString =
+            static member PatchTagString() =
+                Arb.fromGen Generator.CalendarVersion.PatchTagString
+        
+        type internal TagStrictString =
+            static member TagStrictString() =
+                Arb.fromGen Generator.CalendarVersion.TagStrictString
+                
+        type internal TagString =
+            static member TagString() =
+                Arb.fromGen Generator.CalendarVersion.TagString
+                
+        type internal Accidental =
+            static member Accidental() =
+                Arb.fromGen Generator.CalendarVersion.Accidental
+        
+        type internal AccidentalsArray =
+            static member AccidentalsArray() =
+                Arb.fromGen Generator.CalendarVersion.AccidentalsArray
+        
+        type internal WhiteSpaceLeadingTrailingString =
+            static member WhiteSpaceLeadingTrailingString() =
+                Arb.fromGen Generator.CalendarVersion.WhiteSpaceLeadingTrailingString
+                
+        type internal WhiteSpaceLeadingTrailingTagString =
+            static member WhiteSpaceLeadingTrailingTagString() =
+                Arb.fromGen Generator.CalendarVersion.WhiteSpaceLeadingTrailingTagString
                 
     module internal SematicVersion =
         type internal semanticVersionStr =

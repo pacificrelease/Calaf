@@ -252,7 +252,7 @@ let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
                 | Some build ->
                     match build with
                     | Build.BetaNightly (beta, nightly) ->
-                        let priority = 3
+                        let priority = 2
                         (v.Year, v.Month, v.Patch, priority, beta.Number, nightly.Day, nightly.Number )
                     | Build.Beta betaBuild ->
                         let priority = 2

@@ -29,10 +29,7 @@ module Generator =
         }
         
     let genTagVersionPrefix =
-        gen {
-            let! prefix = Gen.elements Calaf.Domain.Version.versionPrefixes
-            return prefix
-        }
+        Gen.elements Calaf.Domain.Version.versionPrefixes
         
     let genReleaseCycle =
         gen {
@@ -276,7 +273,7 @@ module Generator =
                 gen {
                     let! nightlyPrefix = genNightlyPrefix
                     let! nightly = genNightlyBuild
-                    return $"{nightlyPrefix}{Calaf.Domain.Build.BuildTypeDayDivider}{nightly.Day}{Calaf.Domain.Build.DayNumberDivider}{nightly.Number}"
+                    return $"{Calaf.Domain.Build.NightlyZeroPrefix}{Calaf.Domain.Build.NightlyZeroBuildTypeDivider}{nightlyPrefix}{Calaf.Domain.Build.BuildTypeDayDivider}{nightly.Day}{Calaf.Domain.Build.DayNumberDivider}{nightly.Number}"
                 }
                 
             let containingNightlyBadString =
@@ -518,253 +515,288 @@ module Generator =
                 return choice
             }
             
-    module CalendarVersion =            
-        let calendarVersionShortBetaBuildStr =
+    module CalendarVersion =
+        module Stable =
+            let ShortString =
+                gen {
+                    let! year  = Year.inRangeUInt16Year
+                    let! month = Month.inRangeByteMonth
+                    return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}"
+                }
+                
+            let PatchString =
+                gen {
+                    let! year  = Year.inRangeUInt16Year
+                    let! month = Month.inRangeByteMonth
+                    let! patch = validPatchUInt32
+                    return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.MonthPatchDivider}{patch}"
+                }        
+                
+            let String =
+                Gen.frequency
+                    [ 1, ShortString
+                      1, PatchString ]
+                
+            let TagStrictString =
+                gen {
+                    let prefix = Calaf.Domain.Version.tagVersionPrefix
+                    let! version = String
+                    return $"{prefix}{version}"
+                }
+            
+            let TagString =
+                gen {
+                    let! prefix = genTagVersionPrefix
+                    let! version = String
+                    return $"{prefix}{version}"
+                }
+                
+            let Short =
+                gen {
+                    let! year  = Year.inRangeUInt16Year
+                    let! month = Month.inRangeByteMonth
+                    return { Year = year; Month = month; Patch = None; Build = None }
+                }
+                
+            let Patch =
+                gen {
+                    let! short = Short
+                    let! patch = validPatchUInt32
+                    return { short with Patch = Some patch }
+                }
+                
+        module Beta =
+            let ShortString =
+                gen {
+                    let! year  = Year.inRangeUInt16Year
+                    let! month = Month.inRangeByteMonth
+                    let! betaBuild = Build.Beta.betaString
+                    return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{betaBuild}"                 
+                }
+                
+            let PatchString =
+                gen {
+                    let! year  = Year.inRangeUInt16Year
+                    let! month = Month.inRangeByteMonth
+                    let! patch = validPatchUInt32
+                    let! betaBuild = Build.Beta.betaString
+                    return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.MonthPatchDivider}{patch}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{betaBuild}"                 
+                }
+                
+            let String =
+                Gen.frequency
+                    [ 1, ShortString
+                      1, PatchString ]
+                
+            let TagStrictString =
+                gen {
+                    let prefix = Calaf.Domain.Version.tagVersionPrefix
+                    let! version = String
+                    return $"{prefix}{version}"
+                }
+                
+            let TagString =
+                gen {
+                    let! prefix = genTagVersionPrefix
+                    let! version = Gen.frequency [
+                        1, ShortString
+                        1, PatchString
+                    ]
+                    return $"{prefix}{version}"
+                }
+                
+            let Short =
+                gen {
+                    let! shortCalendarVersion = Stable.Short
+                    let! betaBuild = Build.Beta.betaBuild
+                    return { shortCalendarVersion with Build = Some betaBuild }
+                }
+                
+            let Patch =
+                gen {
+                    let! patchCalendarVersion = Stable.Patch
+                    let! betaBuild = Build.Beta.betaBuild
+                    return { patchCalendarVersion with Build = Some betaBuild }
+                }
+            
+        module Nightly =
+            let ShortString =
+                gen {
+                    let! year  = Year.inRangeUInt16Year
+                    let! month = Month.inRangeByteMonth
+                    let! nightlyBuild = Build.Nightly.nightlyString
+                    return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{nightlyBuild}"                 
+                }
+                
+            let PatchString =
+                gen {
+                    let! year  = Year.inRangeUInt16Year
+                    let! month = Month.inRangeByteMonth
+                    let! patch = validPatchUInt32
+                    let! nightlyBuild = Build.Nightly.nightlyString
+                    return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.MonthPatchDivider}{patch}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{nightlyBuild}"                 
+                }
+                
+            let String =
+                Gen.frequency
+                    [ 1, ShortString
+                      1, PatchString ]
+                
+            let TagStrictString =
+                gen {
+                    let prefix = Calaf.Domain.Version.tagVersionPrefix
+                    let! version = String
+                    return $"{prefix}{version}"
+                }
+                
+            let TagString =
+                gen {
+                    let! prefix = genTagVersionPrefix
+                    let! version = String
+                    return $"{prefix}{version}"
+                }
+                
+            let Short =
+                gen {
+                    let! shortCalendarVersion = Stable.Short
+                    let! nightlyBuild = Build.Nightly.nightlyBuild
+                    return { shortCalendarVersion with Build = Some nightlyBuild }
+                }
+                
+            let Patch =
+                gen {
+                    let! patchCalendarVersion = Stable.Patch
+                    let! nightlyBuild = Build.Nightly.nightlyBuild
+                    return { patchCalendarVersion with Build = Some nightlyBuild }
+                }
+                
+        module BetaNightly =
+            let ShortString =
+                gen {
+                    let! year  = Year.inRangeUInt16Year
+                    let! month = Month.inRangeByteMonth
+                    let! betaNightlyBuild = Build.BetaNightly.betaNightlyString
+                    return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{betaNightlyBuild}"                 
+                }
+                
+            let PatchString =
+                gen {
+                    let! year  = Year.inRangeUInt16Year
+                    let! month = Month.inRangeByteMonth
+                    let! patch = validPatchUInt32
+                    let! betaNightlyBuild = Build.BetaNightly.betaNightlyString
+                    return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.MonthPatchDivider}{patch}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{betaNightlyBuild}"                 
+                }
+                
+            let String =
+                Gen.frequency
+                    [ 1, ShortString
+                      1, PatchString ]
+                    
+            let TagStrictString =
+                gen {
+                    let prefix = Calaf.Domain.Version.tagVersionPrefix
+                    let! version = String
+                    return $"{prefix}{version}"
+                }
+                
+            let TagString =
+                gen {
+                    let! prefix = genTagVersionPrefix
+                    let! version = String
+                    return $"{prefix}{version}"
+                }
+                
+            let Short =
+                gen {
+                    let! shortCalendarVersion = Stable.Short
+                    let! betaNightlyBuild = Build.BetaNightly.betaNightlyBuild
+                    return { shortCalendarVersion with Build = Some betaNightlyBuild }
+                }
+                
+            let Patch =
+                gen {
+                    let! patchCalendarVersion = Stable.Patch
+                    let! betaNightlyBuild = Build.BetaNightly.betaNightlyBuild
+                    return { patchCalendarVersion with Build = Some betaNightlyBuild }
+                }            
+        
+        let ShortString =
+            Gen.frequency
+                [ 1, Stable.ShortString
+                  1, Beta.ShortString
+                  1, Nightly.ShortString
+                  1, BetaNightly.ShortString ]
+                
+        let PatchString =
+            Gen.frequency
+                [ 1, Stable.PatchString
+                  1, Beta.PatchString
+                  1, Nightly.PatchString
+                  1, BetaNightly.PatchString ]
+                
+        let String =
+            Gen.frequency
+                [ 1, Stable.String
+                  1, Beta.String
+                  1, Nightly.String
+                  1, BetaNightly.String ]
+                
+        let ShortTagString =
             gen {
-                let! year  = Year.inRangeUInt16Year
-                let! month = Month.inRangeByteMonth
-                let! betaBuild = Build.Beta.betaString
-                return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{betaBuild}"                 
+                let! prefix = genTagVersionPrefix
+                let! version = ShortString
+                return $"{prefix}{version}"
             }
             
-        let calendarVersionPatchBetaBuildStr =
+        let PatchTagString =
             gen {
-                let! year  = Year.inRangeUInt16Year
-                let! month = Month.inRangeByteMonth
-                let! patch = validPatchUInt32
-                let! betaBuild = Build.Beta.betaString
-                return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.MonthPatchDivider}{patch}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{betaBuild}"                 
-            }
-            
-        let calendarVersionBetaBuildStr =
-            gen {
-                let! choice = Gen.frequency [
-                    1, calendarVersionShortBetaBuildStr
-                    1, calendarVersionPatchBetaBuildStr
-                ]
-                return choice
-            }
-            
-        let calendarVersionShortBetaNightlyBuildStr =
-            gen {
-                let! year  = Year.inRangeUInt16Year
-                let! month = Month.inRangeByteMonth
-                let! betaNightlyBuild = Build.BetaNightly.betaNightlyString
-                return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{betaNightlyBuild}"                 
-            }
-            
-        let calendarVersionPatchBetaNightlyBuildStr =
-            gen {
-                let! year  = Year.inRangeUInt16Year
-                let! month = Month.inRangeByteMonth
-                let! patch = validPatchUInt32
-                let! betaNightlyBuild = Build.BetaNightly.betaNightlyString
-                return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.MonthPatchDivider}{patch}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{betaNightlyBuild}"                 
-            }
-            
-        let calendarVersionNightlyBetaBuildStr =
-            gen {
-                let! choice = Gen.frequency [
-                    1, calendarVersionShortBetaNightlyBuildStr
-                    1, calendarVersionPatchBetaNightlyBuildStr
-                ]
-                return choice
-            }
-            
-        let calendarVersionShortNightlyBuildStr =
-            gen {
-                let! year  = Year.inRangeUInt16Year
-                let! month = Month.inRangeByteMonth
-                let! nightlyBuild = Build.Nightly.nightlyString
-                return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{nightlyBuild}"                 
-            }
-            
-        let calendarVersionPatchNightlyBuildStr =
-            gen {
-                let! year  = Year.inRangeUInt16Year
-                let! month = Month.inRangeByteMonth
-                let! patch = validPatchUInt32
-                let! nightlyBuild = Build.Nightly.nightlyString
-                return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.MonthPatchDivider}{patch}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{nightlyBuild}"                 
-            }
-            
-        let calendarVersionNightlyBuildStr =
-            gen {
-                let! choice = Gen.frequency [
-                    1, calendarVersionShortNightlyBuildStr
-                    1, calendarVersionPatchNightlyBuildStr
-                ]
-                return choice
-            }
-            
-        let calendarVersionShortStr =
-            gen {
-                let! year  = Year.inRangeUInt16Year
-                let! month = Month.inRangeByteMonth
-                return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}"
-            }
-            
-        let calendarVersionPatchStr =
-            gen {
-                let! year  = Year.inRangeUInt16Year
-                let! month = Month.inRangeByteMonth
-                let! patch = validPatchUInt32
-                return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.MonthPatchDivider}{patch}"
-            }        
-            
-        let calendarVersionStr =
-            gen {            
-                let! calendarVersion = Gen.frequency [
-                    1, calendarVersionPatchStr
-                    1, calendarVersionShortStr
-                ]
-                return calendarVersion
+                let! prefix = genTagVersionPrefix
+                let! version = PatchString
+                return $"{prefix}{version}"
             }
         
-        let calendarVersionShort =
-            gen {
-                let! year  = Year.inRangeUInt16Year
-                let! month = Month.inRangeByteMonth
-                return { Year = year; Month = month; Patch = None; Build = None }
-            }
+        let TagStrictString =
+            Gen.frequency
+                [ 1, Stable.TagStrictString
+                  1, Beta.TagStrictString
+                  1, Nightly.TagStrictString
+                  1, BetaNightly.TagStrictString ]
+                
+        let TagString =
+            Gen.frequency
+                [ 1, Stable.TagString
+                  1, Beta.TagString
+                  1, Nightly.TagString
+                  1, BetaNightly.TagString ]
             
-        let calendarVersionPatch =
-            gen {
-                let! shortCalendarVersion = calendarVersionShort
-                let! patch = validPatchUInt32
-                return { shortCalendarVersion with Patch = Some patch }
-            }
+        let Accidental =
+            Gen.frequency
+                [ 1, Stable.Short
+                  1, Stable.Patch
+                  1, Beta.Short
+                  1, Beta.Patch
+                  1, Nightly.Short
+                  1, Nightly.Patch
+                  1, BetaNightly.Short
+                  1, BetaNightly.Patch ]
             
-        let calendarVersionShortBetaBuild =
-            gen {
-                let! shortCalendarVersion = calendarVersionShort
-                let! betaBuild = Build.Beta.betaBuild
-                return { shortCalendarVersion with Build = Some betaBuild }
-            }
-            
-        let calendarVersionPatchBetaBuild =
-            gen {
-                let! patchCalendarVersion = calendarVersionPatch
-                let! betaBuild = Build.Beta.betaBuild
-                return { patchCalendarVersion with Build = Some betaBuild }
-            }
-            
-        let calendarVersionShortNightlyBuild =
-            gen {
-                let! shortCalendarVersion = calendarVersionShort
-                let! nightlyBuild = Build.Nightly.nightlyBuild
-                return { shortCalendarVersion with Build = Some nightlyBuild }
-            }
-            
-        let calendarVersionPatchNightlyBuild =
-            gen {
-                let! patchCalendarVersion = calendarVersionPatch
-                let! nightlyBuild = Build.Nightly.nightlyBuild
-                return { patchCalendarVersion with Build = Some nightlyBuild }
-            }
-            
-        let calendarVersionShortBetaNightlyBuild =
-            gen {
-                let! shortCalendarVersion = calendarVersionShort
-                let! betaNightlyBuild = Build.BetaNightly.betaNightlyBuild
-                return { shortCalendarVersion with Build = Some betaNightlyBuild }
-            }
-            
-        let calendarVersionPatchBetaNightlyBuild =
-            gen {
-                let! patchCalendarVersion = calendarVersionPatch
-                let! betaNightlyBuild = Build.BetaNightly.betaNightlyBuild
-                return { patchCalendarVersion with Build = Some betaNightlyBuild }
-            }
-            
-        let calendarVersion =
-            gen {
-                let! choice = Gen.frequency [
-                    1, calendarVersionShort
-                    1, calendarVersionPatch
-                    1, calendarVersionShortNightlyBuild
-                    1, calendarVersionPatchNightlyBuild
-                    1, calendarVersionShortBetaBuild
-                    1, calendarVersionPatchBetaBuild
-                    1, calendarVersionShortBetaNightlyBuild
-                    1, calendarVersionPatchBetaNightlyBuild
-                ]
-                return choice
-            }
-            
-        let calendarVersions =
+        let AccidentalsArray =
             gen {
                 let! smallCount = Gen.choose(1, 50)
                 let! middleCount = Gen.choose(51, 1000)            
                 let! bigCount = Gen.choose(1001, 25_000)            
                 let! choice = Gen.frequency [
-                    3, Gen.arrayOfLength smallCount calendarVersion
-                    2, Gen.arrayOfLength middleCount calendarVersion
-                    1, Gen.arrayOfLength bigCount calendarVersion
+                    3, Gen.arrayOfLength smallCount  Accidental
+                    2, Gen.arrayOfLength middleCount Accidental
+                    1, Gen.arrayOfLength bigCount    Accidental
                 ]
                 return choice
             }
             
-        let stableCalendarVersionTagStr =
+        let WhiteSpaceLeadingTrailingString =
             gen {
-                let! versionPrefix = genTagVersionPrefix
-                let! choice = Gen.frequency [
-                    1, calendarVersionShortStr
-                    1, calendarVersionPatchStr
-                ]
-                return $"{versionPrefix}{choice}"
-            }
-            
-        let betaCalendarVersionTagStr =
-            gen {
-                let! versionPrefix = genTagVersionPrefix
-                let! choice = Gen.frequency [
-                    1, calendarVersionShortBetaBuildStr
-                    1, calendarVersionPatchBetaBuildStr
-                ]
-                return $"{versionPrefix}{choice}"
-            }        
-            
-        let nightlyCalendarVersionTagStr =
-            gen {
-                let! versionPrefix = genTagVersionPrefix
-                let! choice = Gen.frequency [
-                    1, calendarVersionShortNightlyBuildStr
-                    1, calendarVersionPatchNightlyBuildStr
-                ]
-                return $"{versionPrefix}{choice}"
-            }
-            
-        let betaNightlyCalendarVersionTagStr =
-            gen {
-                let! versionPrefix = genTagVersionPrefix
-                let! choice = Gen.frequency [
-                    1, calendarVersionShortBetaNightlyBuildStr
-                    1, calendarVersionPatchBetaNightlyBuildStr
-                ]
-                return $"{versionPrefix}{choice}"
-            }
-            
-        let calendarVersionTagStr =
-            gen {
-                return! Gen.frequency [
-                    1, stableCalendarVersionTagStr
-                    1, betaCalendarVersionTagStr
-                    1, nightlyCalendarVersionTagStr
-                    1, betaNightlyCalendarVersionTagStr
-                ]
-            }        
-            
-        let calendarVersionShortTagStr =
-            gen {
-                let! versionPrefix = genTagVersionPrefix
-                let! calendarVersionShortStr = calendarVersionShortStr
-                return $"{versionPrefix}{calendarVersionShortStr}"
-            }
-            
-        let whiteSpaceLeadingTrailingCalendarVersionStr =
-            gen {
-                let! calVerStr = calendarVersionStr
+                let! calVerStr = String
                 
                 let! whiteSpacesPrefix = genWhiteSpacesString
                 let! whiteSpacesSuffix = genWhiteSpacesString
@@ -772,9 +804,9 @@ module Generator =
                 return $"{whiteSpacesPrefix}{calVerStr}{whiteSpacesSuffix}";
             }
             
-        let whiteSpaceLeadingTrailingCalendarVersionTagStr =
+        let WhiteSpaceLeadingTrailingTagString =
             gen {
-                let! calVerStr = calendarVersionTagStr
+                let! calVerStr = TagString
                 
                 let! whiteSpacesPrefix = genWhiteSpacesString
                 let! whiteSpacesSuffix = genWhiteSpacesString
@@ -916,7 +948,7 @@ module Generator =
             
         let calVerGitTagInfo =
             gen {
-                let! validCalVerString = CalendarVersion.calendarVersionTagStr
+                let! validCalVerString = CalendarVersion.TagString
                 let! maybeCommit = Gen.frequency [
                     1, Gen.constant None
                     3, gitCommitInfo |> Gen.map Some
@@ -954,7 +986,7 @@ module Generator =
         let calendarVersionOrSemanticVersionGitTagInfo =
             gen {
                 let! tagName = Gen.frequency [
-                    3, CalendarVersion.calendarVersionTagStr
+                    3, CalendarVersion.TagString
                     1, SematicVersion.semanticVersionTagStr
                 ]
                 let! commit = gitCommitInfo |> Gen.map Some
@@ -980,7 +1012,7 @@ module Generator =
         let calendarVersionTag : Gen<Tag> =            
             gen {
                 // TODO: Rewrite generator!
-                let! calendarVersion = CalendarVersion.calendarVersion
+                let! calendarVersion = CalendarVersion.Accidental
                 let tagNameSb = System.Text.StringBuilder($"{calendarVersion.Year}.{calendarVersion.Month}")
                 let tagNameSb = if calendarVersion.Patch.IsSome then tagNameSb.Append calendarVersion.Patch.Value else tagNameSb 
                 let! maybeCommit = commitOrNone
