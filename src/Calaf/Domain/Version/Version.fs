@@ -136,16 +136,20 @@ let private tryParse (cleanVersion: CleanString) : Version option =
     
 let private patchRelease (currentVersion: CalendarVersion, build: Build option) =
     match currentVersion with
+    | { Build = None } ->
+        let newPatch =
+            currentVersion.Patch
+            |> Patch.release
+            |> Some
+        { Year = currentVersion.Year
+          Month = currentVersion.Month
+          Patch = newPatch
+          Build = build }
+        
     | { Build = Some _ } ->
         { Year = currentVersion.Year
           Month = currentVersion.Month
           Patch = currentVersion.Patch
-          Build = build }
-    | _ ->
-        let newPatch = Patch.release currentVersion.Patch |> Some
-        { Year = currentVersion.Year
-          Month = currentVersion.Month
-          Patch = newPatch
           Build = build }
 
 let toString (calVer: CalendarVersion) : string =
@@ -238,7 +242,7 @@ let stable (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : Calendar
               Month = monthStamp.Month
               Patch = None
               Build = noBuild }
-        else
+        else            
             patchRelease (currentVersion, noBuild)
 
 let tryMax (versions: CalendarVersion seq) : CalendarVersion option =

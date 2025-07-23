@@ -272,6 +272,14 @@ module Arbitrary =
             static member AccidentalShort() =
                 Arb.fromGen Generator.CalendarVersion.AccidentalShort
                 
+        type internal AccidentalPatch =
+            static member AccidentalPatch() =
+                Arb.fromGen Generator.CalendarVersion.AccidentalPatch
+                
+        type AccidentalPreReleases =
+            static member AccidentalPreReleases() =
+                Arb.fromGen Generator.CalendarVersion.AccidentalPreReleases
+                
         type internal Accidental =
             static member Accidental() =
                 Arb.fromGen Generator.CalendarVersion.Accidental

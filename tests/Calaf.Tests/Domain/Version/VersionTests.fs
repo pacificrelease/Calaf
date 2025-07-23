@@ -508,6 +508,20 @@ module StableTests =
         let release = stable calVer monthStamp
         test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch > calVer.Patch && release.Build.IsNone @>        
     
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.AccidentalPreReleases> |])>]
+    let ``Beta/Nightly/BetaNightly CalendarVersion stable releases drops Build and keeps Year, Month, Patch same when the date is same``
+        (calVer: CalendarVersion) =        
+        let monthStamp = { Year = calVer.Year; Month = calVer.Month }
+        let release = stable calVer monthStamp
+        test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch = calVer.Patch && release.Build.IsNone @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.AccidentalPreReleases> |])>]
+    let ``Beta/Nightly/BetaNightly CalendarVersion stable releases drops Patch, Build and set Year, Month according to the changes when the date is different``
+        (calVer: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =        
+        let monthStamp = Internals.uniqueMonthStamp (calVer, dateTimeOffset)
+        let release = stable calVer monthStamp
+        test <@ release.Year = monthStamp.Year && release.Month = monthStamp.Month && release.Patch.IsNone && release.Build.IsNone @>
+        
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
     let ``Stable CalendarVersion releases expected Year`` (calVer: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
         let monthStamp = Internals.uniqueMonthStamp (calVer, dateTimeOffset)
@@ -521,23 +535,27 @@ module StableTests =
         let release = stable calVer monthStamp
         release.Month = byte monthStamp.Month
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
-    let ``Three-part CalendarVersion stable release only Patch when the MonthStamp has the same Year and Month`` (calVerWithPatch: CalendarVersion) =
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Stable.Patch> |])>]
+    let ``Three-part Stable CalendarVersion stable release only Patch when the MonthStamp has the same Year and Month``
+        (calVerWithPatch: CalendarVersion) =
+        let calVerWithPatch = { calVerWithPatch with Patch = Internals.preventPatchOverflow calVerWithPatch.Patch }
         let monthStamp = { Year = calVerWithPatch.Year; Month = calVerWithPatch.Month }
         let release = stable calVerWithPatch monthStamp
         release.Patch > calVerWithPatch.Patch &&
         release.Month = calVerWithPatch.Month &&
         release.Year = calVerWithPatch.Year
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
-    let ``CalendarVersion preserves Year and Month when the MonthStamp has the same Year and Month`` (calVerWithPatch: CalendarVersion)=
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.AccidentalPatch> |])>]
+    let ``CalendarVersion preserves Year and Month when the MonthStamp has the same Year and Month``
+        (calVerWithPatch: CalendarVersion)=
         let monthStamp = { Year = calVerWithPatch.Year; Month = calVerWithPatch.Month }
         let release = stable calVerWithPatch monthStamp
         release.Year = calVerWithPatch.Year &&
         release.Month = calVerWithPatch.Month
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
-    let ``Three-part CalendarVersion reset Patch when the MonthStamp Year and/or Month is different`` (calVerWithPatch: CalendarVersion, dateTimeOffset: System.DateTimeOffset)=
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.AccidentalPatch> |])>]
+    let ``Three-part CalendarVersion reset Patch when the MonthStamp Year and/or Month is different``
+        (calVerWithPatch: CalendarVersion, dateTimeOffset: System.DateTimeOffset)=
         let monthStamp = Internals.uniqueMonthStamp (calVerWithPatch, dateTimeOffset)
         let release = stable calVerWithPatch monthStamp
         release.Patch = None

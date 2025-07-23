@@ -777,6 +777,22 @@ module Generator =
                   1, Nightly.Short
                   1, BetaNightly.Short ]
                 
+        let AccidentalPatch =
+            Gen.frequency
+                [ 1, Stable.Patch
+                  1, Beta.Patch
+                  1, Nightly.Patch
+                  1, BetaNightly.Patch ]
+                
+        let AccidentalPreReleases =
+            Gen.frequency
+                [ 1, Beta.Short
+                  1, Beta.Patch
+                  1, Nightly.Short
+                  1, Nightly.Patch
+                  1, BetaNightly.Short
+                  1, BetaNightly.Patch ]
+                
         let Accidental =
             Gen.frequency
                 [ 1, Stable.Short
