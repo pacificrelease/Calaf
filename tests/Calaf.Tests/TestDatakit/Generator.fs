@@ -769,7 +769,14 @@ module Generator =
                   1, Beta.TagString
                   1, Nightly.TagString
                   1, BetaNightly.TagString ]
-            
+        
+        let AccidentalShort =
+            Gen.frequency
+                [ 1, Stable.Short
+                  1, Beta.Short
+                  1, Nightly.Short
+                  1, BetaNightly.Short ]
+                
         let Accidental =
             Gen.frequency
                 [ 1, Stable.Short

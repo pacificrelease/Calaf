@@ -267,6 +267,10 @@ module Arbitrary =
         type internal TagString =
             static member TagString() =
                 Arb.fromGen Generator.CalendarVersion.TagString
+        
+        type internal AccidentalShort =
+            static member AccidentalShort() =
+                Arb.fromGen Generator.CalendarVersion.AccidentalShort
                 
         type internal Accidental =
             static member Accidental() =
