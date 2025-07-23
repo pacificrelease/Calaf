@@ -6,7 +6,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>calaf</ToolCommandName>
 
-    <Version>2025.7-beta.1</Version>
+    <Version>2025.7-beta.2</Version>
     
     <Title>Calaf</Title>
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
