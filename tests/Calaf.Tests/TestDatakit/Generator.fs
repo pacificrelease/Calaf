@@ -618,6 +618,11 @@ module Generator =
                     let! betaBuild = Build.Beta.betaBuild
                     return { patchCalendarVersion with Build = Some betaBuild }
                 }
+                
+            let Accidental =
+                Gen.frequency
+                    [ 1, Short
+                      1, Patch ]
             
         module Nightly =
             let ShortString =
@@ -670,6 +675,11 @@ module Generator =
                     return { patchCalendarVersion with Build = Some nightlyBuild }
                 }
                 
+            let Accidental =
+                Gen.frequency
+                    [ 1, Short
+                      1, Patch ]
+                
         module BetaNightly =
             let ShortString =
                 gen {
@@ -719,7 +729,12 @@ module Generator =
                     let! patchCalendarVersion = Stable.Patch
                     let! betaNightlyBuild = Build.BetaNightly.betaNightlyBuild
                     return { patchCalendarVersion with Build = Some betaNightlyBuild }
-                }            
+                }
+                
+            let Accidental =
+                Gen.frequency
+                    [ 1, Short
+                      1, Patch ]
         
         let ShortString =
             Gen.frequency

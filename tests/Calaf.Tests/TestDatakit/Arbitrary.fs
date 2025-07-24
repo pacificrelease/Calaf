@@ -205,6 +205,10 @@ module Arbitrary =
             type internal Patch =
                 static member Patch() =
                     Arb.fromGen Generator.CalendarVersion.Beta.Patch
+                    
+            type internal Accidental =
+                static member Accidental() =
+                    Arb.fromGen Generator.CalendarVersion.Beta.Accidental
             
         module Nightly =
             type internal String =
@@ -223,6 +227,10 @@ module Arbitrary =
                 static member Patch() =
                     Arb.fromGen Generator.CalendarVersion.Nightly.Patch
                     
+            type internal Accidental =
+                static member Accidental() =
+                    Arb.fromGen Generator.CalendarVersion.Nightly.Accidental
+                    
         module BetaNightly =
             type internal String =
                 static member String() =
@@ -238,7 +246,11 @@ module Arbitrary =
                     
             type internal Patch =
                 static member Patch() =
-                    Arb.fromGen Generator.CalendarVersion.BetaNightly.Patch        
+                    Arb.fromGen Generator.CalendarVersion.BetaNightly.Patch
+                    
+            type internal Accidental =
+                static member Accidental() =
+                        Arb.fromGen Generator.CalendarVersion.BetaNightly.Accidental
         
         type internal ShortString =
             static member ShortString() =

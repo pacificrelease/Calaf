@@ -43,3 +43,6 @@ module internal Internals =
         | false, false ->
             { Year = newYear dateTimeOffset |> uint16
               Month = newMonth dateTimeOffset |> byte }
+            
+    let internal asDateTimeOffset (calVer: CalendarVersion) =
+        (int calVer.Year, int calVer.Month, 1) |> System.DateTime |> System.DateTimeOffset
