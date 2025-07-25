@@ -20,20 +20,55 @@ Calaf is a command-line tool for managing Calendar Versioning ([CalVer](https://
 
 ## Versioning Scheme
 
-The current supported scheme has a format:
+Calaf implements a Calendar Versioning ([CalVer](https://calver.org)) scheme that provides chronological, sortable version numbers compatible with Semantic Versioning 2.0.0 specifications.
 
-YYYY.MM[.PATCH][.BUILD.DAY.NUMBER]
+**Format**: `YYYY.MM[.PATCH][-BUILD.FORMAT]`
 
+### Core Components:
 
-Where:
+#### YYYY - Full year (required)
 
-YYYY - A full year of the version, always required - e.g., `2001`, `2025`, `2150`. Values range: `1970` to `9999`.
+ - Examples: `2001`, `2025`, `2150`
+ - Range: `1970` to `9999`
 
-MM - A short month of the version, always required - e.g., `1`, `6`, `12`. Values range: `1` to `12`.
+#### MM - Month number (required)
 
-PATCH - A patch number in the version's month optional - e.g., `1`, `2`, `3`. Values range: `1` to`4294967295`.
+- Examples: `1`, `6`, `12`
+- Range: `1` to `12`
 
-BUILD.DAY.NUMBER - A type of the build with the day of the month, and number of the build in this day, optional - e.g., `nightly.2.1`, `nightly.31.2`. Values range: `nightly` for nightly builds, and `1` to `99999` for the number of builds in a day.
+#### PATCH - Patch number within the month (optional)
+
+- Examples: `1`, `2`, `3`
+- Range: `1` to`4294967295`
+
+### Pre-release Components:
+
+#### BUILD.FORMAT - Pre-release build identifier with the specific format suffix to indicate non-stable builds:
+
+* **Beta releases:** `beta.NUMBER`
+
+    * Example: `2025-6.1-beta.1`
+    * Range `NUMBER`:  `1` to`4294967295`
+
+* **Nightly builds:** `0.nightly.DAY.NUMBER`
+
+    An additional `zero` digits doesn't carry any useful information, but guaranteed to remain "earlier" than any another build's letter.
+    * `DAY` is the day of the month, `NUMBER` is the build sequence for that day
+    * Example: `2025.6.1-0.nightly.30.1`
+    * Range `NUMBER`: `1` to `4294967295`
+
+* **Beta nightly builds:** `beta.BETA_NUMBER.DAY.NIGHTLY_NUMBER`
+
+    * Example: `2025.6.1-beta.1.30.1`
+
+### Version Precedence
+
+Versions are ordered chronologically and follow SemVer precedence rules:
+1. `2025.6.1` (stable)
+2. `2025.6.1-beta.2` (beta)
+3. `2025.6.1-beta.1.30.1` (beta nightly)
+4. `2025.6.1-0.nightly.30.1` (nightly)
+
 
 ## Installation
 
@@ -53,15 +88,26 @@ dotnet tool install -g Calaf
 
 2. Manage project versioning using Calaf:
 
+The supported releases: `stable`, `beta`, `nightly`.
+
 ```bash
-# Create stable version (e.g., 2025.6 → 2025.6.1)
+# Create a stable version (e.g., 2025.6 → 2025.6.1)
 calaf make stable
 ```
 
 Updates the project version to a stable Calendar Version based on the current UTC date.
 
 ```bash
-# Create nightly build (e.g., 2025.6 → 2025.6.1-nightly.30.1)
+# Create a beta build (e.g., 2025.6 → 2025.6.1-beta.1)
+calaf make beta 
+```
+
+Updates the project version to a beta build version based on the current UTC date. `beta` initial Number is `1`
+
+```bash
+# Let's imagine that today's date it: 30 of June 2025:
+# Create a nightly build (e.g., 2025.6 → 2025.6.1-nightly.30.1)
+# Beta build can have a nightly suffix too (e.g., 2025.6.1-nightly.30.1 -> 2025.6.1-beta.1.30.2)
 calaf make nightly 
 ```
 
