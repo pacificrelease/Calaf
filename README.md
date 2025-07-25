@@ -20,7 +20,7 @@ Calaf is a command-line tool for managing Calendar Versioning ([CalVer](https://
 
 ## Versioning Scheme
 
-Calaf implements a Calendar Versioning ([CalVer](https://calver.org)) scheme that provides chronological, sortable version numbers compatible with Semantic Versioning 2.0.0 specifications.
+Calaf implements a Calendar Versioning ([CalVer](https://calver.org)) scheme that is compatible with Semantic Versioning 2.0.0. This ensures that versions are chronological, sortable, and widely supported.
 
 **Format**: `YYYY.MM[.PATCH][-BUILD.FORMAT]`
 
@@ -28,8 +28,8 @@ Calaf implements a Calendar Versioning ([CalVer](https://calver.org)) scheme tha
 
 #### YYYY - Full year (required)
 
- - Examples: `2001`, `2025`, `2150`
- - Range: `1970` to `9999`
+- Examples: `2001`, `2025`, `2150`
+- Range: `1970` to `9999`
 
 #### MM - Month number (required)
 
@@ -39,36 +39,38 @@ Calaf implements a Calendar Versioning ([CalVer](https://calver.org)) scheme tha
 #### PATCH - Patch number within the month (optional)
 
 - Examples: `1`, `2`, `3`
-- Range: `1` to`4294967295`
+- Range: `1` to `4294967295`
 
 ### Pre-release Components:
 
-#### BUILD.FORMAT - Pre-release build identifier with the specific format suffix to indicate non-stable builds:
+#### BUILD.FORMAT - Pre-release build identifier with a specific format suffix to indicate non-stable builds:
 
 * **Beta releases:** `beta.NUMBER`
 
-    * Example: `2025-6.1-beta.1`
-    * Range `NUMBER`:  `1` to`4294967295`
+  * Example: `2025.6.1-beta.1`
+  * Range `NUMBER`: `1` to `4294967295`
 
 * **Nightly builds:** `0.nightly.DAY.NUMBER`
 
-    An additional `zero` digits doesn't carry any useful information, but guaranteed to remain "earlier" than any another build's letter.
-    * `DAY` is the day of the month, `NUMBER` is the build sequence for that day
-    * Example: `2025.6.1-0.nightly.30.1`
-    * Range `NUMBER`: `1` to `4294967295`
+  * The leading `0` ensures that nightly builds have lower precedence than other pre-release builds like `beta`.
+  * `DAY`: The day of the month
+  * `NUMBER`: A sequential number for builds on the same day
+  * Example: `2025.6.1-0.nightly.30.1`
+  * Range `NUMBER`: `1` to `4294967295`
 
 * **Beta nightly builds:** `beta.BETA_NUMBER.DAY.NIGHTLY_NUMBER`
 
-    * Example: `2025.6.1-beta.1.30.1`
+  * Example: `2025.6.1-beta.1.30.1`
 
 ### Version Precedence
 
-Versions are ordered chronologically and follow SemVer precedence rules:
-1. `2025.6.1` (stable)
-2. `2025.6.1-beta.2` (beta)
-3. `2025.6.1-beta.1.30.1` (beta nightly)
-4. `2025.6.1-0.nightly.30.1` (nightly)
+Versions are compared according to SemVer 2.0.0 rules. The following list shows an example of version progression from lowest to highest precedence:
 
+1. `2025.6.1-0.nightly.30.1` (Nightly)
+2. `2025.6.1-beta.1` (Beta)
+3. `2025.6.1-beta.1.30.1` (Beta Nightly)
+4. `2025.6.1-beta.2` (Later Beta)
+5. `2025.6.1` (Stable Release)
 
 ## Installation
 
