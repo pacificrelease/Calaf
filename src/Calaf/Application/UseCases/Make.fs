@@ -14,27 +14,19 @@ module internal Make =
             console.read arguments
         
     module private Console =
-        let ok (console: IConsole) (o: obj) =
-            match o with
-            | :? Workspace as workspace ->
-                console.write $"Processing workspace at: {workspace.Directory}.\n"
-                match workspace.Repository, workspace.Suite with
-                | Some (Repository.Ready _), Suite.StandardSet (version, _) ->
-                    console.success "Git repository is ready. A version tag will be created.\n"
-                    console.success $"Projects version: {version}. 🚀\n"
-                    
-                | Some (Repository.Dirty _), Suite.StandardSet (version, _) ->
-                    console.success "Git repository has uncommitted changes. A version tag will be created; but local changes will be not included.\n"
-                    console.success $"Projects version: {version}. 🚀\n"
-                    
-                | Some _, Suite.StandardSet (version, _) ->
-                    console.success "Git repository is not in a clean state. Version tagging has been skipped. Please fix the repository state to enable version tagging.\n"
-                    console.success $"Projects version: {version}. 🚀\n"
-                    
-                | None, Suite.StandardSet (version, _) ->
-                    console.write "No Git repository found. Version tagging will be skipped.\n"
-                    console.success $"Projects version: {version}. 🚀\n"
-            | _ -> ()
+        let ok (console: IConsole) (workspace: Workspace) =
+            console.write $"Processing workspace at: {workspace.Directory}."            
+            match workspace.Repository with
+            | Some (Repository.Ready _) ->
+                console.write "Git repository is ready. A version tag will be created."                
+            | Some (Repository.Dirty _) ->
+                console.write "Git repository has uncommitted changes. A version tag will be created; but local changes will be not included.\n"                
+            | Some _  ->
+                console.write "Git repository is not in a clean state. Version tagging has been skipped. Please fix the repository state to enable version tagging.\n"                
+            | None ->
+                console.write "No Git repository found. Version tagging will be skipped.\n"
+            let versionString = Version.toString workspace.Version
+            console.success $"↑ Version applied: {versionString}. 🚀\n"
                     
         let error (console: IConsole) e =            
             console.error $"{e}"
