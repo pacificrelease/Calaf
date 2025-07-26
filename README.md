@@ -72,15 +72,19 @@ Versions are compared according to SemVer 2.0.0 rules. The following list shows 
 4. `2025.6.1-beta.2` (Later Beta)
 5. `2025.6.1` (Stable Release)
 
+
 ## Installation
 
 ```bash
 dotnet tool install -g Calaf
 ```
 
+
 ## Getting Started
 
-1. Add init version to your projects files:
+### 1. Initialize Your Project Version
+
+Add an initial Calendar Version to your project file(s) (`*.csproj` or `.fsproj`):
 
 ```xml
 <PropertyGroup>
@@ -88,32 +92,47 @@ dotnet tool install -g Calaf
 </PropertyGroup>
 ```
 
-2. Manage project versioning using Calaf:
+### 2. Create Versions
 
-The supported releases: `stable`, `beta`, `nightly`.
+Calaf supports three release types: **`stable`**, **`beta`**, and **`nightly`**.
+
+##### Stable Releases
+
+Generate production-ready versions:
 
 ```bash
-# Create a stable version (e.g., 2025.6 → 2025.6.1)
+# Example (assuming today is June 30, 2025): 2025.6 → 2025.6.1
 calaf make stable
 ```
 
-Updates the project version to a stable Calendar Version based on the current UTC date.
+Creates a stable Calendar Version using the **current UTC date** from running system (`System.DateTimeOffSet.UtcNow`). 
+
+##### Beta Releases
+
+Generate pre-release versions for testing:
 
 ```bash
-# Create a beta build (e.g., 2025.6 → 2025.6.1-beta.1)
+# Example: 2025.6 → 2025.6.1-beta.1
 calaf make beta 
 ```
 
-Updates the project version to a beta build version based on the current UTC date. `beta` initial Number is `1`
+Creates a beta version using the **current UTC date**. Beta numbering starts from `1` and increments with each new beta release. 
+
+##### Nightly Builds
+
+Generate development builds with daily identifiers:
 
 ```bash
-# Let's imagine that today's date it: 30 of June 2025:
-# Create a nightly build (e.g., 2025.6 → 2025.6.1-nightly.30.1)
-# Beta build can have a nightly suffix too (e.g., 2025.6.1-nightly.30.1 -> 2025.6.1-beta.1.30.2)
+# 2025.6 → 2025.6.1-0.nightly.30.1
 calaf make nightly 
 ```
 
-Updates the project version to a nightly build version based on the current date and day of the month.
+Creates a nightly build version using the **current date and day of the month**. Nightly numbering starts from `1` for each day.
+
+**Note:** You can also create nightly builds from existing beta versions:
+
+* `2025.6.1-beta.1` → `2025.6.1-beta.1.30.1`
+
 
 ## Further Use
 
