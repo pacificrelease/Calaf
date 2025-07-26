@@ -17,16 +17,24 @@ module internal Make =
         let ok (console: IConsole) (o: obj) =
             match o with
             | :? Workspace as workspace ->
+                console.write $"Processing workspace at: {workspace.Directory}.\n"
                 match workspace.Repository, workspace.Suite with
-                | Some _, Suite.StandardSet (version, _ ) ->
-                    console.write $"Workspace: {workspace.Directory}."
-                    console.write "Git repository found. Skipping now..."
-                    console.success $"Current Suite version is {version}. 🚀. \n"                    
+                | Some (Repository.Ready _), Suite.StandardSet (version, _) ->
+                    console.success "Git repository is ready. A version tag will be created.\n"
+                    console.success $"Projects version: {version}. 🚀\n"
+                    
+                | Some (Repository.Dirty _), Suite.StandardSet (version, _) ->
+                    console.success "Git repository has uncommitted changes. A version tag will be created; but local changes will be not included.\n"
+                    console.success $"Projects version: {version}. 🚀\n"
+                    
+                | Some _, Suite.StandardSet (version, _) ->
+                    console.success "Git repository is not in a clean state. Version tagging has been skipped. Please fix the repository state to enable version tagging.\n"
+                    console.success $"Projects version: {version}. 🚀\n"
+                    
                 | None, Suite.StandardSet (version, _) ->
-                    console.write $"Workspace: {workspace.Directory}."
-                    console.write "Git repository not found."
-                    console.success $"Current Suite version is {version}. 🚀. \n"
-            | _ -> ()            
+                    console.write "No Git repository found. Version tagging will be skipped.\n"
+                    console.success $"Projects version: {version}. 🚀\n"
+            | _ -> ()
                     
         let error (console: IConsole) e =            
             console.error $"{e}"

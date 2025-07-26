@@ -27,8 +27,8 @@ module internal ConsoleInputGateway =
     let toMakeType (flags: MakeFlag list) =
         match flags with
             | [ Nightly ] -> Ok MakeType.Nightly
-            | [ Beta ] -> Ok MakeType.Beta
-            | [ Stable ] -> Ok MakeType.Stable            
+            | [ Beta ]    -> Ok MakeType.Beta
+            | [ Stable ]  -> Ok MakeType.Stable            
             | [] -> Ok MakeType.Stable
             | _  ->
                 $"{flags.Head}"
