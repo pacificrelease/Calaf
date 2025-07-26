@@ -731,136 +731,133 @@ module NightlyTests =
             | _ -> false
         test <@ eq @>
         
-// module ToStringPropertiesTests =
-//     let private dotSegments (s:string) = s.Split '.'
-//     
-//     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
-//     let ``CalendarVersion contains it's Year in the string representation`` (calendarVersion: CalendarVersion) =
-//         let calVerString = calendarVersion |> toString
-//         calVerString.Contains(calendarVersion.Year |> string)
-//     
-//     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
-//     let ``CalendarVersion contains it's Month in the string representation`` (calendarVersion: CalendarVersion) =
-//         let calVerString = calendarVersion |> toString
-//         calVerString.Contains(calendarVersion.Month |> string)   
-//         
-//     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatch> |])>]
-//     let ``CalendarVersion with Patch contains it's Patch in the string representation`` (calendarVersion: CalendarVersion) =
-//         let calVerString = calendarVersion |> toString
-//         calVerString.Contains(calendarVersion.Patch.Value |> string)
-//       
-//     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionShortNightlyBuild> |])>]
-//     let ``CalendarVersion with Nightly Build contains it's Build in the string representation`` (calendarVersion: CalendarVersion) =
-//         let calVerString = calendarVersion |> toString
-//         let contains = match calendarVersion with
-//                         | { Build = Some (Build.Nightly { Day = day; Number = number }) } ->
-//                             calVerString.Contains($"{day}") &&
-//                             calVerString.Contains($"{number}")
-//                         | _ -> failwith "CalendarVersion with Build should have a Build"
-//         test <@ contains @>
-//         
-//     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionShortBetaBuild> |])>]
-//     let ``CalendarVersion with Beta Build contains it's Build in the string representation`` (calendarVersion: CalendarVersion) =
-//         let calVerString = calendarVersion |> toString
-//         let contains = match calendarVersion with
-//                         | { Build = Some (Build.Beta { Number = number }) } ->                            
-//                             calVerString.Contains($"{number}")
-//                         | _ -> failwith "CalendarVersion with Build should have a Build"
-//         test <@ contains @>
-//         
-//     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionShortBetaNightlyBuild> |])>]
-//     let ``CalendarVersion with BetaNightly Build contains it's Build in the string representation`` (calendarVersion: CalendarVersion) =
-//         let calVerString = calendarVersion |> toString
-//         let contains = match calendarVersion with
-//                         | { Build = Some (Build.BetaNightly ({ Number = bn }, { Day = nd; Number = nn })) } ->
-//                             calVerString.Contains($"{bn}") &&
-//                             calVerString.Contains($"{nd}") &&
-//                             calVerString.Contains($"{nn}")
-//                         | _ -> failwith "CalendarVersion with Build should have a Build"
-//         test <@ contains @>
-//         
-//     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionPatch> |])>]
-//     let ``CalendarVersion with Patch contains three string sections`` (calendarVersion: CalendarVersion) =
-//         calendarVersion
-//         |> toString
-//         |> dotSegments
-//         |> Array.length  = 3
-//         
-//     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersionShort> |])>]
-//     let ``CalendarVersion without Patch contains two string sections`` (calendarVersion: CalendarVersion) =
-//         calendarVersion
-//         |> toString
-//         |> dotSegments
-//         |> Array.length  = 2
-//         
-//     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
-//     let ``Equal CalendarVersion values produce identical strings`` (calendarVersion: CalendarVersion)=
-//         let copy = calendarVersion
-//         let calVerString1 = calendarVersion |> toString
-//         let calVerString2 = copy   |> toString
-//         calVerString1 = calVerString2
-//         
-//     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
-//     let ``Output is never empty`` (calendarVersion: CalendarVersion) =
-//         calendarVersion
-//         |> toString
-//         |> System.String.IsNullOrWhiteSpace
-//         |> not
+module ToStringPropertiesTests =    
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
+    let ``CalendarVersion contains it's Year in the string representation`` (release: CalendarVersion) =
+        let releaseString = toString release
+        test <@ releaseString.Contains(string release.Year) @>
+    
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
+    let ``CalendarVersion contains it's Month in the string representation`` (release: CalendarVersion) =
+        let releaseString = toString release
+        test <@ releaseString.Contains(string release.Month) @>   
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.AccidentalPatch> |])>]
+    let ``CalendarVersion with Patch contains it's Patch in the string representation`` (release: CalendarVersion) =
+        let releaseString = toString release
+        test <@ releaseString.Contains(string release.Patch.Value) @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
+    let ``Calendar Version's roundtrip. CalendarVersion converts to string and back to the same CalendarVersion`` (release: CalendarVersion) =
+        let releaseString = toString release
+        let release' = tryParseFromString releaseString
+        test <@ (release |> CalVer |> Some) = release' @>
+    
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Beta.Accidental> |])>]
+    let ``CalendarVersion with Beta Build contains it's Build in the string representation`` (beta: CalendarVersion) =
+        let betaString = toString beta
+        test <@
+            match beta with
+            | { Build = Some (Build.Beta { Number = number }) } ->
+                betaString.Contains(Calaf.Domain.Build.BetaBuildType) &&
+                betaString.Contains($"{number}")
+            | _ -> false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Nightly.Accidental> |])>]
+    let ``CalendarVersion with Nightly Build contains it's Build in the string representation`` (nightly: CalendarVersion) =
+        let nightlyString = toString nightly
+        test <@
+            match nightly with
+            | { Build = Some (Build.Nightly { Day = day; Number = number }) } ->
+                nightlyString.Contains(Calaf.Domain.Build.NightlyBuildType) &&
+                nightlyString.Contains $"{Calaf.Domain.Build.NightlyZeroPrefix}" &&
+                nightlyString.Contains(string day) &&
+                nightlyString.Contains(string number)
+            | _ -> false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.BetaNightly.Accidental> |])>]
+    let ``CalendarVersion with BetaNightly Build contains it's Build in the string representation`` (betaNightly: CalendarVersion) =
+        let betaNightlyString = toString betaNightly
+        test <@
+            match betaNightly with
+            | { Build = Some (Build.BetaNightly ({ Number = bn }, { Day = nd; Number = nn })) } ->
+                betaNightlyString.Contains Calaf.Domain.Build.BetaBuildType &&
+                betaNightlyString.Contains $"{bn}" &&
+                betaNightlyString.Contains $"{nd}" &&
+                betaNightlyString.Contains $"{nn}"
+            | _ -> false @>        
+  
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
+    let ``Equal CalendarVersion values produce identical strings`` (release: CalendarVersion)=
+        let release' = release
+        let releaseString  = toString release
+        let releaseString' = toString release'
+        releaseString = releaseString'
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
+    let ``Output is never empty`` (release: CalendarVersion) =
+        release
+        |> toString
+        |> System.String.IsNullOrWhiteSpace
+        |> not
       
-// module ToTagNamePropertiesTests =
-//     // Prefix Prepending
-//     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
-//     let ``Prefix is prepended to the CalendarVersion tag name`` (calendarVersion: CalendarVersion) =
-//         let tag = calendarVersion |> toTagName
-//         tag.StartsWith(tagVersionPrefix)    
-//     
-//     // Suffix Format
-//     // The part after the prefix should match the output of toString calVer.
-//     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
-//     let ``Tag name after prefix matches CalendarVersion string representation`` (calendarVersion: CalendarVersion) =
-//         let tag = calendarVersion |> toTagName
-//         let versionString = calendarVersion |> toString
-//         tag.EndsWith(versionString)
-//     
-//     // Reversibility
-//     // If you strip the prefix from the result and parse it, you should recover the original CalendarVersion (assuming toString and parsing are consistent).
-//     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
-//     let ``Tag name can be parsed back to CalendarVersion`` (calendarVersion: CalendarVersion) =
-//         let tagName = calendarVersion |> toTagName
-//         match tryParseFromTag tagName with
-//         | Some (CalVer version) -> version = calendarVersion
-//         | _ -> false
-//         
-//     // No Unexpected Characters
-//     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
-//     let ``Tag name does not contain unexpected empty or whitespace characters`` (calendarVersion: CalendarVersion) =
-//         let tagName = calendarVersion |> toTagName
-//         not (System.String.IsNullOrWhiteSpace tagName) &&
-//         tagName |> Seq.forall (fun c -> not (System.Char.IsWhiteSpace c))
-//         
-// module ToCommitMessagePropertiesTests =
-//     // Prefix Prepending
-//     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
-//     let ``Commit message starts with commitVersionPrefix`` (calendarVersion: CalendarVersion) =
-//         let commitMsg = calendarVersion |> toCommitMessage
-//         commitMsg.StartsWith(commitVersionPrefix)
-//     
-//     // Suffix Format
-//     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
-//     let ``Commit message ends with string representation of version`` (calendarVersion: CalendarVersion) =
-//         let commitMsg = calendarVersion |> toCommitMessage
-//         commitMsg.EndsWith(toString calendarVersion)
-//
-//     // Contains commit version prefix
-//     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
-//     let ``Commit message does not contain unexpected empty or whitespace and contains commit version prefix`` (calendarVersion: CalendarVersion) =
-//         let commitMsg = calendarVersion |> toCommitMessage
-//         not (System.String.IsNullOrWhiteSpace commitMsg) &&
-//         commitMsg.Contains commitVersionPrefix
-//         
-//     // Commit string contains 2 whitespace
-//     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.calendarVersion> |])>]
-//     let ``Commit message contains two whitespaces on its format`` (calendarVersion: CalendarVersion) =
-//         let commitMsg = toCommitMessage calendarVersion
-//         let spaceCount = commitMsg |> Seq.filter (fun c -> c = ' ') |> Seq.length
-//         test <@ spaceCount = 2 @>
+module ToTagNamePropertiesTests =
+    // Prefix Prepending
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
+    let ``Prefix is prepended to the CalendarVersion tag name`` (release: CalendarVersion) =
+        let releaseTagName = toTagName release
+        releaseTagName.StartsWith tagVersionPrefix    
+    
+    // Suffix Format
+    // The part after the prefix should match the output of toString calVer.
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
+    let ``Tag name after prefix matches CalendarVersion string representation`` (release: CalendarVersion) =
+        let releaseTagName = toTagName release
+        let versionString = toString release
+        releaseTagName.EndsWith versionString
+    
+    // Reversibility
+    // If you strip the prefix from the result and parse it, you should recover the original CalendarVersion (assuming toString and parsing are consistent).
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
+    let ``Tag name can be parsed back to CalendarVersion`` (release: CalendarVersion) =
+        let releaseTagName = toTagName release
+        test <@
+            match tryParseFromTag releaseTagName with
+            | Some (CalVer release') -> release' = release
+            | _ -> false @>
+        
+    // No Unexpected Characters
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
+    let ``Tag name does not contain unexpected empty or whitespace characters`` (release: CalendarVersion) =
+        let releaseTagName = toTagName release
+        test <@
+            not (System.String.IsNullOrWhiteSpace releaseTagName) &&
+            releaseTagName |> Seq.forall (fun c -> not (System.Char.IsWhiteSpace c)) @>
+        
+module ToCommitMessagePropertiesTests =
+    // Prefix Prepending
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
+    let ``Commit message starts with commitVersionPrefix`` (release: CalendarVersion) =
+        let commitMessage = toCommitMessage release
+        test <@ commitMessage.StartsWith commitVersionPrefix @>
+    
+     // Suffix Format
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
+    let ``Commit message ends with a string representation of the version`` (release: CalendarVersion) =
+        let commitMessage = toCommitMessage release
+        test <@ commitMessage.EndsWith (toString release) @>
+
+    // Contains commit version prefix
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
+    let ``Commit message does not contain unexpected empty or whitespace and contains commit version prefix`` (release: CalendarVersion) =
+        let commitMessage = toCommitMessage release
+        test <@
+            System.String.IsNullOrWhiteSpace commitMessage |> not &&
+            commitMessage.Contains commitVersionPrefix @>
+         
+    // Commit string contains 2 whitespace
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
+    let ``Commit message contains two whitespaces on its format`` (release: CalendarVersion) =
+        let commitMessage = toCommitMessage release
+        let spaceCount = commitMessage |> Seq.filter (fun c -> c = ' ') |> Seq.length
+        test <@ spaceCount = 2 @>
