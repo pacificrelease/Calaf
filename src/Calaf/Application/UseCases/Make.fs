@@ -18,16 +18,16 @@ module internal Make =
             console.write $"Processing workspace at: {workspace.Directory}."            
             match workspace.Repository with
             | Some (Repository.Ready _) ->
-                console.write "Git repository is ready. A version tag will be created."                
+                console.write "Git repository is ready. A version tag and commit created."                
             | Some (Repository.Dirty _) ->
-                console.write "Git repository has uncommitted changes. A version tag will be created, but local changes will not be included."
+                console.write "Git repository has uncommitted changes. A version tag and commit created, but local changes was not included."
             | Some _  ->
-                console.write "Git repository is not in a clean state. Version tagging has been skipped. Please fix the repository state to enable version tagging."                
+                console.write "Git repository is not in a clean state. Version tagging skipped. Please fix the repository state to enable version tagging."                
             | None ->
-                console.write "No Git repository found. Version tagging will be skipped."
+                console.write "No Git repository found. Version tagging skipped."
                 
             let versionString = Version.toString workspace.Version
-            console.success $"Version applied: {versionString}. ↑"
+            console.success $"Version applied: {versionString}"
                     
         let error (console: IConsole) e =            
             console.error $"{e}"
