@@ -7,16 +7,32 @@
 
 Calaf is a command-line tool for managing Calendar Versioning ([CalVer](https://calver.org)) of .NET projects, written in F#.
 
+
+## Table of Contents
+
+- [Features](#features)
+- [Requirements](#requirements)
+- [Versioning Scheme](#versioning-scheme)
+- [Quick Start](#quick-start)
+- [Commands Reference](#commands-reference)
+- [Further Use](#further-use)
+- [License](#license)
+
+
 ## Features
 
-- Automatic versioning based on current date
-- Support for stable and nightly builds
-- Works with csproj/fsproj projects formats
+- Automatic Calendar Versioning based on the current UTC date
+- Support for `stable`, `beta`, and `nightly` release types
+- Git integration with automatic tagging (+version commit) for new versions
+- Works with C#/F# project formats (`csproj`/`fsproj`)
+- Generates versions compatible with Semantic Versioning 2.0.0
 - Tool installation via dotnet CLI
+
 
 ## Requirements
 
 - .NET 8.0 or later
+
 
 ## Versioning Scheme
 
@@ -73,65 +89,140 @@ Versions are compared according to SemVer 2.0.0 rules. The following list shows 
 5. `2025.6.1` (Stable Release)
 
 
-## Installation
+## Quick Start
+
+##### 1. Installation:
 
 ```bash
 dotnet tool install -g Calaf
 ```
 
-
-## Getting Started
-
-### 1. Initialize Your Project Version
-
-Add an initial Calendar Version to your project file(s) (`*.csproj` or `.fsproj`):
+##### 2. Add an initial version to your project file(s) (`*.csproj` or `.fsproj`):
 
 ```xml
 <PropertyGroup>
-    <Version>2025.6</Version>
+    <Version>2025.7</Version>
 </PropertyGroup>
 ```
 
-### 2. Create Versions
-
-Calaf supports three release types: **`stable`**, **`beta`**, and **`nightly`**.
-
-##### Stable Releases
-
-Generate production-ready versions:
+##### 3. Generate a stable Calendar Version:
 
 ```bash
-# Example (assuming today is June 30, 2025): 2025.6 → 2025.6.1
 calaf make stable
 ```
 
-Creates a stable Calendar Version using the **current UTC date** from running system (`System.DateTimeOffSet.UtcNow`). 
 
-##### Beta Releases
+## Commands Reference
 
-Generate pre-release versions for testing:
+### `calaf make <type>`
 
-```bash
-# Example: 2025.6 → 2025.6.1-beta.1
+**Synopsis:**
+```console
+calaf make <stable|beta|nightly>
+```
+
+**Description:** Generates and applies a new Calendar Version to all `.csproj` and `.fsproj` files in the current directory. Automatically creates Git commit and tag if repository is detected.
+
+**Arguments:**
+
+|   Argument  |                      Description                    |
+|-------------|-----------------------------------------------------|
+|**`stable`** | Stable release. Creates a production-ready version. |
+| **`beta`**  | Beta release. Creates a pre-release version for testing. Increments the beta number. Beta numbering starts from `1` and increments with each new beta release.|
+|**`nightly`**| Nightly (development) build. Creates a development build version. Uses the current day and an incremental number that's starts from `1` for that day.|
+
+**Examples:**
+
+**Stable Release**
+
+Creates a production version based on current UTC date on running system (`System.DateTimeOffSet.UtcNow`).
+`2025.7` → `2025.7.1`
+
+* Command:
+```console
+calaf make stable
+```
+
+* Output:
+```console
+Version applied: 2025.7.1
+```
+
+* Project file(s) change:
+```xml
+<!-- Before -->
+<Version>2025.7</Version>
+
+<!-- After -->
+<Version>2025.7.1</Version>
+```
+
+**Beta Release**
+
+Creates a pre-release version.
+`2025.7.1` → `2025.7.1-beta.1`
+
+```console
 calaf make beta 
 ```
 
-Creates a beta version using the **current UTC date**. Beta numbering starts from `1` and increments with each new beta release. 
+* Output:
+```console
+Version applied: 2025.7.1-beta.1
+```
 
-##### Nightly Builds
+* Project file(s) change:
+```xml
+<!-- Before -->
+<Version>2025.7.1</Version>
 
-Generate development builds with daily identifiers:
+<!-- After -->
+<Version>2025.7.1-beta.1</Version>
+```
 
-```bash
-# 2025.6 → 2025.6.1-0.nightly.30.1
+**Nightly Build**
+
+Creates a development build with daily identifier.
+`2025.7.1` → `2025.7.2-0.nightly.27.1`
+
+```console
 calaf make nightly 
 ```
 
-Creates a nightly build version using the **current date and day of the month**. Nightly numbering starts from `1` for each day.
+* Output:
+```console
+Version applied: 2025.7.2-0.nightly.27.1
+```
 
-**Note:** You can also create nightly builds from existing beta versions:
+**Note:** Subsequent runs on the same day increment the build number: `2025.7.2-0.nightly.27.2`, `2025.7.2-0.nightly.27.3`, etc.
 
-* `2025.6.1-beta.1` → `2025.6.1-beta.1.30.1`
+Project file change:
+```xml
+<!-- Before -->
+<Version>2025.7.1</Version>
+
+<!-- After -->
+<Version>2025.7.2-0.nightly.27.1</Version>
+```
+
+**Note:** Nightly from Beta
+
+You can create nightly builds from existing beta versions.
+`2025.7.1-beta.1` → `2025.7.1-beta.1.27.1`
+
+* Output:
+```console
+Version applied: 2025.7.1-beta.1.27.1
+```
+
+Project file change:
+```xml
+<!-- Before -->
+<Version>2025.7.1-beta.1</Version>
+
+<!-- After -->
+<Version>2025.7.1-beta.1.27.1</Version>
+```
 
 
 ## Further Use
@@ -144,17 +235,27 @@ jobs:
         name: Release
         runs-on: ubuntu-latest
         steps:
-            ...
-            - name: Install Calaf
-              run: dotnet tool install -g Calaf
-
-            - name: Make Version
-              run: |
-                calaf make stable
-              continue-on-error: false
+          - name: Checkout code
+            uses: actions/checkout@v4
+            with:
+              # Fetch all history for accurate version calculation
+              fetch-depth: 0
+  
+          - name: Install Calaf
+            run: dotnet tool install -g Calaf
+  
+          - name: Make a new stable version
+            id: versioning
+            run: calaf make stable
+            continue-on-error: false
             
-            - name: Push Version
-              run: |                
-                git push origin ${{ github.ref_name }}
-                git push origin --tags
-            ...
+          - name: Push version changes
+            run: |
+              git push origin ${{ github.ref_name }}
+              git push origin --tags
+```
+
+
+## License
+
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
