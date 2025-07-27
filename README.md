@@ -24,7 +24,7 @@ Calaf is a command-line tool for managing Calendar Versioning ([CalVer](https://
 - Automatic Calendar Versioning based on the current UTC date
 - Support for `stable`, `beta`, and `nightly` release types
 - Git integration with automatic tagging (+version commit) for new versions
-- Works with C#/F# project formats (`csproj`/`fsproj`)
+- Works with C#/F# project formats (`*.csproj`/`*.fsproj`)
 - Generates versions compatible with Semantic Versioning 2.0.0
 - Tool installation via dotnet CLI
 
@@ -63,7 +63,7 @@ Calaf implements a Calendar Versioning ([CalVer](https://calver.org)) scheme tha
 
 * **Beta releases:** `beta.NUMBER`
 
-  * Example: `2025.6.1-beta.1`
+  * Example: `2025.7.1-beta.1`
   * Range `NUMBER`: `1` to `4294967295`
 
 * **Nightly builds:** `0.nightly.DAY.NUMBER`
@@ -71,22 +71,22 @@ Calaf implements a Calendar Versioning ([CalVer](https://calver.org)) scheme tha
   * The leading `0` ensures that nightly builds have lower precedence than other pre-release builds like `beta`.
   * `DAY`: The day of the month
   * `NUMBER`: A sequential number for builds on the same day
-  * Example: `2025.6.1-0.nightly.30.1`
+  * Example: `2025.7.1-0.nightly.30.1`
   * Range `NUMBER`: `1` to `4294967295`
 
 * **Beta nightly builds:** `beta.BETA_NUMBER.DAY.NIGHTLY_NUMBER`
 
-  * Example: `2025.6.1-beta.1.30.1`
+  * Example: `2025.7.1-beta.1.30.1`
 
 ### Version Precedence
 
 Versions are compared according to SemVer 2.0.0 rules. The following list shows an example of version progression from lowest to highest precedence:
 
-1. `2025.6.1-0.nightly.30.1` (Nightly)
-2. `2025.6.1-beta.1` (Beta)
-3. `2025.6.1-beta.1.30.1` (Beta Nightly)
-4. `2025.6.1-beta.2` (Later Beta)
-5. `2025.6.1` (Stable Release)
+1. `2025.7.1-0.nightly.30.1` (Nightly)
+2. `2025.7.1-beta.1` (Beta)
+3. `2025.7.1-beta.1.30.1` (Beta Nightly)
+4. `2025.7.1-beta.2` (Later Beta)
+5. `2025.7.1` (Stable Release)
 
 
 ## Quick Start
@@ -97,7 +97,7 @@ Versions are compared according to SemVer 2.0.0 rules. The following list shows 
 dotnet tool install -g Calaf
 ```
 
-##### 2. Add an initial version to your project file(s) (`*.csproj` or `.fsproj`):
+##### 2. Add an initial version to your project file(s) (`*.csproj` or `*.fsproj`):
 
 ```xml
 <PropertyGroup>
