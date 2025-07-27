@@ -41,6 +41,9 @@ jobs:
 
       - name: Build
         run: dotnet build ${{ vars.SOLUTION }} --no-restore --configuration ${{ vars.CONFIGURATION }}
+        
+      - name: Test
+        run: dotnet test ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --verbosity normal
 
       - name: Pack
         run: |
