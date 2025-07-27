@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 concurrency:
@@ -27,33 +27,65 @@ jobs:
         with:
           ref: ${{ github.event.inputs.git_ref || github.ref }}
 
-      - name: Setup
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
           
-      - name: Feed
+      - name: Configure Git
         run: |
-          dotnet nuget add source "${{ env.FEED }}" \
-            --username "${{ github.repository_owner }}" \
-            --password "${{ secrets.GITHUB_TOKEN }}" \
-            --store-password-in-clear-text \
-            --name github
+          git config --global user.name "${{ vars.GIT_USERNAME }}"
+          git config --global user.email "${{ vars.GIT_EMAIL }}"
+          
+      - name: Add GitHub NuGet Feed Source
+        run: |
+          dotnet nuget add source "${{ env.GITHUB_FEED }}" --name "github" --username "${{ github.actor }}" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
+          
+      - name: Install latest Calaf
+        run: |
+          dotnet tool install --global Calaf --add-source "github" --prerelease
+          
+      - name: Generate a Stable Version
+        id: version
+        run: |
+          BEFORE_COMMIT=$(git rev-parse HEAD)
+          
+          calaf make stable
+          
+          AFTER_COMMIT=$(git rev-parse HEAD)
+          
+          if ! git diff --quiet || ! git diff --cached --quiet || [ "$BEFORE_COMMIT" != "$AFTER_COMMIT" ];
+          then
+            echo "VERSION_CHANGED=true" >> $GITHUB_OUTPUT
+            echo "Changes detected"
+          else
+            echo "VERSION_CHANGED=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+          fi
 
-      - name: Restore
+      - name: Push Version Changes
+        if: steps.version.outputs.VERSION_CHANGED == 'true'
+        run: |
+          git push origin ${{ github.ref_name }}
+          git push origin --tags
+
+      - name: Restore Dependencies
         run: dotnet restore ${{ vars.SOLUTION }}
 
-      - name: Build
+      - name: Build Solution
         run: dotnet build ${{ vars.SOLUTION }} --no-restore --configuration ${{ vars.CONFIGURATION }}
+        
+      - name: Run Tests
+        run: dotnet test ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --verbosity normal
 
-      - name: Pack
+      - name: Pack NuGet Package
         run: |
           dotnet pack ${{ vars.SOLUTION }} --no-build --configuration ${{ vars.CONFIGURATION }} --output ${{ env.TEMP_OUTPUT }}
 
-      - name: Publish
+      - name: Publish to the GitHub NuGet Feed Source
         run: |
           dotnet nuget push ${{ env.TEMP_OUTPUT }}/*.nupkg \
             --source github \
             --api-key "${{ secrets.GITHUB_TOKEN }}" \
             --skip-duplicate
-        continue-on-error: true
+        continue-on-error: false
