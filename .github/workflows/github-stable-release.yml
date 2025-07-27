@@ -13,7 +13,7 @@ concurrency:
 
 env:
   DOTNET_VERSION: '9.0.x'
-  FEED: "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+  GITHUB_FEED: "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
   TEMP_OUTPUT: "./nupkgs"
 
 jobs:
