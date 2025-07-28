@@ -13,6 +13,7 @@ type DomainError =
     | DayInvalidInt
     | BuildInvalidString
     | BuildAlreadyCurrent
+    | BuildDowngradeProhibited
     
     // Project errors
     | ProjectUnsupported

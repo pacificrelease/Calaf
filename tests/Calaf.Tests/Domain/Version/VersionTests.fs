@@ -425,53 +425,82 @@ module TryMaxTests =
         let max' = tryMax duplicated
         test <@ max' = max @>
 
-module BetaTests =
+module TryBetaTests =
     [<Fact>]
     let ``Beta short CalendarVersion releases to beta increases beta number but keeps the same Year, Month without Patch when the year and month are same`` () =        
         let calVer = { Year = 2023us; Month = 10uy; Patch = None; Build = Some (Build.Beta { Number = 1us }) }
         let dateTimeOffsetStamp = System.DateTime (2023, 10, 31) |> System.DateTimeOffset
-        let release = beta calVer dateTimeOffsetStamp
-        let betaNumber = match release.Build.Value with | Beta b -> Some b.Number | _ -> None
-        test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch = calVer.Patch && betaNumber > (Some 1us) @>
+        let release = tryBeta calVer dateTimeOffsetStamp
+        test <@
+            match release with
+            | Ok { Year = year; Month = month; Patch = patch; Build = Some (Beta b) } ->
+                year = calVer.Year &&
+                month = calVer.Month &&
+                patch = calVer.Patch &&
+                b.Number > 1us
+            | _ -> false @>
         
     [<Fact>]
     let ``Beta patch CalendarVersion releases to beta increases beta number but keeps the same Year, Month, Patch when the year, month and patch are same`` () =        
         let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.Beta { Number = 1us }) }
         let dateTimeOffsetStamp = System.DateTime (2023, 10, 31) |> System.DateTimeOffset
-        let release = beta calVer dateTimeOffsetStamp
-        let betaNumber = match release.Build.Value with | Beta b -> Some b.Number | _ -> None
-        test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch = calVer.Patch && betaNumber > (Some 1us) @>
+        let release = tryBeta calVer dateTimeOffsetStamp
+        test <@
+            match release with
+            | Ok { Year = year; Month = month; Patch = patch; Build = Some (Beta b) } ->
+                year = calVer.Year &&
+                month = calVer.Month &&
+                patch = calVer.Patch &&
+                b.Number > 1us
+            | _ -> false @>
         
     [<Fact>]
     let ``Stable CalendarVersion releases to beta keeps the same Year, Month, increase Patch and adds Build when the year and month are same`` () =        
         let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = None }
         let dateTimeOffsetStamp = System.DateTime(2023, 10, 31) |> System.DateTimeOffset
-        let release = beta calVer dateTimeOffsetStamp
-        let betaNumber = match release.Build.Value with | Beta b -> Some b.Number | _ -> None
-        test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch > calVer.Patch && betaNumber = (Some Calaf.Domain.Build.NumberStartValue) @>
+        let release = tryBeta calVer dateTimeOffsetStamp
+        test <@
+            match release with
+            | Ok { Year = year; Month = month; Patch = patch; Build = Some (Beta b) } ->
+                year = calVer.Year &&
+                month = calVer.Month &&
+                patch > calVer.Patch &&
+                b.Number = Calaf.Domain.Build.NumberStartValue
+            | _ -> false @>
         
     [<Fact>]
     let ``BetaNightly CalendarVersion releases to beta switch to beta, increases beta number but keeps the same Year, Month, Patch when the year and month are same`` () =        
         let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.BetaNightly ({ Number = 5us },{ Day = byte 31; Number = 2us } ) ) }
         let dateTimeOffsetStamp = System.DateTime (2023, 10, 31) |> System.DateTimeOffset
-        let release = beta calVer dateTimeOffsetStamp
-        let betaNumber = match release.Build.Value with | Beta b -> Some b.Number | _ -> None
-        test <@ release.Year = calVer.Year && release.Month = calVer.Month && release.Patch = calVer.Patch && betaNumber > (Some 5us) @>
+        let release = tryBeta calVer dateTimeOffsetStamp
+        test <@
+            match release with
+            | Ok { Year = year; Month = month; Patch = patch; Build = Some (Beta b) } ->
+                year = calVer.Year &&
+                month = calVer.Month &&
+                patch = calVer.Patch &&
+                b.Number > 5us
+            | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Beta.Accidental> |])>]
     let ``Beta CalendarVersion + max beta Number releases to beta resets beta Number to init value the year, month and patch are same``
-        (b: CalendarVersion) =
-        let b =
-            match b.Build with
+        (beta: CalendarVersion) =
+        let beta =
+            match beta.Build with
             | Some (Beta _) ->
                 let build = Beta { Number = BuildNumber.MaxValue } |> Some
-                { b with Build = build }
-            | _ -> b
-        let dateTimeOffset = Internals.asDateTimeOffset b
-        let release = beta b dateTimeOffset
-        let betaNumber =
-            match release.Build.Value with | Beta b -> Some b.Number | _ -> None        
-        test <@ release.Year = b.Year && release.Month = b.Month && release.Patch = b.Patch && betaNumber = Some Calaf.Domain.Build.NumberStartValue @>
+                { beta with Build = build }
+            | _ -> beta
+        let dateTimeOffset = Internals.asDateTimeOffset beta
+        let release = tryBeta beta dateTimeOffset
+        test <@
+            match release with
+            | Ok { Year = year; Month = month; Patch = patch; Build = Some (Beta b) } ->
+                year = beta.Year &&
+                month = beta.Month &&
+                patch = beta.Patch &&
+                b.Number = Calaf.Domain.Build.NumberStartValue
+            | _ -> false @> 
       
 module StableTests =
     [<Fact>]
@@ -582,15 +611,22 @@ module StableTests =
         let release = stable calVer monthStamp
         release.Patch = None
        
-module NightlyTests =    
+module TryNightlyTests =    
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Stable.Patch> |])>]
     let ``Stable CalendarVersion with Patch releases to nightly and keeps Year, Month, but increases Patch when the year & month are same``
         (stable: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
         let stable = { stable with Patch = Internals.preventPatchOverflow stable.Patch }
         let monthStamp = { Year = stable.Year; Month = stable.Month }
         let dayOfMonth = byte dateTimeOffset.Day  
-        let release = nightly stable (dayOfMonth, monthStamp)
-        test <@ release.Year = stable.Year && release.Month = stable.Month && release.Patch > stable.Patch && release.Build.Value.IsNightly @>
+        let release = tryNightly stable (dayOfMonth, monthStamp)
+        test <@
+            match release with
+            | Ok r ->
+                r.Year = stable.Year &&
+                r.Month = stable.Month &&
+                r.Patch > stable.Patch &&
+                r.Build.Value.IsNightly
+            | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Stable.Patch> |])>]
     let ``Stable CalendarVersion with max Patch releases to nightly and keeps Year, Month, but resets Patch when the year & month are same``
@@ -598,8 +634,15 @@ module NightlyTests =
         let stable = { stable with Patch = Some Patch.MaxValue }
         let monthStamp = { Year = stable.Year; Month = stable.Month }
         let dayOfMonth = byte dateTimeOffset.Day  
-        let release = nightly stable (dayOfMonth, monthStamp)
-        test <@ release.Year = stable.Year && release.Month = stable.Month && release.Patch = Some Calaf.Domain.Patch.PatchStartValue && release.Build.Value.IsNightly @>
+        let release = tryNightly stable (dayOfMonth, monthStamp)
+        test <@
+            match release with
+            | Ok r ->
+                r.Year = stable.Year &&
+                r.Month = stable.Month &&
+                r.Patch = Some Calaf.Domain.Patch.PatchStartValue &&
+                r.Build.Value.IsNightly
+            | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Stable.Short> |])>]
     let ``Stable CalendarVersion without Patch releases to nightly and keeps Year, Month, adds Patch when the year & month are same and Patch has max allowed value``
@@ -607,71 +650,118 @@ module NightlyTests =
         let stable = { stable with Patch = Some Patch.MaxValue }
         let monthStamp = { Year = stable.Year; Month = stable.Month }
         let dayOfMonth = byte dateTimeOffset.Day  
-        let release = nightly stable (dayOfMonth, monthStamp)
-        test <@ release.Year = stable.Year && release.Month = stable.Month && release.Patch.IsSome && release.Build.Value.IsNightly @>
+        let release = tryNightly stable (dayOfMonth, monthStamp)
+        test <@
+            match release with
+            | Ok r ->
+                r.Year = stable.Year &&
+                r.Month = stable.Month &&
+                r.Patch.IsSome &&
+                r.Build.Value.IsNightly
+            | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Stable.Patch> |])>]
     let ``Stable CalendarVersion with Patch releases to nightly and sets Year, Month, removes Patch when the year and/or month are different``
         (stable: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
         let monthStamp = Internals.uniqueMonthStamp (stable, dateTimeOffset)
         let dayOfMonth = byte dateTimeOffset.Day  
-        let release = nightly stable (dayOfMonth, monthStamp)
-        test <@ release.Year = monthStamp.Year && release.Month = monthStamp.Month && release.Patch.IsNone && release.Build.Value.IsNightly @>
+        let release = tryNightly stable (dayOfMonth, monthStamp)
+        test <@
+            match release with
+            | Ok r ->
+                r.Year = monthStamp.Year &&
+                r.Month = monthStamp.Month &&
+                r.Patch.IsNone &&
+                r.Build.Value.IsNightly
+            | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Stable.Short> |])>]
     let ``Stable CalendarVersion without Patch releases to nightly and sets Year, Month, with no Patch when the year and/or month are different``
         (stable: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
         let monthStamp = Internals.uniqueMonthStamp (stable, dateTimeOffset)
         let dayOfMonth = byte dateTimeOffset.Day  
-        let release = nightly stable (dayOfMonth, monthStamp)
-        test <@ release.Year = monthStamp.Year && release.Month = monthStamp.Month && release.Patch.IsNone && release.Build.Value.IsNightly @>
+        let release = tryNightly stable (dayOfMonth, monthStamp)
+        test <@
+            match release with
+            | Ok r ->
+                r.Year = monthStamp.Year &&
+                r.Month = monthStamp.Month && r.Patch.IsNone &&
+                r.Build.Value.IsNightly
+            | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Beta.Accidental> |])>]
     let ``Beta CalendarVersion with Patch releases to beta-nightly and keeps Year, Month, Patch when the year & month are same``
         (beta: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
         let monthStamp = { Year = beta.Year; Month = beta.Month }
         let dayOfMonth = byte dateTimeOffset.Day  
-        let release = nightly beta (dayOfMonth, monthStamp)
-        test <@ release.Year = beta.Year && release.Month = beta.Month && release.Patch = beta.Patch && release.Build.Value.IsBetaNightly @>
+        let release = tryNightly beta (dayOfMonth, monthStamp)
+        test <@
+            match release with
+            | Ok r ->
+                r.Year = beta.Year &&
+                r.Month = beta.Month &&
+                r.Patch = beta.Patch &&
+                r.Build.Value.IsBetaNightly
+            | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Beta.Accidental> |])>]
     let ``Beta CalendarVersion releases to beta-nightly and sets Year, Month, removes Patch when the year and/or month are different``
         (beta: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
         let monthStamp = Internals.uniqueMonthStamp (beta, dateTimeOffset)
         let dayOfMonth = byte dateTimeOffset.Day  
-        let release = nightly beta (dayOfMonth, monthStamp)
-        test <@ release.Year = monthStamp.Year && release.Month = monthStamp.Month && release.Patch.IsNone && release.Build.Value.IsBetaNightly @>
+        let release = tryNightly beta (dayOfMonth, monthStamp)
+        test <@
+            match release with
+            | Ok r ->                 
+                r.Year = monthStamp.Year &&
+                r.Month = monthStamp.Month &&
+                r.Patch.IsNone &&
+                r.Build.Value.IsBetaNightly
+            | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Beta.Accidental> |])>]
     let ``Beta CalendarVersion releases to beta-nightly and Build keeps Beta Number, has expected Day and init night number when the year and/or month are different``
         (beta: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
         let monthStamp = Internals.uniqueMonthStamp (beta, dateTimeOffset)
         let dayOfMonth = byte dateTimeOffset.Day  
-        let release = nightly beta (dayOfMonth, monthStamp)
-        let eq =
-            match release.Build with
-            | Some (BetaNightly ({Number = bn}, { Day = nd; Number = nn })) ->
+        let release = tryNightly beta (dayOfMonth, monthStamp)
+        test <@
+            match release with
+            | Ok { Build = Some (BetaNightly ({Number = bn}, { Day = nd; Number = nn })) } ->
                 (Some bn = match beta.Build.Value with | Beta b -> Some b.Number | _ -> None) &&
                 nd = dayOfMonth &&
                 nn = Calaf.Domain.Build.NumberStartValue
-            | _ -> false
-        test <@ eq @>
+            | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Nightly.Accidental> |])>]
     let ``Nightly CalendarVersion releases to nightly and keeps Year, Month, Patch when the year & month are same``
         (n: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
         let monthStamp = { Year = n.Year; Month = n.Month }
         let dayOfMonth = byte dateTimeOffset.Day  
-        let release = nightly n (dayOfMonth, monthStamp)
-        test <@ release.Year = n.Year && release.Month = n.Month && release.Patch = n.Patch && release.Build.Value.IsNightly @>
+        let release = tryNightly n (dayOfMonth, monthStamp)
+        test <@
+            match release with
+            | Ok r ->
+                r.Year = n.Year &&
+                r.Month = n.Month &&
+                r.Patch = n.Patch &&
+                r.Build.Value.IsNightly
+            | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Nightly.Patch> |])>]
     let ``Nightly CalendarVersion with Patch releases to nightly and sets Year, Month removes Patch when the year and/or month are different``
         (n: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
         let monthStamp = Internals.uniqueMonthStamp (n, dateTimeOffset)
         let dayOfMonth = byte dateTimeOffset.Day  
-        let release = nightly n (dayOfMonth, monthStamp)
-        test <@ release.Year = monthStamp.Year && release.Month = monthStamp.Month && release.Patch.IsNone && release.Build.Value.IsNightly @>
+        let release = tryNightly n (dayOfMonth, monthStamp)
+        test <@
+            match release with
+            | Ok r ->
+                r.Year = monthStamp.Year &&
+                r.Month = monthStamp.Month &&
+                r.Patch.IsNone &&
+                r.Build.Value.IsNightly
+            | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Nightly.Accidental> |])>]
     let ``Nightly CalendarVersion with max Number releases to nightly and resets Number to Init value when the year, month are same``
@@ -684,31 +774,45 @@ module NightlyTests =
             | _ -> n
         let monthStamp = { Year = n.Year; Month = n.Month }
         let dayOfMonth = byte dateTimeOffset.Day  
-        let release = nightly n (dayOfMonth, monthStamp)
-        let eq =
-            match release.Build with
-            | Some (Nightly { Day = nd; Number = nn }) ->
-                release.Year = monthStamp.Year && release.Month = monthStamp.Month &&
+        let release = tryNightly n (dayOfMonth, monthStamp)
+        test <@
+            match release with
+            | Ok { Year = year; Month = month; Build = Some (Nightly { Day = nd; Number = nn }) } ->
+                year = monthStamp.Year &&
+                month = monthStamp.Month &&
                 nd = dayOfMonth &&
                 nn = Calaf.Domain.Build.NumberStartValue
-            | _ -> false
-        test <@ eq @>
+            | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.BetaNightly.Accidental> |])>]
     let ``Beta-Nightly CalendarVersion releases to beta-nightly and keeps Year, Month, Patch when the year & month are same``
         (bn: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
         let monthStamp = { Year = bn.Year; Month = bn.Month }
         let dayOfMonth = byte dateTimeOffset.Day  
-        let release = nightly bn (dayOfMonth, monthStamp)
-        test <@ release.Year = bn.Year && release.Month = bn.Month && release.Patch = bn.Patch && release.Build.Value.IsBetaNightly @>
+        let release = tryNightly bn (dayOfMonth, monthStamp)
+        test <@
+            match release with
+            | Ok r ->
+                r.Year = bn.Year &&
+                r.Month = bn.Month &&
+                r.Patch = bn.Patch &&
+                r.Build.Value.IsBetaNightly
+            | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.BetaNightly.Patch> |])>]
     let ``Beta-Nightly CalendarVersion with Patch releases to beta-nightly and sets Year, Month removes Patch when the year and/or month are different``
         (bn: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
         let monthStamp = Internals.uniqueMonthStamp (bn, dateTimeOffset)
         let dayOfMonth = byte dateTimeOffset.Day  
-        let release = nightly bn (dayOfMonth, monthStamp)
-        test <@ release.Year = monthStamp.Year && release.Month = monthStamp.Month && release.Patch.IsNone && release.Build.Value.IsBetaNightly @>
+        let release = tryNightly bn (dayOfMonth, monthStamp)
+        test <@
+            match release with
+            | Ok r ->
+                r.Year = monthStamp.Year &&
+                r.Month = monthStamp.Month &&
+                r.Patch.IsNone &&
+                r.Build.Value.IsBetaNightly
+            | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.BetaNightly.Accidental> |])>]
     let ``Beta-Nightly CalendarVersion with max nightly Number releases to beta-nightly and resets nightly Number to Init value when the year, month are same``
@@ -721,15 +825,15 @@ module NightlyTests =
             | _ -> bn
         let monthStamp = { Year = bn.Year; Month = bn.Month }
         let dayOfMonth = byte dateTimeOffset.Day  
-        let release = nightly bn (dayOfMonth, monthStamp)
-        let eq =
-            match release.Build with
-            | Some (BetaNightly(_, { Day = nd; Number = nn })) ->
-                release.Year = monthStamp.Year && release.Month = monthStamp.Month &&
+        let release = tryNightly bn (dayOfMonth, monthStamp)
+        test <@
+            match release with
+            | Ok { Year = year; Month = month; Build = (Some (BetaNightly(_, { Day = nd; Number = nn }))) } ->
+                year = monthStamp.Year &&
+                month = monthStamp.Month &&
                 nd = dayOfMonth &&
                 nn = Calaf.Domain.Build.NumberStartValue
-            | _ -> false
-        test <@ eq @>
+            | _ -> false @>
         
 module ToStringPropertiesTests =    
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]

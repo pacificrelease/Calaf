@@ -77,117 +77,121 @@ module TryParseFromStringPropertyTests =
         let build = containingBetaNightlyBadString |> tryParseFromString
         test <@ build = Error BuildInvalidString @>
 
-module BetaTests =
+module TryBetaTests =
     // Result is always Build.Beta
     [<Property>]
     let ``None build always releases a Beta build type`` () =
-        let beta = beta None
-        test <@ beta.IsBeta @>
+        let result = tryBeta None
+        test <@ match result with | Ok (Build.Beta _) -> true | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Beta.betaBuild> |])>]
     let ``Beta always releases a Beta build type`` (build: Build) =
-        let beta = beta (Some build)
-        test <@ beta.IsBeta @>
+        let build' = tryBeta (Some build)
+        test <@ match build' with | Ok (Build.Beta _) -> true | _ -> false @>
         
     // Number is greater then assigned
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Beta.beta> |])>]
     let ``The number is increased for Beta build`` (b: BetaBuild) =
         let b = { b with Number = Internals.preventNumberOverflow b.Number }
-        let build' = beta (Some (Build.Beta b))        
-        match build' with
-        | Build.Beta { Number = number' } ->
-            test <@ number' > b.Number @>
-        | _ -> test <@ false @>
+        let build' = tryBeta (Some (Build.Beta b))
+        test <@ match build' with
+                | Ok (Build.Beta { Number = number' }) -> number' > b.Number
+                | _ -> false @>
     
     // Number increased on the step value     
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Beta.beta> |])>]
     let ``The number is increased on step value for Beta build`` (b: BetaBuild) =
         let b = { b with Number = Internals.preventNumberOverflow b.Number }
-        let build' = beta (Some (Build.Beta b))        
-        match build' with
-        | Build.Beta { Number = number' } ->
-            test <@ number' - b.Number = NumberIncrementStep @>
-        | _ -> test <@ false @>
+        let build' = tryBeta (Some (Build.Beta b))        
+        test <@ match build' with
+                | Ok (Build.Beta { Number = number' }) ->
+                    number' - b.Number = NumberIncrementStep
+                | _ -> false @>
         
     // Number resets to NumberStartValue on overflow
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Beta.beta> |])>]
     let ``The Beta number resets the number to NumberStartValue on overflow`` (b: BetaBuild) =
         let b = { b with Number = BuildNumber.MaxValue }
-        let build' = beta (Some (Build.Beta b))        
-        match build' with
-        | Build.Beta { Number = number' } ->
-            test <@ number' = NumberStartValue @>
-        | _ -> test <@ false @>
+        let build' = tryBeta (Some (Build.Beta b))        
+        test <@ match build' with
+                | Ok (Build.Beta { Number = number' }) ->
+                    number' = NumberStartValue
+                | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.nightlyBuild> |])>]
     let ``Nightly always releases a Beta build type`` (build: Build) =
-        let beta = beta (Some build)
-        test <@ beta.IsBeta @>
+        let build' = tryBeta (Some build)
+        test <@ match build' with
+                | Ok (Build.Beta _) -> true
+                | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.nightly> |])>]
     let ``Nightly always releases a Beta build with NumberStartValue`` (n: NightlyBuild) =
-        let build' = beta (Some (Build.Nightly n))   
-        match build' with
-        | Build.Beta { Number = number' } ->
-            test <@ number' = NumberStartValue @>
-        | _ -> test <@ false @>
+        let build' = tryBeta (Some (Build.Nightly n))   
+        test <@ match build' with
+                | Ok (Build.Beta { Number = number' }) -> number' = NumberStartValue
+                | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.BetaNightly.betaNightlyBuild> |])>]
     let ``BetaNightly always releases a Beta build type`` (build: Build) =
-        let beta = beta (Some build)
-        test <@ beta.IsBeta @>
+        let build' = tryBeta (Some build)
+        test <@ match build' with | Ok (Build.Beta _) -> true | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Beta.beta>; typeof<Arbitrary.Build.Nightly.nightly> |])>]
     let ``BetaNightly always increases number of Beta build type when releases beta`` (b: BetaBuild, n: NightlyBuild) =
         let b = { b with Number = Internals.preventNumberOverflow b.Number }
-        let build' = beta (Some (Build.BetaNightly (b, n)))   
+        let build' = tryBeta (Some (Build.BetaNightly (b, n)))   
         match build' with
-        | Build.Beta { Number = number' } ->
+        | Ok (Build.Beta { Number = number' }) ->
             test <@ number' > b.Number @>
         | _ -> test <@ false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Beta.beta>; typeof<Arbitrary.Build.Nightly.nightly> |])>]
     let ``BetaNightly always increases number by step when releases beta`` (b: BetaBuild, n: NightlyBuild) =
         let b = { b with Number = Internals.preventNumberOverflow b.Number }
-        let build' = beta (Some (Build.BetaNightly (b, n)))   
+        let build' = tryBeta (Some (Build.BetaNightly (b, n)))   
         match build' with
-        | Build.Beta { Number = number' } ->
+        | Ok (Build.Beta { Number = number' }) ->
             test <@ number' - b.Number = NumberIncrementStep @>
         | _ -> test <@ false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Beta.beta>; typeof<Arbitrary.Build.Nightly.nightly> |])>]
     let ``BetaNightly resets the number to NumberStartValue on overflow`` (b: BetaBuild, n: NightlyBuild) =
         let b = { b with Number = BuildNumber.MaxValue }
-        let build' = beta (Some (Build.BetaNightly (b, n)))   
+        let build' = tryBeta (Some (Build.BetaNightly (b, n)))   
         match build' with
-        | Build.Beta { Number = number' } ->
+        | Ok (Build.Beta { Number = number' }) ->
             test <@ number' = NumberStartValue @>
         | _ -> test <@ false @>
         
-module NightlyTests =
+module TryNightlyTests =
     // Result is always Build.Nightly
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.nightlyBuildOption> |])>]
     let ``Nightly build type always returns a Nightly build type when releases nightly``
         (build: Build option, dateTimeOffset: System.DateTimeOffset) =
-        let nightly = nightly build (byte dateTimeOffset.Day)
-        test <@ nightly.IsNightly @>
+        let nightly = tryNightly build (byte dateTimeOffset.Day)
+        test <@ match nightly with
+                | Ok (Build.Nightly _) -> true
+                | _ -> false @>
         
     // Day is correctly assigned
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.nightlyBuildOption> |])>]
-    let ``The day of the month is correctly assigned to the Nightly build`` (nightlyBuild: Build option, dateTimeOffset: System.DateTimeOffset) =
+    let ``The day of the month is correctly assigned to the Nightly build``
+        (nightlyBuild: Build option, dateTimeOffset: System.DateTimeOffset) =
         let dayOfMonth = (byte dateTimeOffset.Day)
-        let nightlyBuild' = nightly nightlyBuild dayOfMonth
+        let nightlyBuild' = tryNightly nightlyBuild dayOfMonth
         match nightlyBuild' with
-        | Build.Nightly { Day = actualDay } ->
+        | Ok (Build.Nightly { Day = actualDay }) ->
             test <@ actualDay = dayOfMonth @>
         | _ -> test <@ false @>
         
     // Number starts at NumberStartValue if no current build
     [<Property>]
-    let ``Nightly build starts at NumberStartValue if no current build`` (dateTimeOffset: System.DateTimeOffset) =
-        let nightlyBuild = nightly None (byte dateTimeOffset.Day)
+    let ``Nightly build starts at NumberStartValue if no current build``
+        (dateTimeOffset: System.DateTimeOffset) =
+        let nightlyBuild = tryNightly None (byte dateTimeOffset.Day)
         match nightlyBuild with
-        | Build.Nightly { Number = number } ->
+        | Ok (Build.Nightly { Number = number }) ->
             test <@ number = NumberStartValue @>
         | _ -> test <@ false @>
         
@@ -196,11 +200,11 @@ module NightlyTests =
     let ``Nightly build with no upper boundary number increments the number for the same day nightly build`` (nightlyBuild: Build) =
         match nightlyBuild with
         | Build.Nightly { Day = dayOfMonth; Number = number } ->
-            let nightlyBuild' = nightly (Some nightlyBuild) dayOfMonth            
+            let nightlyBuild' = tryNightly (Some nightlyBuild) dayOfMonth            
             match nightlyBuild' with
-            | Build.Nightly { Number = number' } ->
+            | Ok (Build.Nightly { Number = number' }) ->
                 test <@ number' - number = NumberIncrementStep @>
-            | _ -> test <@ false  @>
+            | _ -> test <@ false @>
         | _ -> test <@ false @>
         
     // Number resets to NumberStartValue on overflow
@@ -208,9 +212,9 @@ module NightlyTests =
     let ``Nightly build resets the number to NumberStartValue on overflow`` (dateTimeOffset: System.DateTimeOffset) =
         let dayOfMonth = (byte dateTimeOffset.Day) 
         let nightlyBuild = Build.Nightly { Day = dayOfMonth; Number = BuildNumber.MaxValue } |> Some                
-        let nightlyBuild' = nightly nightlyBuild dayOfMonth        
+        let nightlyBuild' = tryNightly nightlyBuild dayOfMonth        
         match nightlyBuild' with
-        | Build.Nightly { Number = number } ->
+        | Ok (Build.Nightly { Number = number }) ->
             test <@ number = NumberStartValue @>
         | _ -> test <@ false @>
         
@@ -221,9 +225,9 @@ module NightlyTests =
         match nightlyBuild with
         | Build.Nightly { Day = dayOfMonth; Number = _ } ->
             let dayOfMonth' = Internals.uniqueDay (dayOfMonth, dateTimeOffset)
-            let nightlyBuild' = nightly (Some nightlyBuild) dayOfMonth'
+            let nightlyBuild' = tryNightly (Some nightlyBuild) dayOfMonth'
             match nightlyBuild' with
-            | Build.Nightly { Number = number' } ->
+            | Ok (Build.Nightly { Number = number' }) ->
                 test <@ number' = NumberStartValue @>
             | _ -> test <@ false @>            
         | _ -> test <@ false @>
@@ -232,8 +236,10 @@ module NightlyTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.BetaNightly.betaNightlyBuild> |])>]
     let ``BetaNightly build type always returns a BetaNightly build type when releases nightly``
         (build: Build, dateTimeOffset: System.DateTimeOffset) =
-        let betaNightly = nightly (Some build) (byte dateTimeOffset.Day)
-        test <@ betaNightly.IsBetaNightly @>
+        let betaNightly = tryNightly (Some build) (byte dateTimeOffset.Day)
+        test <@ match betaNightly with
+                | Ok (Build.BetaNightly _) -> true
+                | _ -> false @>
         
     // Number resets to NumberStartValue on overflow
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.BetaNightly.betaNightlyBuild> |])>]
@@ -246,9 +252,9 @@ module NightlyTests =
                 Build.BetaNightly (b, { Day = dayOfMonth; Number = BuildNumber.MaxValue}) |> Some
             | _ -> Some betaNightlyBuild
             
-        let nightlyBuild' = nightly betaNightlyBuild dayOfMonth        
+        let nightlyBuild' = tryNightly betaNightlyBuild dayOfMonth        
         match nightlyBuild' with
-        | Build.BetaNightly (_, { Number = number }) ->
+        | Ok (Build.BetaNightly (_, { Number = number })) ->
             test <@ number = NumberStartValue @>
         | _ -> test <@ false @>
         
@@ -259,9 +265,9 @@ module NightlyTests =
         match betaNightlyBuild with
         | Build.BetaNightly (_, { Day = dayOfMonth; Number = _ }) ->
             let dayOfMonth = Internals.uniqueDay (dayOfMonth, dateTimeOffset)
-            let betaNightlyBuild' = nightly (Some betaNightlyBuild) dayOfMonth
+            let betaNightlyBuild' = tryNightly (Some betaNightlyBuild) dayOfMonth
             match betaNightlyBuild' with
-            | Build.BetaNightly (_, { Number = number' }) ->
+            | Ok (Build.BetaNightly (_, { Number = number' })) ->
                 test <@ number' = NumberStartValue @>
             | _ -> test <@ false @>            
         | _ -> test <@ false @>
@@ -272,9 +278,9 @@ module NightlyTests =
         (betaNightlyBuild: Build, dateTimeOffset: System.DateTimeOffset) =
         match betaNightlyBuild with
         | Build.BetaNightly ({ Number = number }, _) ->
-            let betaNightlyBuild' = nightly (Some betaNightlyBuild) (byte dateTimeOffset.Day)
+            let betaNightlyBuild' = tryNightly (Some betaNightlyBuild) (byte dateTimeOffset.Day)
             match betaNightlyBuild' with
-            | Build.BetaNightly ({ Number = number' }, _) ->
+            | Ok (Build.BetaNightly ({ Number = number' }, _)) ->
                 test <@ number' = number @>
             | _ -> test <@ false @>            
         | _ -> test <@ false @>
@@ -283,17 +289,19 @@ module NightlyTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Beta.betaBuild> |])>]
     let ``Beta build type always returns a BetaNightly build type when releases nightly``
         (build: Build, dateTimeOffset: System.DateTimeOffset) =
-        let betaNightly = nightly (Some build) (byte dateTimeOffset.Day)
-        test <@ betaNightly.IsBetaNightly @>
+        let betaNightly = tryNightly (Some build) (byte dateTimeOffset.Day)
+        test <@ match betaNightly with
+                | Ok (Build.BetaNightly _) -> true
+                | _ -> false @>
         
     // Result is always Build.BetaNightly corresponding to a day and the initial number
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Beta.betaBuild> |])>]
     let ``Beta build type always switch to BetaNightly with the corresponding day and initial number when releases nightly``
         (build: Build, dateTimeOffset: System.DateTimeOffset) =
         let dayOfMonth = (byte dateTimeOffset.Day)
-        let betaNightly = nightly (Some build) dayOfMonth
+        let betaNightly = tryNightly (Some build) dayOfMonth
         match betaNightly with
-        | Build.BetaNightly (_, { Day = day; Number = number }) ->
+        | Ok (Build.BetaNightly (_, { Day = day; Number = number })) ->
             test <@ day = dayOfMonth && number = NumberStartValue @>
         | _ -> test <@ false @>
         
@@ -304,9 +312,9 @@ module NightlyTests =
         match build with
         | Beta { Number = number } ->       
             let dayOfMonth = (byte dateTimeOffset.Day)
-            let build' = nightly (Some build) dayOfMonth
+            let build' = tryNightly (Some build) dayOfMonth
             match build' with
-            | Build.BetaNightly ({ Number = number' }, _) ->
+            | Ok (Build.BetaNightly ({ Number = number' }, _)) ->
                 test <@ number' = number @>
             | _ -> test <@ false @>
         | _ -> test <@ false @>

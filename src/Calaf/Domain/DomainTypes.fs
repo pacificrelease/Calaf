@@ -10,13 +10,18 @@ module Values =
         Day:    DayOfMonth
         Number: BuildNumber
     }
+    type AlphaBuild = {
+        Number: BuildNumber
+    }
     type BetaBuild = {
         Number: BuildNumber
     }
     type Build =
-        | Nightly     of NightlyBuild
-        | Beta        of BetaBuild
-        | BetaNightly of beta: BetaBuild * nightly: NightlyBuild
+        | Nightly      of NightlyBuild
+        | Alpha        of AlphaBuild
+        | AlphaNightly of alpha: AlphaBuild * nightly: NightlyBuild
+        | Beta         of BetaBuild
+        | BetaNightly  of beta: BetaBuild * nightly: NightlyBuild
     // SemVer
     type Major = uint32
     type Minor = uint32

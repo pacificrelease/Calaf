@@ -327,7 +327,7 @@ module Generator =
                 gen {
                     let! betaPrefix = genBetaPrefix
                     let! beta, nightly = genBetaNightlyBuild
-                    return $"{betaPrefix}{Calaf.Domain.Build.BuildTypeNumberDivider}{beta.Number}{Calaf.Domain.Build.BetaNightlyDivider}{nightly.Day}{Calaf.Domain.Build.DayNumberDivider}{nightly.Number}"
+                    return $"{betaPrefix}{Calaf.Domain.Build.BuildTypeNumberDivider}{beta.Number}{Calaf.Domain.Build.PreReleaseNightlyDivider}{nightly.Day}{Calaf.Domain.Build.DayNumberDivider}{nightly.Number}"
                 } 
             
             let containingBetaNightlyBadString =

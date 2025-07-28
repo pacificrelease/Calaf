@@ -33,7 +33,7 @@ module internal Make =
             console.error $"{e}"
             
     // TODO: Remove this type after refactoring
-    let private beta path (context: MakeContext) settings =
+    let private tryBeta path (context: MakeContext) settings =
         result {
             let dateTimeOffset = context.Clock.utcNow()
             let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
@@ -41,8 +41,11 @@ module internal Make =
             let (TagQuantity tagCount) = settings.TagsToLoad
             let! repo = context.Git.tryRead path tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace,  _ = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
+            let! version =
+                Version.tryBeta workspace.Version dateTimeOffset
+                |> Result.mapError CalafError.Domain            
             let! workspace', _ =
-                Version.beta workspace.Version dateTimeOffset
+                version
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain
             let profile = Workspace.profile workspace'
@@ -60,7 +63,7 @@ module internal Make =
         }
     
     // TODO: Remove this type after refactoring
-    let private nightly path (context: MakeContext) settings =
+    let private tryNightly path (context: MakeContext) settings =
         result {
             let dateTimeOffset = context.Clock.utcNow()
             let! dayOfMonth = dateTimeOffset |> DateSteward.tryCreateDayOfMonth |> Result.mapError CalafError.Domain
@@ -70,8 +73,11 @@ module internal Make =
             let (TagQuantity tagCount) = settings.TagsToLoad
             let! repo = context.Git.tryRead path tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace,  _ = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
+            let! version =
+                Version.tryNightly workspace.Version (dayOfMonth, monthStamp)
+                |> Result.mapError CalafError.Domain
             let! workspace', _ =
-                Version.nightly workspace.Version (dayOfMonth, monthStamp)
+                version
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain
             let profile = Workspace.profile workspace'
@@ -88,7 +94,7 @@ module internal Make =
             return workspace'
         }
         
-    let private nightly2
+    let private tryNightly2
         (dependencies: {| Directory: string; Settings: MakeSettings; FileSystem: IFileSystem; Git: IGit; Clock: IClock |}) =
         result {
             let dateTimeOffset = dependencies.Clock.utcNow()
@@ -100,8 +106,11 @@ module internal Make =
             let! repo = dependencies.Git.tryRead dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, captureEvents =
                 Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
+            let! version =
+                Version.tryNightly workspace.Version (dayOfMonth, monthStamp)
+                |> Result.mapError CalafError.Domain
             let! workspace', releaseEvents =
-                Version.nightly workspace.Version (dayOfMonth, monthStamp)
+                version
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain
             let profile = Workspace.profile workspace'
@@ -205,7 +214,7 @@ module internal Make =
         match context.Type with
         | MakeType.Stable  -> stable2 dependencies
         | MakeType.Beta    -> failwith "not implemented yet"
-        | MakeType.Nightly -> nightly2 dependencies      
+        | MakeType.Nightly -> tryNightly2 dependencies      
         
     let run path arguments context settings  =
         let apply path arguments context settings =
@@ -216,9 +225,9 @@ module internal Make =
                 | Command.Make strategy ->
                     match strategy with
                     | MakeType.Nightly ->
-                        return! nightly path context settings
+                        return! tryNightly path context settings
                     | MakeType.Beta ->
-                        return! beta path context settings
+                        return! tryBeta path context settings
                     | MakeType.Stable ->
                         return! stable path context settings
             }

@@ -182,47 +182,52 @@ let toTagName (calVer: CalendarVersion) : string =
 let toCommitMessage (calVer: CalendarVersion) : string =
     $"{commitVersionPrefix}{toString calVer}"
     
-let beta (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.DateTimeOffset) : CalendarVersion =
-    let build = Build.beta currentVersion.Build |> Some
+let tryBeta (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.DateTimeOffset) : Result<CalendarVersion, DomainError> =
+    result {
+        let! build = Build.tryBeta currentVersion.Build
+        let stampYear = uint16 dateTimeOffsetStamp.Year
+        let stampMonth = byte dateTimeOffsetStamp.Month
+        
+        let shouldReleaseYear = shouldChange (currentVersion.Year, stampYear)
+        let shouldReleaseMonth = shouldChange (currentVersion.Month, stampMonth)
+        
+        return
+            match shouldReleaseYear, shouldReleaseMonth with
+            | true, _ ->
+                { Year = stampYear
+                  Month = stampMonth
+                  Patch = None
+                  Build = Some build }
+            | false, true ->
+                { Year = currentVersion.Year
+                  Month = stampMonth
+                  Patch = None
+                  Build = Some build }
+            | false, false ->
+                patchRelease (currentVersion, Some build)
+    }
     
-    let shouldReleaseYear = shouldChange (currentVersion.Year, uint16 dateTimeOffsetStamp.Year)
-    if shouldReleaseYear
-    then
-        { Year  = uint16 dateTimeOffsetStamp.Year
-          Month = byte dateTimeOffsetStamp.Month
-          Patch = None
-          Build = build }
-    else
-        let shouldReleaseMonth = shouldChange (currentVersion.Month, byte dateTimeOffsetStamp.Month)
-        if shouldReleaseMonth
+let tryNightly (currentVersion: CalendarVersion) (dayOfMonth: DayOfMonth, monthStamp: MonthStamp) : Result<CalendarVersion, DomainError> =
+    result {
+        let! build = Build.tryNightly currentVersion.Build dayOfMonth
+        let shouldReleaseYear = shouldChange (currentVersion.Year, monthStamp.Year)
+        if shouldReleaseYear
         then
-            { Year  = currentVersion.Year
-              Month = byte dateTimeOffsetStamp.Month
-              Patch = None
-              Build = build }
+            return { Year  = monthStamp.Year
+                     Month = monthStamp.Month
+                     Patch = None
+                     Build = Some build }
         else
-            patchRelease (currentVersion, build)
-    
-let nightly (currentVersion: CalendarVersion) (dayOfMonth: DayOfMonth, monthStamp: MonthStamp) : CalendarVersion =
-    let build = Build.nightly currentVersion.Build dayOfMonth |> Some
-    
-    let isYearRelease = shouldChange (currentVersion.Year, monthStamp.Year)
-    if isYearRelease
-    then
-        { Year  = monthStamp.Year
-          Month = monthStamp.Month
-          Patch = None
-          Build = build }
-    else
-        let isMonthRelease = shouldChange (currentVersion.Month, monthStamp.Month)
-        if isMonthRelease
-        then
-            { Year = currentVersion.Year
-              Month = monthStamp.Month
-              Patch = None
-              Build = build }
-        else
-            patchRelease (currentVersion, build)
+            let shouldReleaseMonth = shouldChange (currentVersion.Month, monthStamp.Month)
+            if shouldReleaseMonth
+            then
+                return { Year = currentVersion.Year
+                         Month = monthStamp.Month
+                         Patch = None
+                         Build = Some build }
+            else
+                return patchRelease (currentVersion, Some build)        
+    }
 
 let stable (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : CalendarVersion =
     let noBuild = None
@@ -246,6 +251,9 @@ let stable (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : Calendar
             patchRelease (currentVersion, noBuild)
 
 let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
+    let noPreReleaseNumber = 0us
+    let noNightlyDay       = 0uy
+    let noNightlyNumber    = 0us    
     match versions with
     | _ when Seq.isEmpty versions -> None
     | _ ->
@@ -256,23 +264,23 @@ let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
                 | Some build ->
                     match build with
                     | Build.BetaNightly (beta, nightly) ->
-                        let priority = 2
+                        let priority = 3
                         (v.Year, v.Month, v.Patch, priority, beta.Number, nightly.Day, nightly.Number )
                     | Build.Beta betaBuild ->
-                        let priority = 2
-                        let noNightlyDay = 0uy
-                        let noNightlyNumber = 0us
+                        let priority = 3                        
                         (v.Year, v.Month, v.Patch, priority, betaBuild.Number, noNightlyDay, noNightlyNumber)
+                    | Build.AlphaNightly (alpha, nightly) ->
+                        let priority = 2
+                        (v.Year, v.Month, v.Patch, priority, alpha.Number, nightly.Day, nightly.Number )
+                    | Build.Alpha alphaBuild ->
+                        let priority = 2
+                        (v.Year, v.Month, v.Patch, priority, alphaBuild.Number, noNightlyDay, noNightlyNumber)
                     | Build.Nightly nightlyBuild ->
                         let priority = 1
-                        let noBetaNumber = 0us
-                        (v.Year, v.Month, v.Patch, priority, noBetaNumber, nightlyBuild.Day, nightlyBuild.Number)
+                        (v.Year, v.Month, v.Patch, priority, noPreReleaseNumber, nightlyBuild.Day, nightlyBuild.Number)
                 | None ->
-                    let priority = 0
-                    let noBetaNumber = 0us
-                    let noNightlyDay = 0uy
-                    let noNightlyNumber = 0us
-                    (v.Year, v.Month, v.Patch, priority, noBetaNumber, noNightlyDay, noNightlyNumber))
+                    let priority = 0                    
+                    (v.Year, v.Month, v.Patch, priority, noPreReleaseNumber, noNightlyDay, noNightlyNumber))
         Some maxVersion
 
 let tryParseFromString (bareVersion: string) : Version option =
