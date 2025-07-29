@@ -10,9 +10,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="TestDatakit\Internals.fs" />
-    <Compile Include="TestDatakit\Generator.fs" />
-    <Compile Include="TestDatakit\Arbitrary.fs" />
+    <Compile Include="DataKit\Internals.fs" />
+    <Compile Include="DataKit\Generator.fs" />
+    <Compile Include="DataKit\Arbitrary.fs" />
     <Compile Include="Domain\Version\DayTests.fs" />
     <Compile Include="Domain\Version\BuildTests.fs" />
     <Compile Include="Domain\Version\PatchTests.fs" />

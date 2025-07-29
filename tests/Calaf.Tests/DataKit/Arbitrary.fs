@@ -35,7 +35,32 @@ module Arbitrary =
         type wrongString =
             static member wrongString() =
                 Arb.fromGen Generator.Build.wrongString
-                
+        
+        module Alpha =            
+            type alphaString =
+                static member alphaString() =
+                    Arb.fromGen Generator.Build.Alpha.String
+                    
+            type containingAlphaBadString =
+                static member containingBetaBadString() =
+                    Arb.fromGen Generator.Build.Alpha.BadString
+            
+            type alpha =
+                static member alpha() =
+                    Arb.fromGen Generator.Build.Alpha.Accidental
+                    
+            type alphaBuild =
+                static member alphaBuild() =
+                    Arb.fromGen Generator.Build.Alpha.AccidentalBuild
+                    
+            type alphaBuildOption =
+                static member alphaBuildOption() =
+                    Arb.fromGen Generator.Build.Alpha.AccidentalBuildOption
+                    
+            type numberNoUpperBoundaryAlphaBuild =
+                static member numberNoUpperBoundaryAlphaBuild() =
+                    Arb.fromGen Generator.Build.Alpha.NoUpperBoundaryAccidentalBuild
+                    
         module Beta =            
             type betaString =
                 static member betaString() =
@@ -85,6 +110,27 @@ module Arbitrary =
             type numberNoUpperBoundaryNightlyBuild =
                 static member numberNoUpperBoundaryNightlyBuild() =
                     Arb.fromGen Generator.Build.Nightly.numberNoUpperBoundaryNightlyBuild
+                    
+        module AlphaNightly =
+            type alphaNightlyString =
+                static member alphaNightlyString() =
+                    Arb.fromGen Generator.Build.AlphaNightly.String
+                    
+            type containingAlphaNightlyBadString =
+                static member containingAlphaNightlyBadString() =
+                    Arb.fromGen Generator.Build.AlphaNightly.BadString
+                
+            type alphaNightlyBuild =
+                static member alphaNightlyBuild() =
+                    Arb.fromGen Generator.Build.AlphaNightly.AccidentalBuild
+                    
+            type alphaNightlyBuildOption =
+                static member alphaNightlyBuildOption() =
+                    Arb.fromGen Generator.Build.AlphaNightly.AccidentalBuildOption
+                
+            type numberNoUpperBoundaryAlphaNightlyBuild =
+                static member numberNoUpperBoundaryAlphaNightlyBuild() =
+                    Arb.fromGen Generator.Build.AlphaNightly.NoUpperBoundaryAccidentalBuild
                     
         module BetaNightly =
             type betaNightlyString =
