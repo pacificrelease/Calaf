@@ -132,6 +132,32 @@ module TryBetaTests =
                 | Ok (Build.Beta { Number = number' }) -> number' = NumberStartValue
                 | _ -> false @>
         
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Alpha.alphaBuild> |])>]
+    let ``Alpha always releases a Beta build type when releasing Beta`` (build: Build) =
+        let build' = tryBeta (Some build)
+        test <@ match build' with | Ok (Build.Beta _) -> true | _ -> false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Alpha.alphaBuild> |])>]
+    let ``Alpha always switches to Beta and starts with the initial number of Beta build type when releasing Beta`` (build: Build) =        
+        let build' = tryBeta (Some build)
+        match build' with
+        | Ok (Build.Beta { Number = number' }) ->
+            test <@ number' = NumberStartValue @>
+        | _ -> test <@ false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.AlphaNightly.alphaNightlyBuild> |])>]
+    let ``AlphaNightly always releases a Beta build type when releasing Beta`` (build: Build) =
+        let build' = tryBeta (Some build)
+        test <@ match build' with | Ok (Build.Beta _) -> true | _ -> false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.AlphaNightly.alphaNightlyBuild> |])>]
+    let ``AlphaNightly always switches to Beta and starts with the initial number of Beta build type when releasing Beta`` (build: Build) =        
+        let build' = tryBeta (Some build)
+        match build' with
+        | Ok (Build.Beta { Number = number' }) ->
+            test <@ number' = NumberStartValue @>
+        | _ -> test <@ false @>
+        
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.BetaNightly.betaNightlyBuild> |])>]
     let ``BetaNightly always releases a Beta build type`` (build: Build) =
         let build' = tryBeta (Some build)
@@ -231,6 +257,59 @@ module TryNightlyTests =
                 test <@ number' = NumberStartValue @>
             | _ -> test <@ false @>            
         | _ -> test <@ false @>
+        
+    // Result is always Build.AlphaNightly
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.AlphaNightly.alphaNightlyBuild> |])>]
+    let ``AlphaNightly build type always returns a AlphaNightly build type when releases nightly``
+        (build: Build, dateTimeOffset: System.DateTimeOffset) =
+        let alphaNightly = tryNightly (Some build) (byte dateTimeOffset.Day)
+        test <@ match alphaNightly with
+                | Ok (Build.AlphaNightly _) -> true
+                | _ -> false @>
+        
+    // Number resets to NumberStartValue on overflow
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.AlphaNightly.alphaNightlyBuild> |])>]
+    let ``AlphaNightly build resets the number to NumberStartValue on overflow``
+        (alphaNightlyBuild: Build, dateTimeOffset: System.DateTimeOffset) =
+        let dayOfMonth = (byte dateTimeOffset.Day) 
+        let alphaNightlyBuild =
+            match alphaNightlyBuild with
+            | Build.AlphaNightly (a, _) ->
+                Build.AlphaNightly (a, { Day = dayOfMonth; Number = BuildNumber.MaxValue}) |> Some
+            | _ -> Some alphaNightlyBuild
+            
+        let nightlyBuild' = tryNightly alphaNightlyBuild dayOfMonth        
+        match nightlyBuild' with
+        | Ok (Build.AlphaNightly (_, { Number = number })) ->
+            test <@ number = NumberStartValue @>
+        | _ -> test <@ false @>
+        
+    // New day resets the number to the NumberStartValue
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.AlphaNightly.alphaNightlyBuild> |])>]
+    let ``AlphaNightly build with different day resets the nightly number to NumberStartValue``
+        (alphaNightlyBuild: Build, dateTimeOffset: System.DateTimeOffset) =
+        match alphaNightlyBuild with
+        | Build.AlphaNightly (_, { Day = dayOfMonth; Number = _ }) ->
+            let dayOfMonth = Internals.uniqueDay (dayOfMonth, dateTimeOffset)
+            let alphaNightlyBuild' = tryNightly (Some alphaNightlyBuild) dayOfMonth
+            match alphaNightlyBuild' with
+            | Ok (Build.AlphaNightly (_, { Number = number' })) ->
+                test <@ number' = NumberStartValue @>
+            | _ -> test <@ false @>            
+        | _ -> test <@ false @>
+        
+    // Always keeps a beta version on nightly for AlphaNightly
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.AlphaNightly.alphaNightlyBuild> |])>]
+    let ``AlphaNightly build always keeps it's alpha version when releases nightly``
+        (alphaNightlyBuild: Build, dateTimeOffset: System.DateTimeOffset) =
+        match alphaNightlyBuild with
+        | Build.AlphaNightly ({ Number = number }, _) ->
+            let alphaNightlyBuild' = tryNightly (Some alphaNightlyBuild) (byte dateTimeOffset.Day)
+            match alphaNightlyBuild' with
+            | Ok (Build.AlphaNightly ({ Number = number' }, _)) ->
+                test <@ number' = number @>
+            | _ -> test <@ false @>            
+        | _ -> test <@ false @>
     
     // Result is always Build.BetaNightly
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.BetaNightly.betaNightlyBuild> |])>]
@@ -283,6 +362,40 @@ module TryNightlyTests =
             | Ok (Build.BetaNightly ({ Number = number' }, _)) ->
                 test <@ number' = number @>
             | _ -> test <@ false @>            
+        | _ -> test <@ false @>
+        
+    // Result is always Build.AlphaNightly
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Alpha.alphaBuild> |])>]
+    let ``Alpha build type always returns a AlphaNightly build type when releases nightly``
+        (build: Build, dateTimeOffset: System.DateTimeOffset) =
+        let alphaNightly = tryNightly (Some build) (byte dateTimeOffset.Day)
+        test <@ match alphaNightly with
+                | Ok (Build.AlphaNightly _) -> true
+                | _ -> false @>
+        
+    // Result is always Build.AlphaNightly corresponding to a day and the initial number
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Alpha.alphaBuild> |])>]
+    let ``Alpha build type always switch to AlphaNightly with the corresponding day and initial number when releases nightly``
+        (build: Build, dateTimeOffset: System.DateTimeOffset) =
+        let dayOfMonth = (byte dateTimeOffset.Day)
+        let alphaNightly = tryNightly (Some build) dayOfMonth
+        match alphaNightly with
+        | Ok (Build.AlphaNightly (_, { Day = day; Number = number })) ->
+            test <@ day = dayOfMonth && number = NumberStartValue @>
+        | _ -> test <@ false @>
+        
+    // Alpha is always keeps it's beta number
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Alpha.alphaBuild> |])>]
+    let ``Alpha build type always keeps it's alpha number when releases nightly``
+        (build: Build, dateTimeOffset: System.DateTimeOffset) =
+        match build with
+        | Alpha { Number = number } ->       
+            let dayOfMonth = (byte dateTimeOffset.Day)
+            let build' = tryNightly (Some build) dayOfMonth
+            match build' with
+            | Ok (Build.AlphaNightly ({ Number = number' }, _)) ->
+                test <@ number' = number @>
+            | _ -> test <@ false @>
         | _ -> test <@ false @>
         
     // Result is always Build.BetaNightly

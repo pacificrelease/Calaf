@@ -645,6 +645,65 @@ module Generator =
                     let! patch = validPatchUInt32
                     return { short with Patch = Some patch }
                 }
+        
+        module Alpha =
+            let ShortString =
+                gen {
+                    let! year  = Year.inRangeUInt16Year
+                    let! month = Month.inRangeByteMonth
+                    let! alphaString = Build.Alpha.String
+                    return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{alphaString}"                 
+                }
+                
+            let PatchString =
+                gen {
+                    let! year  = Year.inRangeUInt16Year
+                    let! month = Month.inRangeByteMonth
+                    let! patch = validPatchUInt32
+                    let! alphaString = Build.Alpha.String
+                    return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.MonthPatchDivider}{patch}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{alphaString}"                 
+                }
+                
+            let String =
+                Gen.frequency
+                    [ 1, ShortString
+                      1, PatchString ]
+                
+            let TagStrictString =
+                gen {
+                    let prefix = Calaf.Domain.Version.tagVersionPrefix
+                    let! version = String
+                    return $"{prefix}{version}"
+                }
+                
+            let TagString =
+                gen {
+                    let! prefix = genTagVersionPrefix
+                    let! version = Gen.frequency [
+                        1, ShortString
+                        1, PatchString
+                    ]
+                    return $"{prefix}{version}"
+                }
+                
+            let Short =
+                gen {
+                    let! shortCalendarVersion = Stable.Short
+                    let! alphaBuild = Build.Alpha.AccidentalBuild
+                    return { shortCalendarVersion with Build = Some alphaBuild }
+                }
+                
+            let Patch =
+                gen {
+                    let! patchCalendarVersion = Stable.Patch
+                    let! alphaBuild = Build.Alpha.AccidentalBuild
+                    return { patchCalendarVersion with Build = Some alphaBuild }
+                }
+                
+            let Accidental =
+                Gen.frequency
+                    [ 1, Short
+                      1, Patch ]
                 
         module Beta =
             let ShortString =
@@ -760,7 +819,63 @@ module Generator =
                 Gen.frequency
                     [ 1, Short
                       1, Patch ]
+        
+        module AlphaNightly =
+            let ShortString =
+                gen {
+                    let! year  = Year.inRangeUInt16Year
+                    let! month = Month.inRangeByteMonth
+                    let! alphaNightlyString = Build.AlphaNightly.String
+                    return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{alphaNightlyString}"                 
+                }
                 
+            let PatchString =
+                gen {
+                    let! year  = Year.inRangeUInt16Year
+                    let! month = Month.inRangeByteMonth
+                    let! patch = validPatchUInt32
+                    let! alphaNightlyString = Build.AlphaNightly.String
+                    return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.MonthPatchDivider}{patch}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{alphaNightlyString}"                 
+                }
+                
+            let String =
+                Gen.frequency
+                    [ 1, ShortString
+                      1, PatchString ]
+                    
+            let TagStrictString =
+                gen {
+                    let prefix = Calaf.Domain.Version.tagVersionPrefix
+                    let! version = String
+                    return $"{prefix}{version}"
+                }
+                
+            let TagString =
+                gen {
+                    let! prefix = genTagVersionPrefix
+                    let! version = String
+                    return $"{prefix}{version}"
+                }
+                
+            let Short =
+                gen {
+                    let! shortCalendarVersion = Stable.Short
+                    let! alphaNightlyBuild = Build.AlphaNightly.AccidentalBuild
+                    return { shortCalendarVersion with Build = Some alphaNightlyBuild }
+                }
+                
+            let Patch =
+                gen {
+                    let! patchCalendarVersion = Stable.Patch
+                    let! alphaNightlyBuild = Build.AlphaNightly.AccidentalBuild
+                    return { patchCalendarVersion with Build = Some alphaNightlyBuild }
+                }
+                
+            let Accidental =
+                Gen.frequency
+                    [ 1, Short
+                      1, Patch ]
+                    
         module BetaNightly =
             let ShortString =
                 gen {
@@ -820,22 +935,28 @@ module Generator =
         let ShortString =
             Gen.frequency
                 [ 1, Stable.ShortString
+                  1, Alpha.ShortString
                   1, Beta.ShortString
                   1, Nightly.ShortString
+                  1, AlphaNightly.ShortString
                   1, BetaNightly.ShortString ]
                 
         let PatchString =
             Gen.frequency
                 [ 1, Stable.PatchString
+                  1, Alpha.PatchString
                   1, Beta.PatchString
                   1, Nightly.PatchString
+                  1, AlphaNightly.PatchString
                   1, BetaNightly.PatchString ]
                 
         let String =
             Gen.frequency
                 [ 1, Stable.String
+                  1, Alpha.String
                   1, Beta.String
                   1, Nightly.String
+                  1, AlphaNightly.String
                   1, BetaNightly.String ]
                 
         let ShortTagString =
@@ -855,37 +976,49 @@ module Generator =
         let TagStrictString =
             Gen.frequency
                 [ 1, Stable.TagStrictString
+                  1, Alpha.TagStrictString
                   1, Beta.TagStrictString
                   1, Nightly.TagStrictString
+                  1, AlphaNightly.TagStrictString
                   1, BetaNightly.TagStrictString ]
                 
         let TagString =
             Gen.frequency
                 [ 1, Stable.TagString
+                  1, Alpha.TagString
                   1, Beta.TagString
                   1, Nightly.TagString
+                  1, AlphaNightly.TagString
                   1, BetaNightly.TagString ]
         
         let AccidentalShort =
             Gen.frequency
                 [ 1, Stable.Short
+                  1, Alpha.Short
                   1, Beta.Short
                   1, Nightly.Short
+                  1, AlphaNightly.Short
                   1, BetaNightly.Short ]
                 
         let AccidentalPatch =
             Gen.frequency
                 [ 1, Stable.Patch
+                  1, Alpha.Patch
                   1, Beta.Patch
                   1, Nightly.Patch
+                  1, AlphaNightly.Patch
                   1, BetaNightly.Patch ]
                 
         let AccidentalPreReleases =
             Gen.frequency
-                [ 1, Beta.Short
+                [ 1, Alpha.Short
+                  1, Alpha.Patch
+                  1, Beta.Short
                   1, Beta.Patch
                   1, Nightly.Short
                   1, Nightly.Patch
+                  1, AlphaNightly.Short
+                  1, AlphaNightly.Patch
                   1, BetaNightly.Short
                   1, BetaNightly.Patch ]
                 
@@ -893,10 +1026,14 @@ module Generator =
             Gen.frequency
                 [ 1, Stable.Short
                   1, Stable.Patch
+                  1, Alpha.Short
+                  1, Alpha.Patch
                   1, Beta.Short
                   1, Beta.Patch
                   1, Nightly.Short
                   1, Nightly.Patch
+                  1, AlphaNightly.Short
+                  1, AlphaNightly.Patch
                   1, BetaNightly.Short
                   1, BetaNightly.Patch ]
             
