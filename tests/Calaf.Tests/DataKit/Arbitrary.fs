@@ -234,6 +234,27 @@ module Arbitrary =
             type internal Patch =
                 static member Patch() =
                     Arb.fromGen Generator.CalendarVersion.Stable.Patch
+        
+        module Alpha =
+            type internal String =
+                static member String() =
+                    Arb.fromGen Generator.CalendarVersion.Alpha.String
+                    
+            type internal TagString =
+                static member TagString() =
+                    Arb.fromGen Generator.CalendarVersion.Alpha.TagString
+                    
+            type internal Short =
+                static member calendarVersionShort() =
+                    Arb.fromGen Generator.CalendarVersion.Alpha.Short
+                    
+            type internal Patch =
+                static member Patch() =
+                    Arb.fromGen Generator.CalendarVersion.Alpha.Patch
+                    
+            type internal Accidental =
+                static member Accidental() =
+                    Arb.fromGen Generator.CalendarVersion.Alpha.Accidental
                     
         module Beta =
             type internal String =
@@ -277,6 +298,27 @@ module Arbitrary =
                 static member Accidental() =
                     Arb.fromGen Generator.CalendarVersion.Nightly.Accidental
                     
+        module AlphaNightly =
+            type internal String =
+                static member String() =
+                    Arb.fromGen Generator.CalendarVersion.AlphaNightly.String
+                    
+            type internal TagString =
+                static member TagString() =
+                    Arb.fromGen Generator.CalendarVersion.AlphaNightly.TagString
+                
+            type internal Short =
+                static member Short() =
+                    Arb.fromGen Generator.CalendarVersion.AlphaNightly.Short
+                    
+            type internal Patch =
+                static member Patch() =
+                    Arb.fromGen Generator.CalendarVersion.AlphaNightly.Patch
+                    
+            type internal Accidental =
+                static member Accidental() =
+                        Arb.fromGen Generator.CalendarVersion.AlphaNightly.Accidental
+                        
         module BetaNightly =
             type internal String =
                 static member String() =

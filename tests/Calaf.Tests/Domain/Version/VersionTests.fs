@@ -31,33 +31,101 @@ module TryParseFromStringTests =
             |> Option.map (function | CalVer v -> v.Build.IsNone | _ -> false)
             |> Option.defaultValue false
         test <@ hasNoBuild @> 
+    
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Alpha.String> |])>]
+    let ``Alpha calendar version string always parses to CalendarVersion with Alpha Build containing its original values`` (alphaString: string) =        
+        let version = tryParseFromString alphaString        
+        match version with
+        | Some (CalVer { Year = year; Month = month; Patch = Some patch; Build = Some (Build.Alpha({ Number = number })) }) ->
+            test <@
+                alphaString.Contains $"{year}" &&
+                alphaString.Contains $"{month}" &&
+                alphaString.Contains $"{patch}" &&
+                alphaString.Contains $"{number}" @>
+        | Some (CalVer { Year = year; Month = month; Patch = None; Build = Some (Build.Alpha({ Number = number })) }) ->
+            test <@
+                alphaString.Contains $"{year}" &&
+                alphaString.Contains $"{month}" &&
+                alphaString.Contains $"{number}" @>
+        | _ -> test <@ false @> 
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Beta.String> |])>]
-    let ``Beta calendar version string always parses to the CalendarVersion with Beta Build`` (betaString: string) =        
+    let ``Beta calendar version string always parses to CalendarVersion with Beta Build containing its original values`` (betaString: string) =        
         let version = tryParseFromString betaString
-        let hasBetaBuild =
-            version
-            |> Option.map (function | CalVer v -> v.Build.Value.IsBeta | _ -> false)
-            |> Option.defaultValue false
-        test <@ hasBetaBuild @>
+        match version with
+        | Some (CalVer { Year = year; Month = month; Patch = Some patch; Build = Some (Build.Beta({ Number = number })) }) ->
+            test <@
+                betaString.Contains $"{year}" &&
+                betaString.Contains $"{month}" &&
+                betaString.Contains $"{patch}" &&
+                betaString.Contains $"{number}" @>
+        | Some (CalVer { Year = year; Month = month; Patch = None; Build = Some (Build.Beta({ Number = number })) }) ->
+            test <@
+                betaString.Contains $"{year}" &&
+                betaString.Contains $"{month}" &&
+                betaString.Contains $"{number}" @>
+        | _ -> test <@ false @> 
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Nightly.String> |])>]
     let ``Nightly calendar version string always parses to the CalendarVersion with Nightly Build`` (nightlyString: string) =        
         let version = tryParseFromString nightlyString
-        let hasNightlyBetaBuild =
-            version
-            |> Option.map (function | CalVer v -> v.Build.Value.IsNightly | _ -> false)
-            |> Option.defaultValue false
-        test <@ hasNightlyBetaBuild @>
+        match version with
+        | Some (CalVer { Year = year; Month = month; Patch = Some patch; Build = Some (Build.Nightly({ Day = day; Number = number })) }) ->
+            test <@
+                nightlyString.Contains $"{year}" &&
+                nightlyString.Contains $"{month}" &&
+                nightlyString.Contains $"{patch}" &&
+                nightlyString.Contains $"{day}" &&
+                nightlyString.Contains $"{number}" @>
+        | Some (CalVer { Year = year; Month = month; Patch = None; Build = Some (Build.Nightly({ Day = day; Number = number })) }) ->
+            test <@
+                nightlyString.Contains $"{year}" &&
+                nightlyString.Contains $"{month}" &&
+                nightlyString.Contains $"{day}" &&
+                nightlyString.Contains $"{number}" @>
+        | _ -> test <@ false @>
+    
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.AlphaNightly.String> |])>]
+    let ``Alpha-Nightly calendar version string always parses to the CalendarVersion with AlphaNightly Build`` (alphaNightlyString: string) =        
+        let version = tryParseFromString alphaNightlyString
+        match version with
+        | Some (CalVer { Year = year; Month = month; Patch = Some patch; Build = Some (Build.AlphaNightly({ Number = alphaNumber }, { Day = day; Number = nightlyNumber })) }) ->
+            test <@
+                alphaNightlyString.Contains $"{year}" &&
+                alphaNightlyString.Contains $"{month}" &&
+                alphaNightlyString.Contains $"{patch}" &&
+                alphaNightlyString.Contains $"{alphaNumber}" &&
+                alphaNightlyString.Contains $"{day}" &&
+                alphaNightlyString.Contains $"{nightlyNumber}" @>
+        | Some (CalVer { Year = year; Month = month; Patch = None; Build = Some (Build.AlphaNightly({ Number = alphaNumber }, { Day = day; Number = number })) }) ->
+            test <@
+                alphaNightlyString.Contains $"{year}" &&
+                alphaNightlyString.Contains $"{month}" &&
+                alphaNightlyString.Contains $"{alphaNumber}" &&
+                alphaNightlyString.Contains $"{day}" &&
+                alphaNightlyString.Contains $"{number}" @>
+        | _ -> test <@ false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.BetaNightly.String> |])>]
     let ``Beta-Nightly calendar version string always parses to the CalendarVersion with BetaNightly Build`` (betaNightlyString: string) =        
         let version = tryParseFromString betaNightlyString
-        let hasBetaNightlyBetaBuild =
-            version
-            |> Option.map (function | CalVer v -> v.Build.Value.IsBetaNightly | _ -> false)
-            |> Option.defaultValue false
-        test <@ hasBetaNightlyBetaBuild @>
+        match version with
+        | Some (CalVer { Year = year; Month = month; Patch = Some patch; Build = Some (Build.BetaNightly({ Number = betaNumber }, { Day = day; Number = nightlyNumber })) }) ->
+            test <@
+                betaNightlyString.Contains $"{year}" &&
+                betaNightlyString.Contains $"{month}" &&
+                betaNightlyString.Contains $"{patch}" &&
+                betaNightlyString.Contains $"{betaNumber}" &&
+                betaNightlyString.Contains $"{day}" &&
+                betaNightlyString.Contains $"{nightlyNumber}" @>
+        | Some (CalVer { Year = year; Month = month; Patch = None; Build = Some (Build.BetaNightly({ Number = betaNumber }, { Day = day; Number = number })) }) ->
+            test <@
+                betaNightlyString.Contains $"{year}" &&
+                betaNightlyString.Contains $"{month}" &&
+                betaNightlyString.Contains $"{betaNumber}" &&
+                betaNightlyString.Contains $"{day}" &&
+                betaNightlyString.Contains $"{number}" @>
+        | _ -> test <@ false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.ShortString> |])>]
     let ``Short Calendar Version string always parses to Calendar Version without Patch`` (releaseString: string) =
@@ -128,6 +196,15 @@ module TryParseFromTagTests =
             |> Option.map (function | CalVer v -> v.Build.IsNone | _ -> false)
             |> Option.defaultValue false
         test <@ hasNoBuild @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Alpha.TagString> |])>]
+    let ``Alpha Calendar Version tag string always parses to Calendar Version with Alpha Build`` (tag: string) =         
+        let version = tryParseFromTag tag
+        let hasAlphaBuild =
+            version
+            |> Option.map (function | CalVer v -> v.Build.Value.IsBeta | _ -> false)
+            |> Option.defaultValue false
+        test <@ hasAlphaBuild @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Beta.TagString> |])>]
     let ``Beta Calendar Version tag string always parses to Calendar Version with Beta Build`` (tag: string) =         
