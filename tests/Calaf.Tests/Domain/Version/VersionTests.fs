@@ -200,38 +200,127 @@ module TryParseFromTagTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Alpha.TagString> |])>]
     let ``Alpha Calendar Version tag string always parses to Calendar Version with Alpha Build`` (tag: string) =         
         let version = tryParseFromTag tag
-        let hasAlphaBuild =
-            version
-            |> Option.map (function | CalVer v -> v.Build.Value.IsBeta | _ -> false)
-            |> Option.defaultValue false
-        test <@ hasAlphaBuild @>
+        match version with
+        | Some (CalVer(
+            { Year = year
+              Month = month
+              Patch = Some patch
+              Build = Some(Alpha({ Number = number })) })) ->
+            test <@ tag.Contains $"{year}" &&
+                    tag.Contains $"{month}" &&
+                    tag.Contains $"{patch}" &&
+                    tag.Contains $"{number}" @>
+        | Some (CalVer(
+            { Year = year
+              Month = month
+              Patch = None
+              Build = Some(Alpha({ Number = number })) })) ->
+            test <@ tag.Contains $"{year}" &&
+                    tag.Contains $"{month}" &&
+                    tag.Contains $"{number}" @>
+        | _ -> test <@ false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Beta.TagString> |])>]
     let ``Beta Calendar Version tag string always parses to Calendar Version with Beta Build`` (tag: string) =         
         let version = tryParseFromTag tag
-        let hasBetaBuild =
-            version
-            |> Option.map (function | CalVer v -> v.Build.Value.IsBeta | _ -> false)
-            |> Option.defaultValue false
-        test <@ hasBetaBuild @>
+        match version with
+        | Some (CalVer(
+            { Year = year
+              Month = month
+              Patch = Some patch
+              Build = Some(Beta({ Number = number })) })) ->
+            test <@ tag.Contains $"{year}" &&
+                    tag.Contains $"{month}" &&
+                    tag.Contains $"{patch}" &&
+                    tag.Contains $"{number}" @>
+        | Some (CalVer(
+            { Year = year
+              Month = month
+              Patch = None
+              Build = Some(Beta({ Number = number })) })) ->
+            test <@ tag.Contains $"{year}" &&
+                    tag.Contains $"{month}" &&
+                    tag.Contains $"{number}" @>
+        | _ -> test <@ false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Nightly.TagString> |])>]
     let ``Nightly Calendar Version tag string always parses to Calendar Version with Nightly Build`` (tag: string) =         
         let version = tryParseFromTag tag
-        let hasNightlyBuild =
-            version
-            |> Option.map (function | CalVer v -> v.Build.Value.IsNightly | _ -> false)
-            |> Option.defaultValue false
-        test <@ hasNightlyBuild @>
+        match version with
+        | Some (CalVer(
+            { Year = year
+              Month = month
+              Patch = Some patch
+              Build = Some(Nightly({ Day = day; Number = number })) })) ->
+            test <@ tag.Contains $"{year}" &&
+                    tag.Contains $"{month}" &&
+                    tag.Contains $"{patch}" &&
+                    tag.Contains $"{day}" &&
+                    tag.Contains $"{number}" @>
+        | Some (CalVer(
+            { Year = year
+              Month = month
+              Patch = None
+              Build = Some(Nightly({ Day = day; Number = number })) })) ->
+            test <@ tag.Contains $"{year}" &&
+                    tag.Contains $"{month}" &&
+                    tag.Contains $"{day}" &&
+                    tag.Contains $"{number}" @>
+        | _ -> test <@ false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.AlphaNightly.TagString> |])>]
+    let ``Alpha-Nightly Calendar Version tag string always parses to Calendar Version with AlphaNightly Build`` (tag: string) =         
+        let version = tryParseFromTag tag
+        match version with
+        | Some (CalVer(
+            { Year = year
+              Month = month
+              Patch = Some patch
+              Build = Some(AlphaNightly({ Number = alphaNumber }, { Day = nightlyDay; Number = nightlyNumber })) })) ->
+            test <@ tag.Contains $"{year}" &&
+                    tag.Contains $"{month}" &&
+                    tag.Contains $"{patch}" &&
+                    tag.Contains $"{alphaNumber}" &&
+                    tag.Contains $"{nightlyDay}" &&
+                    tag.Contains $"{nightlyNumber}" @>
+        | Some (CalVer(
+            { Year = year
+              Month = month
+              Patch = None
+              Build = Some(AlphaNightly({ Number = alphaNumber },{ Day = nightlyDay; Number = nightlyNumber })) })) ->
+            test <@ tag.Contains $"{year}" &&
+                    tag.Contains $"{month}" &&
+                    tag.Contains $"{alphaNumber}" &&
+                    tag.Contains $"{nightlyDay}" &&
+                    tag.Contains $"{nightlyNumber}" @>
+        | _ -> test <@ false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.BetaNightly.TagString> |])>]
     let ``Beta-Nightly Calendar Version tag string always parses to Calendar Version with BetaNightly Build`` (tag: string) =         
         let version = tryParseFromTag tag
-        let hasBetaNightlyBuild =
-            version
-            |> Option.map (function | CalVer v -> v.Build.Value.IsBetaNightly | _ -> false)
-            |> Option.defaultValue false
-        test <@ hasBetaNightlyBuild @>
+        match version with
+        | Some (CalVer(
+            { Year = year
+              Month = month
+              Patch = Some patch
+              Build = Some(BetaNightly({ Number = betaNumber }, { Day = nightlyDay; Number = nightlyNumber })) })) ->
+            test <@ tag.Contains $"{year}" &&
+                    tag.Contains $"{month}" &&
+                    tag.Contains $"{patch}" &&
+                    tag.Contains $"{betaNumber}" &&
+                    tag.Contains $"{nightlyDay}" &&
+                    tag.Contains $"{nightlyNumber}" @>
+        | Some (CalVer(
+            { Year = year
+              Month = month
+              Patch = None
+              Build = Some(BetaNightly({ Number = betaNumber },{ Day = nightlyDay; Number = nightlyNumber })) })) ->
+            test <@ tag.Contains $"{year}" &&
+                    tag.Contains $"{month}" &&
+                    tag.Contains $"{betaNumber}" &&
+                    tag.Contains $"{nightlyDay}" &&
+                    tag.Contains $"{nightlyNumber}" @>
+        | _ -> test <@ false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.SematicVersion.semanticVersionStr> |])>]
     let ``Correct Sematic Version string parses to Semantic Version`` (tag: string) =
