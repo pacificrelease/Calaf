@@ -71,7 +71,7 @@ module internal Make =
             let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
             let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
             let (TagQuantity tagCount) = settings.TagsToLoad
-            let! repo = context.Git.tryRead path tagCount Version.versionPrefixes dateTimeOffset                
+            let! repo = context.Git.tryRead path tagCount Version.versionPrefixes dateTimeOffset
             let! workspace,  _ = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
             let! version =
                 Version.tryNightly workspace.Version (dayOfMonth, monthStamp)
