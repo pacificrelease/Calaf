@@ -40,9 +40,9 @@ module internal GitRepository2 =
             |> Git
             |> Error
     
-    let private hasGitFolder directory =
-        let gitDir = System.IO.Path.Combine(directory, ".git")
-        not (System.IO.Directory.Exists gitDir || System.IO.File.Exists gitDir)
+    let private gitDirectory directory =
+        let gitPath = System.IO.Path.Combine(directory, ".git")
+        System.IO.Directory.Exists gitPath || System.IO.File.Exists gitPath
             
     let private status
         (gitProcess: string -> Result<string,InfrastructureError>) =
@@ -116,23 +116,24 @@ module internal GitRepository2 =
                     |> List.map (fun prefix -> $"--list \"{prefix}*\"")
                     |> String.concat " "
             
-            let! tags = gitProcess $"tag --sort=-version:refname {tagFilter}"
-            if (not (String.IsNullOrWhiteSpace tags))
+            let! output = gitProcess $"tag --sort=-creatordate {tagFilter}"
+            if (not (String.IsNullOrWhiteSpace output))
             then
+                let tagNames = output.Split([|'\n'; '\r'|], StringSplitOptions.RemoveEmptyEntries)
                 return!
-                    tags.Split([|'\n'; '\r'|], StringSplitOptions.RemoveEmptyEntries)
-                    |> Array.take (min qty (Array.length (tags.Split([|'\n'; '\r'|], StringSplitOptions.RemoveEmptyEntries))))                    
+                    tagNames
+                    |> Array.take (min qty tagNames.Length)
                     |> Array.toList
-                    |> List.traverseResultM(fun tagName ->
+                    |> List.traverseResultM (fun tagName ->
                         result {
                             let! c = gitProcess |> commit (Some tagName)
                             return { Name = tagName; Commit = c }
                         })
-                else return []
+            else return []
         }
         
     let private unborn
-        (gitProcess: string -> Result<string,InfrastructureError>) =        
+        (gitProcess: string -> Result<string,InfrastructureError>) =
         let head = gitProcess "rev-parse HEAD"
         match head with
         | Error (Git (GitProcessErrorExit _)) -> Ok true
@@ -145,7 +146,7 @@ module internal GitRepository2 =
         (tagsPrefixesToFilter: string list)
         (timeStamp: DateTimeOffset) =
         result {
-            if hasGitFolder directory
+            if not (gitDirectory directory)
             then
                 return None
             else

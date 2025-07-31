@@ -8,7 +8,7 @@ open Calaf.Application
 open Calaf.Infrastructure
 
 module TryReadTests =
-    [<Fact(Skip = "Waiting for the implementation")>]
+    [<Fact(Skip = "TBD")>]
     let ``Test`` () =
         let dir = "../../../../.."
         let absPath = System.IO.DirectoryInfo(dir)
