@@ -44,13 +44,11 @@ module internal GitWrapper =
         let gitPath = System.IO.Path.Combine(directory, ".git")
         System.IO.Directory.Exists gitPath || System.IO.File.Exists gitPath
             
-    let private status
+    let private getStatus
         (gitProcess: string -> Result<string,InfrastructureError>) =
-        result {
-            return! gitProcess "status --porcelain"
-        }
+        gitProcess "status --porcelain"
         
-    let private damaged
+    let private isDamaged
         (gitProcess: string -> Result<string,InfrastructureError>) =
         let headCheck = gitProcess "rev-parse --verify HEAD"
         let refsCheck = gitProcess "show-ref"        
@@ -58,7 +56,7 @@ module internal GitWrapper =
         | Error _, Error _ -> true
         | _ -> false
             
-    let private branch
+    let private getBranch
         (gitProcess: string -> Result<string,InfrastructureError>) =
         result {
             let! branch = gitProcess "branch --show-current"
@@ -67,7 +65,7 @@ module internal GitWrapper =
                 else return None
         }
         
-    let private commit
+    let private getCommit
         (name: string option)
         (gitProcess: string -> Result<string,InfrastructureError>) =
         result {
@@ -90,7 +88,7 @@ module internal GitWrapper =
             else return None
         }
         
-    let private signature
+    let private getSignature
         (timeStamp: DateTimeOffset)
         (gitProcess: string -> Result<string,InfrastructureError>) =
         result {
@@ -103,7 +101,7 @@ module internal GitWrapper =
             else return None
         }
         
-    let private tags
+    let private listTags
         (filter: string list)
         (qty: int)
         (gitProcess: string -> Result<string,InfrastructureError>) =
@@ -126,13 +124,13 @@ module internal GitWrapper =
                     |> Array.toList
                     |> List.traverseResultM (fun tagName ->
                         result {
-                            let! c = gitProcess |> commit (Some tagName)
+                            let! c = gitProcess |> getCommit (Some tagName)
                             return { Name = tagName; Commit = c }
                         })
             else return []
         }
         
-    let private unborn
+    let private isUnborn
         (gitProcess: string -> Result<string,InfrastructureError>) =
         let head = gitProcess "rev-parse HEAD"
         match head with
@@ -143,6 +141,22 @@ module internal GitWrapper =
     let private unstage
         (gitProcess: string -> Result<string,InfrastructureError>) =
         gitProcess "reset HEAD ."
+        
+    let private stage
+        (files: string list)
+        (gitProcess: string -> Result<string,InfrastructureError>) =
+            let files = files |> String.concat " "
+            gitProcess $"add {files}"
+            
+    let private commit
+        (commitMessage: string)
+        (gitProcess: string -> Result<string,InfrastructureError>) =
+        gitProcess $"commit -m \"{commitMessage}\""
+        
+    let private tag
+        (tagName: string)
+        (gitProcess: string -> Result<string,InfrastructureError>) =
+        gitProcess $"tag \"{tagName}\""
      
     let read
         (directory: string)
@@ -155,12 +169,12 @@ module internal GitWrapper =
                 return None
             else                   
                 let git = runGit directory
-                let! status    = git |> status
-                let! branch    = git |> branch
-                let! commit    = git |> commit None
-                let! signature = git |> signature timeStamp                
-                let! tags      = git |> tags tagsPrefixesToFilter (int maxTagsToRead)
-                let! unborn    = git |> unborn
+                let! status    = git |> getStatus
+                let! branch    = git |> getBranch
+                let! commit    = git |> getCommit None
+                let! signature = git |> getSignature timeStamp                
+                let! tags      = git |> listTags tagsPrefixesToFilter (int maxTagsToRead)
+                let! unborn    = git |> isUnborn
                 return Some {                    
                     Directory = directory
                     Damaged = false
@@ -186,7 +200,10 @@ module internal GitWrapper =
                 return! Error (Git RepoNotInitialized)
             else
                 let git = runGit directory
-                let! _ = git |> unstage 
+                let! _ = git |> unstage
+                let! _ = git |> stage files
+                let! _ = git |> commit commitMessage
+                let! _ = git |> tag tagName
                 return ()
         }
 
