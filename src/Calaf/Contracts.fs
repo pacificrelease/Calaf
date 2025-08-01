@@ -31,7 +31,7 @@ type GitRepositoryInfo = {
     Directory: string    
     Damaged: bool
     Unborn: bool
-    Detached: bool    
+    Detached: bool
     CurrentBranch: string option
     CurrentCommit: GitCommitInfo option
     Signature: GitSignatureInfo option

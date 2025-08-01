@@ -7,7 +7,7 @@ open FsToolkit.ErrorHandling
 open Calaf.Contracts
 open Calaf.Application
 
-module internal GitRepository2 =    
+module internal GitWrapper =    
     let private runGit
         (directory: string)
         (arguments: string)=
@@ -139,7 +139,11 @@ module internal GitRepository2 =
         | Error (Git (GitProcessErrorExit _)) -> Ok true
         | Error e -> Error e 
         | Ok _ -> Ok false
-    
+   
+    let private unstage
+        (gitProcess: string -> Result<string,InfrastructureError>) =
+        gitProcess "reset HEAD ."
+     
     let read
         (directory: string)
         (maxTagsToRead: byte)
@@ -149,8 +153,8 @@ module internal GitRepository2 =
             if not (gitDirectory directory)
             then
                 return None
-            else
-                let git = runGit directory            
+            else                   
+                let git = runGit directory
                 let! status    = git |> status
                 let! branch    = git |> branch
                 let! commit    = git |> commit None
@@ -168,13 +172,30 @@ module internal GitRepository2 =
                     Dirty = not (String.IsNullOrWhiteSpace status)
                     Tags = tags
                 }
-        }                
+        }
+        
+    let apply
+        (directory: string)
+        (files: string list)
+        (commitMessage: string)
+        (tagName: string)
+        (signature: GitSignatureInfo)=
+        result {
+            if not (gitDirectory directory)
+            then
+                return! Error (Git RepoNotInitialized)
+            else
+                let git = runGit directory
+                let! _ = git |> unstage 
+                return ()
+        }
 
 type Git2() =
     interface IGit with
         member _.tryRead directory maxTagsToRead tagsPrefixesToFilter timeStamp =
-            GitRepository2.read directory maxTagsToRead tagsPrefixesToFilter timeStamp
+            GitWrapper.read directory maxTagsToRead tagsPrefixesToFilter timeStamp
             |> Result.mapError CalafError.Infrastructure
             
         member _.tryApply (directory, files) commitMessage tagName signature =
-            () |> Ok
+            GitWrapper.apply directory files commitMessage tagName signature
+            |> Result.mapError CalafError.Infrastructure
