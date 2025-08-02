@@ -279,7 +279,7 @@ let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
                         let priority = 1
                         (v.Year, v.Month, v.Patch, priority, noPreReleaseNumber, nightlyBuild.Day, nightlyBuild.Number)
                 | None ->
-                    let priority = 0                    
+                    let priority = 4
                     (v.Year, v.Month, v.Patch, priority, noPreReleaseNumber, noNightlyDay, noNightlyNumber))
         Some maxVersion
 
