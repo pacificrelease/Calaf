@@ -49,7 +49,9 @@ let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
             |> List.choose id
             |> Suite.tryCapture
             
-        let! repoResult = repoInfo |> Option.traverseResult Repository.tryCapture        
+        let! repoResult =
+            repoInfo
+            |> Option.traverseResult Repository.tryCapture        
         let events = match repoResult with | Some (_, repoEvents) -> suiteEvents @ repoEvents | None -> suiteEvents
         let maybeRepo = repoResult |> Option.map fst
         let! version = combineVersions suite maybeRepo |> Version.tryMax |> Option.toResult CalendarVersionMissing 

@@ -72,7 +72,9 @@ module internal Make =
             let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
             let (TagQuantity tagCount) = settings.TagsToLoad
             let! repo = context.Git.tryRead path tagCount Version.versionPrefixes dateTimeOffset
-            let! workspace,  _ = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
+            let! workspace,  _ =
+                Workspace.tryCapture (dir, repo)
+                |> Result.mapError CalafError.Domain
             let! version =
                 Version.tryNightly workspace.Version (dayOfMonth, monthStamp)
                 |> Result.mapError CalafError.Domain
@@ -128,7 +130,7 @@ module internal Make =
         }
         
     // TODO: Remove this type after refactoring
-    let private stable path (context: MakeContext) settings =
+    let private tryStable path (context: MakeContext) settings =
         result {
             let dateTimeOffset = context.Clock.utcNow()            
             let! monthStamp = dateTimeOffset |> DateSteward.tryCreateMonthStamp |> Result.mapError CalafError.Domain                
@@ -229,7 +231,7 @@ module internal Make =
                     | MakeType.Beta ->
                         return! tryBeta path context settings
                     | MakeType.Stable ->
-                        return! stable path context settings
+                        return! tryStable path context settings
             }
         let path = directory path
         let result = apply path arguments context settings
