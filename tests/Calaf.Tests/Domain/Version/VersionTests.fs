@@ -369,13 +369,13 @@ module TryParseFromTagTests =
         
 module TryMaxTests =
     [<Fact>]
-    let ``Same date stable, beta, nightly, beta-nightly versions return beta-nightly version`` () =
+    let ``Same date beta, nightly, beta-nightly versions return beta-nightly version`` () =
         let versions = [
             { Year = 9999us; Month = 12uy; Patch = None; Build = None }
             { Year = 9999us; Month = 12uy; Patch = Some 1u; Build = None }
-            { Year = 9999us; Month = 12uy; Patch = Some 1u; Build = Some (Nightly { Day = 10uy; Number = 1us }) }
-            { Year = 9999us; Month = 12uy; Patch = Some 1u; Build = Some (Beta { Number = 1us }) }
-            { Year = 9999us; Month = 12uy; Patch = Some 1u; Build = Some (BetaNightly ({ Number = 1us }, { Day = 10uy; Number = 1us })) }
+            { Year = 9999us; Month = 12uy; Patch = Some 2u; Build = Some (Nightly { Day = 10uy; Number = 1us }) }
+            { Year = 9999us; Month = 12uy; Patch = Some 2u; Build = Some (Beta { Number = 1us }) }
+            { Year = 9999us; Month = 12uy; Patch = Some 2u; Build = Some (BetaNightly ({ Number = 1us }, { Day = 10uy; Number = 1us })) }
         ]
         let expected = versions[4] |> Some
             
@@ -383,7 +383,7 @@ module TryMaxTests =
         test <@ expected = max @>
         
     [<Fact>]
-    let ``Same date stable, beta, nightly, beta-nightly + higher beta versions return higher beta version`` () =
+    let ``Same date stable, beta, nightly, beta-nightly + higher beta versions return stable`` () =
         let versions = [
             { Year = 9999us; Month = 12uy; Patch = None; Build = None }
             { Year = 9999us; Month = 12uy; Patch = Some 1u; Build = None }
@@ -392,7 +392,7 @@ module TryMaxTests =
             { Year = 9999us; Month = 12uy; Patch = Some 1u; Build = Some (BetaNightly ({ Number = 1us }, { Day = 10uy; Number = 1us })) }
             { Year = 9999us; Month = 12uy; Patch = Some 1u; Build = Some (Beta { Number = 2us }) }
         ]
-        let expected = versions[5] |> Some
+        let expected = versions[1] |> Some
             
         let max = versions |> tryMax        
         test <@ expected = max @>
