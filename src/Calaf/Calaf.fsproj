@@ -70,7 +70,6 @@
     <Compile Include="Application\UseCases\Make.fs" />
     <Compile Include="Application\Api.fs" />
     <Compile Include="Infrastructure\Adapters\Git2.fs" />
-    <Compile Include="Infrastructure\Adapters\Git.fs" />    
     <Compile Include="Infrastructure\Adapters\FileSystem.fs" />    
     <Compile Include="Infrastructure\Adapters\Clock.fs" />    
     <Compile Include="Infrastructure\Adapters\Console.fs" />    
@@ -82,7 +81,6 @@
   <ItemGroup>
     <PackageReference Include="Argu" Version="6.2.5" />
     <PackageReference Include="FsToolkit.ErrorHandling" Version="5.0.1" />
-    <PackageReference Include="LibGit2Sharp" Version="0.31.0" />
     <PackageReference Update="FSharp.Core" Version="9.0.300" />
     <PackageReference Include="Microsoft.Build.Tasks.Git" Version="8.0.0">
       <PrivateAssets>all</PrivateAssets>
