@@ -206,7 +206,32 @@ let tryBeta (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.DateT
             | false, false ->
                 patchRelease (currentVersion, Some build)
     }
-    
+
+let tryAlpha (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.DateTimeOffset) : Result<CalendarVersion, DomainError> =
+    result {
+        let! build = Build.tryAlpha currentVersion.Build
+        let stampYear = uint16 dateTimeOffsetStamp.Year
+        let stampMonth = byte dateTimeOffsetStamp.Month
+        
+        let shouldReleaseYear = shouldChange (currentVersion.Year, stampYear)
+        let shouldReleaseMonth = shouldChange (currentVersion.Month, stampMonth)
+        
+        return
+            match shouldReleaseYear, shouldReleaseMonth with
+            | true, _ ->
+                { Year = stampYear
+                  Month = stampMonth
+                  Patch = None
+                  Build = Some build }
+            | false, true ->
+                { Year = currentVersion.Year
+                  Month = stampMonth
+                  Patch = None
+                  Build = Some build }
+            | false, false ->
+                patchRelease (currentVersion, Some build)
+    }
+     
 let tryNightly (currentVersion: CalendarVersion) (dayOfMonth: DayOfMonth, monthStamp: MonthStamp) : Result<CalendarVersion, DomainError> =
     result {
         let! build = Build.tryNightly currentVersion.Build dayOfMonth

@@ -591,6 +591,89 @@ module TryMaxTests =
         let max' = tryMax duplicated
         test <@ max' = max @>
 
+module TryAlphaTests =
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Alpha.Accidental> |])>]
+    let ``Alpha CalendarVersion releases to the new alpha``
+        (v: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
+        let release = tryAlpha v dateTimeOffset
+        test <@
+            match release with
+            | Ok { Build = b } ->                
+                v.Build <> b
+            | _ -> false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Beta.Accidental> |])>]
+    let ``Beta CalendarVersion prohibits to alpha``
+        (v: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
+        let release = tryAlpha v dateTimeOffset
+        test <@
+            match release with
+            | Error Calaf.Domain.DomainError.BuildDowngradeProhibited -> true
+            | _ -> false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Stable.Accidental> |])>]
+    let ``Stable CalendarVersion releases to the alpha and keeps the same Year, Month, increase Patch and adds Build when the year and month are same``
+        (v: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
+        let v = { v with Year = uint16 dateTimeOffset.Year; Month = byte dateTimeOffset.Month }
+        let release = tryAlpha v dateTimeOffset
+        test <@
+            match release with
+            | Ok { Year = year; Month = month; Patch = patch; Build = Some (Alpha b) } ->
+                year = v.Year &&
+                month = v.Month &&
+                patch > v.Patch &&
+                b.Number = Calaf.Domain.Build.NumberStartValue
+            | _ -> false @>
+    
+    // [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.AlphaNightly.Accidental> |])>]
+    // let ``AlphaNightly CalendarVersion releases to alpha by alpha, changes an alpha number but keeps the same Year, Month, Patch when the year and month are same``
+    //     (v: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
+    //     let v' = tryAlpha v dateTimeOffset
+    //     test <@
+    //         match v' with
+    //         | Ok { Year = year; Month = month; Patch = patch; Build = Some (Alpha number) } ->
+    //             year = v.Year &&
+    //             month = v.Month &&
+    //             patch = v.Patch &&
+    //             match v.Build.Value with
+    //             | AlphaNightly ({ Number = alphaNumber }, _) -> number.Number <> alphaNumber
+    //             | _ -> false
+    //         | _ -> false @> 
+    //         
+    // [<Fact>]
+    // let ``BetaNightly CalendarVersion releases to beta switch to beta, increases beta number but keeps the same Year, Month, Patch when the year and month are same`` () =        
+    //     let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.BetaNightly ({ Number = 5us },{ Day = byte 31; Number = 2us } ) ) }
+    //     let dateTimeOffsetStamp = System.DateTime (2023, 10, 31) |> System.DateTimeOffset
+    //     let release = tryBeta calVer dateTimeOffsetStamp
+    //     test <@
+    //         match release with
+    //         | Ok { Year = year; Month = month; Patch = patch; Build = Some (Beta b) } ->
+    //             year = calVer.Year &&
+    //             month = calVer.Month &&
+    //             patch = calVer.Patch &&
+    //             b.Number > 5us
+    //         | _ -> false @>
+        
+    // [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Beta.Accidental> |])>]
+    // let ``Beta CalendarVersion + max beta Number releases to beta resets beta Number to init value the year, month and patch are same``
+    //     (beta: CalendarVersion) =
+    //     let beta =
+    //         match beta.Build with
+    //         | Some (Beta _) ->
+    //             let build = Beta { Number = BuildNumber.MaxValue } |> Some
+    //             { beta with Build = build }
+    //         | _ -> beta
+    //     let dateTimeOffset = Internals.asDateTimeOffset beta
+    //     let release = tryBeta beta dateTimeOffset
+    //     test <@
+    //         match release with
+    //         | Ok { Year = year; Month = month; Patch = patch; Build = Some (Beta b) } ->
+    //             year = beta.Year &&
+    //             month = beta.Month &&
+    //             patch = beta.Patch &&
+    //             b.Number = Calaf.Domain.Build.NumberStartValue
+    //         | _ -> false @>
+        
 module TryBetaTests =
     [<Fact>]
     let ``Beta short CalendarVersion releases to beta increases beta number but keeps the same Year, Month without Patch when the year and month are same`` () =        

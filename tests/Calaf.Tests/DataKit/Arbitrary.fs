@@ -234,6 +234,10 @@ module Arbitrary =
             type internal Patch =
                 static member Patch() =
                     Arb.fromGen Generator.CalendarVersion.Stable.Patch
+                    
+            type internal Accidental =
+                static member Accidental() =
+                    Arb.fromGen Generator.CalendarVersion.Stable.Accidental
         
         module Alpha =
             type internal String =

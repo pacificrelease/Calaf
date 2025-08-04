@@ -645,6 +645,11 @@ module Generator =
                     let! patch = validPatchUInt32
                     return { short with Patch = Some patch }
                 }
+                
+            let Accidental =
+                Gen.frequency
+                    [ 1, Short
+                      1, Patch ]
         
         module Alpha =
             let ShortString =

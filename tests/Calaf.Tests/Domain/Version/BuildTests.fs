@@ -76,6 +76,97 @@ module TryParseFromStringPropertyTests =
     let ``String containing BetaNightly parses to BuildInvalidString error`` (containingBetaNightlyBadString: string) =
         let build = containingBetaNightlyBadString |> tryParseFromString
         test <@ build = Error BuildInvalidString @>
+        
+module TryAlphaTests =
+    // Result is always Build.Alpha
+    [<Property>]
+    let ``None build always releases an Alpha build type`` () =
+        let result = tryAlpha None
+        test <@ match result with | Ok (Build.Alpha _) -> true | _ -> false @>
+        
+    // Number is greater then assigned
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Alpha.alpha> |])>]
+    let ``The number is increased for the Alpha build`` (a: AlphaBuild) =
+        let a = { a with Number = Internals.preventNumberOverflow a.Number }
+        let build' = tryAlpha (Some (Build.Alpha a))
+        test <@ match build' with
+                | Ok (Build.Alpha { Number = number' }) -> number' > a.Number
+                | _ -> false @>
+    
+    // Number increased on the step value     
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Alpha.alpha> |])>]
+    let ``The number is increased on step value for the Alpha build`` (a: AlphaBuild) =
+        let a = { a with Number = Internals.preventNumberOverflow a.Number }
+        let build' = tryAlpha (Some (Build.Alpha a))        
+        test <@ match build' with
+                | Ok (Build.Alpha { Number = number' }) ->
+                    number' - a.Number = NumberIncrementStep
+                | _ -> false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.nightlyBuild> |])>]
+    let ``Nightly always releases aa Alpha build type`` (build: Build) =
+        let build' = tryAlpha (Some build)
+        test <@ match build' with
+                | Ok (Build.Alpha _) -> true
+                | _ -> false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.nightly> |])>]
+    let ``Nightly always releases a Alpha build with NumberStartValue`` (n: NightlyBuild) =
+        let build' = tryAlpha (Some (Build.Nightly n))   
+        test <@ match build' with
+                | Ok (Build.Alpha { Number = number' }) -> number' = NumberStartValue
+                | _ -> false @>    
+    
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Alpha.alphaBuild> |])>]
+    let ``Alpha always releases an Alpha build type`` (build: Build) =
+        let build' = tryAlpha (Some build)
+        test <@ match build' with | Ok (Build.Alpha _) -> true | _ -> false @>
+        
+    // Number resets to NumberStartValue on overflow
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Alpha.alpha> |])>]
+    let ``Alpha number resets the number to NumberStartValue on overflow when releasing to Alpha`` (a: AlphaBuild) =
+        let a = { a with Number = BuildNumber.MaxValue }
+        let build' = tryAlpha (Some (Build.Alpha a))        
+        test <@ match build' with
+                | Ok (Build.Alpha { Number = number' }) ->
+                    number' = NumberStartValue
+                | _ -> false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.AlphaNightly.alphaNightlyBuild> |])>]
+    let ``AlphaNightly always resets it's Alpha's overflowed build number when releasing Alpha`` (build: Build) =
+        let build =
+            match build with
+            | AlphaNightly (_, { Day = day; Number = nightlyNumber }) ->
+                AlphaNightly({ Number = BuildNumber.MaxValue }, { Day = day; Number = nightlyNumber })
+            | _ -> build
+        let build' = tryAlpha (Some build)
+        match build' with
+        | Ok (Build.Alpha { Number = alphaNumber' }) ->
+            test <@ alphaNumber' = NumberStartValue @>
+        | _ -> test <@ false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.AlphaNightly.alphaNightlyBuild> |])>]
+    let ``AlphaNightly always releases an Alpha build type`` (build: Build) =
+        let build' = tryAlpha (Some build)
+        test <@ match build' with | Ok (Build.Alpha _) -> true | _ -> false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.AlphaNightly.alphaNightlyBuild> |])>]
+    let ``AlphaNightly always switches to Alpha and increases the build number when releasing Alpha`` (build: Build) =        
+        let build' = tryAlpha (Some build)
+        match (build, build') with
+        | Build.AlphaNightly ({ Number = alphaNumber }, _), Ok (Build.Alpha { Number = alphaNumber' }) ->
+            test <@ alphaNumber' <> alphaNumber @>
+        | _ -> test <@ false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Beta.betaBuild> |])>]
+    let ``Beta always returns BuildDowngradeProhibited error when releasing Alpha`` (build: Build) =
+        let build' = tryAlpha (Some build)
+        test <@ match build' with | Error BuildDowngradeProhibited -> true | _ -> false @>
+    
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.BetaNightly.betaNightlyBuild> |])>]
+    let ``BetaNightly always returns BuildDowngradeProhibited error when releasing Alpha`` (build: Build) =
+        let build' = tryAlpha (Some build)
+        test <@ match build' with | Error BuildDowngradeProhibited -> true | _ -> false @>
 
 module TryBetaTests =
     // Result is always Build.Beta

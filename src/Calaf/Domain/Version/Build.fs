@@ -177,6 +177,9 @@ let private tryCreateBuild (buildString: string) =
 let private createBeta =
     Build.Beta { Number = NumberStartValue }
     
+let private createAlpha =
+    Build.Alpha { Number = NumberStartValue }
+    
 let private createNightly dayOfMonth =
     Build.Nightly { Day = dayOfMonth; Number = NumberStartValue }
     
@@ -208,6 +211,17 @@ let private applyBeta build =
     | Build.AlphaNightly _
     | Build.Nightly _ ->
         Build.Beta { Number = NumberStartValue }
+        
+let private tryApplyAlpha build =
+    match build with    
+    | Build.BetaNightly _
+    | Build.Beta _ ->
+        Error BuildDowngradeProhibited
+    | Build.Alpha { Number = alphaNumber }
+    | Build.AlphaNightly ({ Number = alphaNumber }, _) ->
+        Ok (Build.Alpha { Number = nextNumber alphaNumber })
+    | Build.Nightly _ ->
+        Ok (Build.Alpha { Number = NumberStartValue })
     
 let toString (build: Build) : string =
     match build with
@@ -228,7 +242,12 @@ let tryParseFromString (build: string) =
 let tryBeta (currentBuild: Build option) : Result<Build, DomainError> =
     match currentBuild with
     | None -> createBeta |> Ok
-    | Some build -> applyBeta build |> Ok        
+    | Some build -> applyBeta build |> Ok
+    
+let tryAlpha (currentBuild: Build option) : Result<Build, DomainError> =
+    match currentBuild with
+    | None -> createAlpha |> Ok
+    | Some build -> tryApplyAlpha build
 
 let tryNightly (currentBuild: Build option) (dayOfMonth: DayOfMonth) : Result<Build, DomainError> =        
     match currentBuild with
