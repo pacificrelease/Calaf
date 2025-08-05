@@ -7,12 +7,14 @@ open Calaf.Contracts
 
 type MakeFlag =    
     | [<CliPrefix(CliPrefix.None)>] Stable
+    | [<CliPrefix(CliPrefix.None)>] Alpha
     | [<CliPrefix(CliPrefix.None)>] Beta
     | [<CliPrefix(CliPrefix.None)>] Nightly
     interface IArgParserTemplate with
         member flag.Usage =
             match flag with
             | Stable  -> "Make a stable version"
+            | Alpha   -> "Make an alpha version"
             | Beta    -> "Make a beta version"
             | Nightly -> "Make a nightly version"
 
@@ -27,6 +29,7 @@ module internal ConsoleInputGateway =
     let toMakeType (flags: MakeFlag list) =
         match flags with
             | [ Nightly ] -> Ok MakeType.Nightly
+            | [ Alpha ]   -> Ok MakeType.Alpha
             | [ Beta ]    -> Ok MakeType.Beta
             | [ Stable ]  -> Ok MakeType.Stable            
             | [] -> Ok MakeType.Stable

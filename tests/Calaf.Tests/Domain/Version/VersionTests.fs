@@ -609,37 +609,39 @@ module TryAlphaTests =
         test <@
             match release with
             | Error Calaf.Domain.DomainError.BuildDowngradeProhibited -> true
-            | _ -> false @>
-        
+            | _ -> false @>        
+    
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Stable.Accidental> |])>]
-    let ``Stable CalendarVersion releases to the alpha and keeps the same Year, Month, increase Patch and adds Build when the year and month are same``
+    let ``Stable CalendarVersion releases alpha, set appropriate Year, Month, Patch, adds Build type Alpha``
         (v: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
-        let v = { v with Year = uint16 dateTimeOffset.Year; Month = byte dateTimeOffset.Month }
-        let release = tryAlpha v dateTimeOffset
+        let dateTimeOffset = Internals.uniqueDateTimeOffset (v, dateTimeOffset)
+        let v' = tryAlpha v dateTimeOffset
         test <@
-            match release with
-            | Ok { Year = year; Month = month; Patch = patch; Build = Some (Alpha b) } ->
+            match v' with
+            | Ok { Year = year; Month = month; Patch = patch; Build = Some (Alpha a) } ->
                 year = v.Year &&
                 month = v.Month &&
                 patch > v.Patch &&
-                b.Number = Calaf.Domain.Build.NumberStartValue
+                a.Number = Calaf.Domain.Build.NumberStartValue
             | _ -> false @>
     
     // [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.AlphaNightly.Accidental> |])>]
     // let ``AlphaNightly CalendarVersion releases to alpha by alpha, changes an alpha number but keeps the same Year, Month, Patch when the year and month are same``
-    //     (v: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
+    //     (v: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =        
     //     let v' = tryAlpha v dateTimeOffset
+    //     
+    //     let expectedYear = dateTimeOffset.Year
+    //     let expectedMonth = dateTimeOffset.Month
+    //     let number = match v.Build with | Some (AlphaNightly (an, _)) -> an.Number | _ -> None   
     //     test <@
     //         match v' with
-    //         | Ok { Year = year; Month = month; Patch = patch; Build = Some (Alpha number) } ->
-    //             year = v.Year &&
-    //             month = v.Month &&
-    //             patch = v.Patch &&
-    //             match v.Build.Value with
-    //             | AlphaNightly ({ Number = alphaNumber }, _) -> number.Number <> alphaNumber
-    //             | _ -> false
+    //         | Ok { Year = year; Month = month; Patch = patch; Build = Some (Alpha a) } ->
+    //             (int year) = expectedYear &&
+    //             (int month) = expectedMonth &&
+    //             patch >= v.Patch &&
+    //             a.Number > number 
     //         | _ -> false @> 
-    //         
+            
     // [<Fact>]
     // let ``BetaNightly CalendarVersion releases to beta switch to beta, increases beta number but keeps the same Year, Month, Patch when the year and month are same`` () =        
     //     let calVer = { Year = 2023us; Month = 10uy; Patch = Some 1u; Build = Some (Build.BetaNightly ({ Number = 5us },{ Day = byte 31; Number = 2us } ) ) }

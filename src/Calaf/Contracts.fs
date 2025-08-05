@@ -3,6 +3,7 @@
 // Incoming commands
 type MakeType =    
     | Stable
+    | Alpha
     | Beta
     | Nightly
     
