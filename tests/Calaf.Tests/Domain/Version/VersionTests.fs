@@ -611,17 +611,20 @@ module TryAlphaTests =
             | Error Calaf.Domain.DomainError.BuildDowngradeProhibited -> true
             | _ -> false @>        
     
-    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Stable.Accidental> |])>]
-    let ``Stable CalendarVersion releases alpha, set appropriate Year, Month, Patch, adds Build type Alpha``
+    [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Stable.Patch> |])>]
+    let ``Stable with Patch CalendarVersion releases alpha, set appropriate Year, Month, no Patch, adds Build type Alpha``
         (v: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
         let dateTimeOffset = Internals.uniqueDateTimeOffset (v, dateTimeOffset)
         let v' = tryAlpha v dateTimeOffset
+        
+        let expectedYear = dateTimeOffset.Year
+        let expectedMonth = dateTimeOffset.Month
         test <@
             match v' with
             | Ok { Year = year; Month = month; Patch = patch; Build = Some (Alpha a) } ->
-                year = v.Year &&
-                month = v.Month &&
-                patch > v.Patch &&
+                int year = expectedYear &&
+                int month = expectedMonth &&
+                patch.IsNone &&
                 a.Number = Calaf.Domain.Build.NumberStartValue
             | _ -> false @>
     
