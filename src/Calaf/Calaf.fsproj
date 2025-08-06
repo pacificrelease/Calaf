@@ -10,6 +10,7 @@
     <Version>2025.7</Version>
     
     <Title>Calaf</Title>
+    <PackageDescription>Calendar Versioning (CalVer) tool for .NET projects. Automatically generates semantic calendar versions and integrates with Git for tagging. Requires Git to be installed for automatic commit and tagging functionality.</PackageDescription>
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <PackageReadmeFile>README.md</PackageReadmeFile>

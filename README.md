@@ -32,6 +32,7 @@ Calaf is a command-line tool for managing Calendar Versioning ([CalVer](https://
 ## Requirements
 
 - .NET 8.0 or later
+- Git (required for automatic commit and tagging functionality when creating new versions)
 
 
 ## Versioning Scheme
