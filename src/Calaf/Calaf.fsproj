@@ -69,7 +69,7 @@
     <Compile Include="Application\Context.fs" />
     <Compile Include="Application\UseCases\Make.fs" />
     <Compile Include="Application\Api.fs" />
-    <Compile Include="Infrastructure\Adapters\Git2.fs" />
+    <Compile Include="Infrastructure\Adapters\Git.fs" />
     <Compile Include="Infrastructure\Adapters\FileSystem.fs" />    
     <Compile Include="Infrastructure\Adapters\Clock.fs" />    
     <Compile Include="Infrastructure\Adapters\Console.fs" />    

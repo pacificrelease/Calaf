@@ -51,11 +51,7 @@ let tryCapture (repoInfo: GitRepositoryInfo) =
                 return ctor (repoInfo.Directory, head, signature, version)
             }
         let! path = tryValidatePath repoInfo.Directory
-        match repoInfo with
-        | { Damaged = true } ->
-            let repo = Damaged path
-            let event = Events.toRepositoryCaptured repo
-            return (repo, [event])
+        match repoInfo with        
         | i when i.Unborn || i.CurrentCommit.IsNone ->
             let repo = Unborn path
             let event = Events.toRepositoryCaptured repo

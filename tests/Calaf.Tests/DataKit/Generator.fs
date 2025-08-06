@@ -1339,7 +1339,6 @@ module Generator =
         let baseGitRepositoryInfo =
             gen {
                 let! dir = directoryPathString
-                let! damaged = genBool
                 let! unborn = genBool
                 let! detached = genBool
                 let! branch = branchNameOrNone
@@ -1349,7 +1348,6 @@ module Generator =
                 let! tags = Gen.listOf gitTagInfo
                 return {
                     Directory = dir
-                    Damaged = damaged
                     Unborn = unborn
                     Detached = detached
                     CurrentBranch = branch

@@ -47,14 +47,6 @@ module internal GitWrapper =
     let private getStatus
         (gitProcess: string -> Result<string,InfrastructureError>) =
         gitProcess "status --porcelain"
-        
-    let private isDamaged
-        (gitProcess: string -> Result<string,InfrastructureError>) =
-        let headCheck = gitProcess "rev-parse --verify HEAD"
-        let refsCheck = gitProcess "show-ref"        
-        match headCheck, refsCheck with
-        | Error _, Error _ -> true
-        | _ -> false
             
     let private getBranch
         (gitProcess: string -> Result<string,InfrastructureError>) =
@@ -162,7 +154,7 @@ module internal GitWrapper =
         (directory: string)
         (maxTagsToRead: byte)
         (tagsPrefixesToFilter: string list)
-        (timeStamp: DateTimeOffset) =
+        (timeStamp: DateTimeOffset)=
         result {
             if not (gitDirectory directory)
             then
@@ -172,12 +164,11 @@ module internal GitWrapper =
                 let! status    = git |> getStatus
                 let! branch    = git |> getBranch
                 let! commit    = git |> getCommit None
-                let! signature = git |> getSignature timeStamp                
+                let! signature = git |> getSignature timeStamp    
                 let! tags      = git |> listTags tagsPrefixesToFilter (int maxTagsToRead)
                 let! unborn    = git |> isUnborn
                 return Some {                    
                     Directory = directory
-                    Damaged = false
                     Unborn = unborn
                     Detached = branch.IsNone
                     CurrentBranch = branch
@@ -192,8 +183,7 @@ module internal GitWrapper =
         (directory: string)
         (files: string list)
         (commitMessage: string)
-        (tagName: string)
-        (signature: GitSignatureInfo)=
+        (tagName: string)=
         result {
             if not (gitDirectory directory)
             then
@@ -207,12 +197,12 @@ module internal GitWrapper =
                 return ()
         }
 
-type Git2() =
+type Git() =
     interface IGit with
         member _.tryRead directory maxTagsToRead tagsPrefixesToFilter timeStamp =
             GitWrapper.read directory maxTagsToRead tagsPrefixesToFilter timeStamp
             |> Result.mapError CalafError.Infrastructure
             
-        member _.tryApply (directory, files) commitMessage tagName signature =
-            GitWrapper.apply directory files commitMessage tagName signature
+        member _.tryApply (directory, files) commitMessage tagName =
+            GitWrapper.apply directory files commitMessage tagName
             |> Result.mapError CalafError.Infrastructure

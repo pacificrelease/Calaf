@@ -29,8 +29,7 @@ type GitTagInfo = {
 }
 
 type GitRepositoryInfo = {
-    Directory: string    
-    Damaged: bool
+    Directory: string
     Unborn: bool
     Detached: bool
     CurrentBranch: string option

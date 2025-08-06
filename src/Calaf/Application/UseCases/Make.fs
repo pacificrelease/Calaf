@@ -56,8 +56,7 @@ module internal Make =
                 |> Result.map ignore                
             do! profile.Repository
                 |> Option.map (fun p ->
-                    let signature = { Name = p.Signature.Name; Email = p.Signature.Email; When = p.Signature.When }
-                    context.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName signature
+                    context.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
@@ -86,8 +85,7 @@ module internal Make =
                 |> Result.map ignore                
             do! profile.Repository
                 |> Option.map (fun p ->
-                    let signature = { Name = p.Signature.Name; Email = p.Signature.Email; When = p.Signature.When }
-                    context.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName signature
+                    context.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
@@ -120,8 +118,7 @@ module internal Make =
                 |> Result.map ignore                
             do! profile.Repository
                 |> Option.map (fun p ->
-                    let signature = { Name = p.Signature.Name; Email = p.Signature.Email; When = p.Signature.When }
-                    context.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName signature
+                    context.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
@@ -153,8 +150,7 @@ module internal Make =
                 |> Result.map ignore                
             do! profile.Repository
                 |> Option.map (fun p ->
-                    let signature = { Name = p.Signature.Name; Email = p.Signature.Email; When = p.Signature.When }
-                    dependencies.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName signature
+                    dependencies.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
@@ -181,8 +177,7 @@ module internal Make =
                 |> Result.map ignore                
             do! profile.Repository
                 |> Option.map (fun p ->
-                    let signature = { Name = p.Signature.Name; Email = p.Signature.Email; When = p.Signature.When }
-                    context.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName signature
+                    context.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
@@ -209,8 +204,7 @@ module internal Make =
                 |> Result.map ignore                
             do! profile.Repository
                 |> Option.map (fun p ->
-                    let signature = { Name = p.Signature.Name; Email = p.Signature.Email; When = p.Signature.When }
-                    dependencies.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName signature
+                    dependencies.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                

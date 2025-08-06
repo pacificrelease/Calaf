@@ -33,7 +33,6 @@ module Run2Tests =
         let createTestGitRepository () =
             Some {
                 Directory = "/test/workspace"
-                Damaged = false
                 Unborn = false
                 Detached = false
                 CurrentBranch = Some "main"
@@ -103,8 +102,8 @@ module Run2Tests =
                 member _.tryRead directory maxTagsToRead tagsPrefixesToFilter timeStamp =
                     repositoryResult
                     
-                member _.tryApply (directory, files) commitMessage tagName signature =
-                    appliedOperations <- (directory, files, commitMessage, tagName, signature) :: appliedOperations
+                member _.tryApply (directory, files) commitMessage tagName =
+                    appliedOperations <- (directory, files, commitMessage, tagName) :: appliedOperations
                     applyResults 
                     |> Map.tryFind directory 
                     |> Option.defaultValue (Ok ())
@@ -158,10 +157,8 @@ module Run2Tests =
         let appliedOps = mockGit.GetAppliedOperations()
         test <@ List.length appliedOps = 1 @>
         
-        let directory, files, commitMessage, tagName, signature = List.head appliedOps
+        let directory, files, commitMessage, tagName = List.head appliedOps
         test <@ directory = "/test/workspace" @>
-        test <@ signature.Email = "test@example.com" @>
-        test <@ signature.Name = "Test User" @>
 
     [<Fact>]
     let ``run2 with Nightly type should execute nightly workflow successfully`` () =
