@@ -558,11 +558,11 @@ module Generator =
             
         let leadingZeroOutOfRangeStringYear =
             gen {
-                let! lowerThanAllowed   = Gen.choose(1, int Calaf.Domain.Year.LowerYearBoundary - 1)
+                let! lowerThanAllowed   = Gen.constant 0
                 let! greaterThanAllowed = Gen.choose(int Calaf.Domain.Year.UpperYearBoundary + 1, int System.UInt16.MaxValue)
                 let! year = Gen.frequency [
                     1, Gen.constant lowerThanAllowed
-                    1, Gen.constant greaterThanAllowed
+                    3, Gen.constant greaterThanAllowed
                 ]
                 return $"{year:D6}"
             }

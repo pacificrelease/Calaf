@@ -185,8 +185,8 @@ let toCommitMessage (calVer: CalendarVersion) : string =
 let tryBeta (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.DateTimeOffset) : Result<CalendarVersion, DomainError> =
     result {
         let! build = Build.tryBeta currentVersion.Build
-        let stampYear = uint16 dateTimeOffsetStamp.Year
-        let stampMonth = byte dateTimeOffsetStamp.Month
+        let! stampYear = Year.tryParseFromInt32 dateTimeOffsetStamp.Year
+        let! stampMonth = Month.tryParseFromInt32 dateTimeOffsetStamp.Month
         
         let shouldReleaseYear = shouldChange (currentVersion.Year, stampYear)
         let shouldReleaseMonth = shouldChange (currentVersion.Month, stampMonth)
@@ -210,8 +210,8 @@ let tryBeta (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.DateT
 let tryAlpha (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.DateTimeOffset) : Result<CalendarVersion, DomainError> =
     result {
         let! build = Build.tryAlpha currentVersion.Build
-        let stampYear = uint16 dateTimeOffsetStamp.Year
-        let stampMonth = byte dateTimeOffsetStamp.Month
+        let! stampYear = Year.tryParseFromInt32 dateTimeOffsetStamp.Year
+        let! stampMonth = Month.tryParseFromInt32 dateTimeOffsetStamp.Month
         
         let shouldReleaseYear = shouldChange (currentVersion.Year, stampYear)
         let shouldReleaseMonth = shouldChange (currentVersion.Month, stampMonth)
@@ -232,48 +232,50 @@ let tryAlpha (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.Date
                 patchRelease (currentVersion, Some build)
     }
      
-let tryNightly (currentVersion: CalendarVersion) (dayOfMonth: DayOfMonth, monthStamp: MonthStamp) : Result<CalendarVersion, DomainError> =
+let tryNightly (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.DateTimeOffset) : Result<CalendarVersion, DomainError> =
     result {
-        let! build = Build.tryNightly currentVersion.Build dayOfMonth
-        let shouldReleaseYear = shouldChange (currentVersion.Year, monthStamp.Year)
+        let! day = Day.tryParseFromInt32 dateTimeOffsetStamp.Day
+        let! build = Build.tryNightly currentVersion.Build day
+        let! stampYear = Year.tryParseFromInt32 dateTimeOffsetStamp.Year
+        let! stampMonth = Month.tryParseFromInt32 dateTimeOffsetStamp.Month
+        
+        let shouldReleaseYear = shouldChange (currentVersion.Year, stampYear)
         if shouldReleaseYear
         then
-            return { Year  = monthStamp.Year
-                     Month = monthStamp.Month
+            return { Year  = stampYear
+                     Month = stampMonth
                      Patch = None
                      Build = Some build }
         else
-            let shouldReleaseMonth = shouldChange (currentVersion.Month, monthStamp.Month)
+            let shouldReleaseMonth = shouldChange (currentVersion.Month,stampMonth)
             if shouldReleaseMonth
             then
                 return { Year = currentVersion.Year
-                         Month = monthStamp.Month
+                         Month = stampMonth
                          Patch = None
                          Build = Some build }
             else
                 return patchRelease (currentVersion, Some build)        
     }
 
-let stable (currentVersion: CalendarVersion) (monthStamp: MonthStamp) : CalendarVersion =
-    let noBuild = None
-    
-    let yearRelease = shouldChange (currentVersion.Year, monthStamp.Year)
-    if yearRelease
-    then
-        { Year = monthStamp.Year
-          Month = monthStamp.Month
-          Patch = None
-          Build = noBuild }
-    else
-        let monthRelease = shouldChange (currentVersion.Month, monthStamp.Month)
-        if monthRelease
+let tryStable (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.DateTimeOffset) : Result<CalendarVersion, DomainError> =
+    result {
+        let noBuild = None
+        let! stampYear = Year.tryParseFromInt32 dateTimeOffsetStamp.Year
+        let! stampMonth = Month.tryParseFromInt32 dateTimeOffsetStamp.Month
+        
+        let yearRelease = shouldChange (currentVersion.Year, stampYear)
+        if yearRelease
         then
-            { Year = currentVersion.Year
-              Month = monthStamp.Month
-              Patch = None
-              Build = noBuild }
-        else            
-            patchRelease (currentVersion, noBuild)
+            return { Year = stampYear; Month = stampMonth; Patch = None; Build = noBuild }
+        else
+            let monthRelease = shouldChange (currentVersion.Month, stampMonth)
+            if monthRelease
+            then
+                return { Year = currentVersion.Year; Month = stampMonth; Patch = None; Build = noBuild }
+            else            
+                return patchRelease (currentVersion, noBuild)
+    }
 
 let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
     let noPreReleaseNumber = 0us

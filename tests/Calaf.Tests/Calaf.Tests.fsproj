@@ -22,7 +22,6 @@
     <Compile Include="Domain\Version\PatchTests.fs" />
     <Compile Include="Domain\Version\MonthTests.fs" />
     <Compile Include="Domain\Version\YearTests.fs" />
-    <Compile Include="Domain\Version\DateStewardTests.fs" />
     <Compile Include="Domain\Version\VersionTests.fs" />
     <Compile Include="Domain\Git\CommitTests.fs" />
     <Compile Include="Domain\Git\TagTests.fs" />

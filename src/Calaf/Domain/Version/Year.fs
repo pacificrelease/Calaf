@@ -3,7 +3,7 @@
 open Calaf.Domain.DomainTypes.Values
 
 [<Literal>]
-let internal LowerYearBoundary = 1970us
+let internal LowerYearBoundary = 1us
 [<Literal>]
 let internal UpperYearBoundary = 9999us
 

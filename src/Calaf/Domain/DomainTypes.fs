@@ -30,11 +30,6 @@ module Values =
     type Month = uint8
 
     // Value Object
-    type MonthStamp = {
-        Year:   Year
-        Month:  Month
-    }
-
     // MAJOR.MINOR.PATCH-SUFFIX
     type SemanticVersion = {
         Major: Major

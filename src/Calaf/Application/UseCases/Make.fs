@@ -96,8 +96,6 @@ module internal Make =
     let private tryNightly path (context: MakeContext) settings =
         result {
             let dateTimeOffset = context.Clock.utcNow()
-            let! dayOfMonth = dateTimeOffset |> DateSteward.tryCreateDayOfMonth |> Result.mapError CalafError.Domain
-            let! monthStamp = dateTimeOffset |> DateSteward.tryCreateMonthStamp |> Result.mapError CalafError.Domain                
             let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
             let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
             let (TagQuantity tagCount) = settings.TagsToLoad
@@ -106,7 +104,7 @@ module internal Make =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain
             let! version =
-                Version.tryNightly workspace.Version (dayOfMonth, monthStamp)
+                Version.tryNightly workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain
             let! workspace', _ =
                 version
@@ -129,8 +127,6 @@ module internal Make =
         (dependencies: {| Directory: string; Settings: MakeSettings; FileSystem: IFileSystem; Git: IGit; Clock: IClock |}) =
         result {
             let dateTimeOffset = dependencies.Clock.utcNow()
-            let! dayOfMonth = dateTimeOffset |> DateSteward.tryCreateDayOfMonth |> Result.mapError CalafError.Domain
-            let! monthStamp = dateTimeOffset |> DateSteward.tryCreateMonthStamp |> Result.mapError CalafError.Domain                
             let (DotNetXmlFilePattern searchPatternStr) = dependencies.Settings.ProjectsSearchPattern
             let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatternStr                
             let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
@@ -138,7 +134,7 @@ module internal Make =
             let! workspace, captureEvents =
                 Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
             let! version =
-                Version.tryNightly workspace.Version (dayOfMonth, monthStamp)
+                Version.tryNightly workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain
             let! workspace', releaseEvents =
                 version
@@ -160,15 +156,19 @@ module internal Make =
     // TODO: Remove this type after refactoring
     let private tryStable path (context: MakeContext) settings =
         result {
-            let dateTimeOffset = context.Clock.utcNow()            
-            let! monthStamp = dateTimeOffset |> DateSteward.tryCreateMonthStamp |> Result.mapError CalafError.Domain                
+            let dateTimeOffset = context.Clock.utcNow()
             let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
             let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
             let (TagQuantity tagCount) = settings.TagsToLoad
             let! repo = context.Git.tryRead path tagCount Version.versionPrefixes dateTimeOffset                
-            let! workspace,  _ = Workspace.tryCapture (dir, repo)          |> Result.mapError CalafError.Domain
+            let! workspace,  _ =
+                Workspace.tryCapture (dir, repo)
+                |> Result.mapError CalafError.Domain
+            let! version =
+                Version.tryStable workspace.Version dateTimeOffset
+                |> Result.mapError CalafError.Domain
             let! workspace', _ =
-                Version.stable workspace.Version monthStamp
+                version
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain                
             let profile = Workspace.profile workspace'
@@ -187,15 +187,17 @@ module internal Make =
     let private stable2
         (dependencies: {| Directory: string; Settings: MakeSettings; FileSystem: IFileSystem; Git: IGit; Clock: IClock |}) =
         result {
-            let dateTimeOffset = dependencies.Clock.utcNow()            
-            let! monthStamp = dateTimeOffset |> DateSteward.tryCreateMonthStamp |> Result.mapError CalafError.Domain                
+            let dateTimeOffset = dependencies.Clock.utcNow()
             let (DotNetXmlFilePattern searchPatternStr) = dependencies.Settings.ProjectsSearchPattern
             let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatternStr                
             let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
             let! repo = dependencies.Git.tryRead dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, captureEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
+            let! version =
+                Version.tryStable workspace.Version dateTimeOffset
+                |> Result.mapError CalafError.Domain
             let! workspace', releaseEvents =
-                Version.stable workspace.Version monthStamp
+                version
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain                
             let profile = Workspace.profile workspace'
