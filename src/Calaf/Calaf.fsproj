@@ -14,6 +14,7 @@
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>calaf_logo.png</PackageIcon>
 
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/pacificrelease/Calaf</PackageProjectUrl>    
@@ -37,6 +38,7 @@
   
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\assets\calaf_logo.png" Pack="true" Visible="false" PackagePath="" />
   </ItemGroup>
   
   <ItemGroup>
