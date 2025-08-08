@@ -49,7 +49,7 @@ module TryParseFromStringPropertyTests =
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.BetaNightly.betaNightlyString> |])>]
     let ``BetaNightly string recognizes correctly to the Beta with number`` (betaNightlyString: string) =
-        let result = betaNightlyString |> tryParseFromString
+        let result = tryParseFromString betaNightlyString
         test <@ match result with | Ok (Some (Build.BetaNightly _)) -> true | _ -> false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.nullOrWhiteSpaceString> |])>]

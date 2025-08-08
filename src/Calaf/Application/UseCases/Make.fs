@@ -91,6 +91,37 @@ module internal Make =
                 |> Option.defaultValue (Ok ())                                
             return workspace'
         }
+        
+    // TODO: Remove this type after refactoring
+    let private tryReleaseCandidate path (context: MakeContext) settings =
+        result {
+            let dateTimeOffset = context.Clock.utcNow()
+            let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
+            let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
+            let (TagQuantity tagCount) = settings.TagsToLoad
+            let! repo = context.Git.tryRead path tagCount Version.versionPrefixes dateTimeOffset                
+            let! workspace, _ =
+                Workspace.tryCapture (dir, repo)
+                |> Result.mapError CalafError.Domain
+            let! version =
+                Version.tryReleaseCandidate workspace.Version dateTimeOffset
+                |> Result.mapError CalafError.Domain            
+            let! workspace', _ =
+                version
+                |> Workspace.tryRelease workspace
+                |> Result.mapError CalafError.Domain
+            let profile = Workspace.profile workspace'
+            do! profile.Projects
+                |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
+                |> Result.map ignore                
+            do! profile.Repository
+                |> Option.map (fun p ->
+                    context.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName
+                    |> Result.map ignore
+                    |> Result.mapError id)
+                |> Option.defaultValue (Ok ())                                
+            return workspace'
+        }
     
     // TODO: Remove this type after refactoring
     let private tryNightly path (context: MakeContext) settings =
@@ -245,6 +276,7 @@ module internal Make =
         | MakeType.Stable  -> stable2 dependencies
         | MakeType.Alpha   -> failwith "not implemented yet"
         | MakeType.Beta    -> failwith "not implemented yet"
+        | MakeType.RC      -> failwith "not implemented yet"
         | MakeType.Nightly -> tryNightly2 dependencies      
         
     let run path arguments context settings  =
@@ -261,6 +293,8 @@ module internal Make =
                         return! tryAlpha path context settings
                     | MakeType.Beta ->
                         return! tryBeta path context settings
+                    | MakeType.RC ->
+                        return! tryReleaseCandidate path context settings
                     | MakeType.Stable ->
                         return! tryStable path context settings
             }

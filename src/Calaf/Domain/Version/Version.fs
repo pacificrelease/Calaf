@@ -182,6 +182,31 @@ let toTagName (calVer: CalendarVersion) : string =
 let toCommitMessage (calVer: CalendarVersion) : string =
     $"{commitVersionPrefix}{toString calVer}"
     
+let tryReleaseCandidate (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.DateTimeOffset) : Result<CalendarVersion, DomainError> =
+    result {
+        let! build = Build.tryReleaseCandidate currentVersion.Build
+        let! stampYear = Year.tryParseFromInt32 dateTimeOffsetStamp.Year
+        let! stampMonth = Month.tryParseFromInt32 dateTimeOffsetStamp.Month
+        
+        let shouldReleaseYear = shouldChange (currentVersion.Year, stampYear)
+        let shouldReleaseMonth = shouldChange (currentVersion.Month, stampMonth)
+        
+        return
+            match shouldReleaseYear, shouldReleaseMonth with
+            | true, _ ->
+                { Year = stampYear
+                  Month = stampMonth
+                  Patch = None
+                  Build = Some build }
+            | false, true ->
+                { Year = currentVersion.Year
+                  Month = stampMonth
+                  Patch = None
+                  Build = Some build }
+            | false, false ->
+                patchRelease (currentVersion, Some build)
+    }
+    
 let tryBeta (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.DateTimeOffset) : Result<CalendarVersion, DomainError> =
     result {
         let! build = Build.tryBeta currentVersion.Build

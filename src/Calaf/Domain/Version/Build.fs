@@ -42,7 +42,7 @@ let private betaNightlyBuildPattern =
 let private releaseCandidateBuildPattern =        
     $@"(?i:({ReleaseCandidateBuildType})){BuildTypeNumberDivider}([1-9][0-9]{{0,4}})$"
 let private releaseCandidateNightlyBuildPattern =        
-    $@"(?i:({BetaBuildType})){BuildTypeNumberDivider}([1-9][0-9]{{0,4}})\{PreReleaseNightlyDivider}([1-9]|[12][0-9]|3[0-1])\{DayNumberDivider}([1-9][0-9]{{0,4}})$"
+    $@"(?i:({ReleaseCandidateBuildType})){BuildTypeNumberDivider}([1-9][0-9]{{0,4}})\{PreReleaseNightlyDivider}([1-9]|[12][0-9]|3[0-1])\{DayNumberDivider}([1-9][0-9]{{0,4}})$"
 
 let private allowedNightlyBuildRegexString =
     $@"^{nightlyBuildPattern}"
@@ -65,14 +65,20 @@ let private matchNightlyBuildRegex (input: string) =
 let private matchAlphaBuildRegex (input: string) =
     System.Text.RegularExpressions.Regex.Match(input, allowedAlphaBuildRegexString)
     
-let private matchAlphaNightlyRegex (input: string) =
+let private matchAlphaNightlyBuildRegex (input: string) =
     System.Text.RegularExpressions.Regex.Match(input, allowedAlphaNightlyBuildRegexString)
     
 let private matchBetaBuildRegex (input: string) =
     System.Text.RegularExpressions.Regex.Match(input, allowedBetaBuildRegexString)
     
-let private matchBetaNightlyRegex (input: string) =
+let private matchBetaNightlyBuildRegex (input: string) =
     System.Text.RegularExpressions.Regex.Match(input, allowedBetaNightlyBuildRegexString)
+
+let private matchReleaseCandidateBuildRegex (input: string) =
+    System.Text.RegularExpressions.Regex.Match(input, allowedReleaseCandidateBuildRegexString)
+    
+let private matchReleaseCandidateNightlyBuildRegex (input: string) =
+    System.Text.RegularExpressions.Regex.Match(input, allowedReleaseCandidateNightlyBuildRegexString)
 
 let private nextNumber currentNumber : BuildNumber =
     let isOverflowPossible = currentNumber = BuildNumber.MaxValue
@@ -91,7 +97,7 @@ let private (|Alpha|_|) (input: string) =
     else None
         
 let private (|AlphaNightly|_|) (input: string) =
-    let m = matchAlphaNightlyRegex input
+    let m = matchAlphaNightlyBuildRegex input
     if m.Success then
         let alphaNumberSegment    = m.Groups[2].Value
         let nightlyDaySegment    = m.Groups[3].Value
@@ -107,12 +113,28 @@ let private (|Beta|_|) (input: string) =
     else None
         
 let private (|BetaNightly|_|) (input: string) =
-    let m = matchBetaNightlyRegex input
+    let m = matchBetaNightlyBuildRegex input
     if m.Success then
         let betaNumberSegment    = m.Groups[2].Value
         let nightlyDaySegment    = m.Groups[3].Value
         let nightlyNumberSegment = m.Groups[4].Value
         Some (betaNumberSegment, nightlyDaySegment, nightlyNumberSegment)
+    else None
+    
+let private (|ReleaseCandidate|_|) (input: string) =
+    let m = matchReleaseCandidateBuildRegex input
+    if m.Success then
+        let numberSegment = m.Groups[2].Value
+        Some numberSegment
+    else None
+    
+let private (|ReleaseCandidateNightly|_|) (input: string) =
+    let m = matchReleaseCandidateNightlyBuildRegex input
+    if m.Success then
+        let rcNumberSegment      = m.Groups[2].Value
+        let nightlyDaySegment    = m.Groups[3].Value
+        let nightlyNumberSegment = m.Groups[4].Value
+        Some (rcNumberSegment, nightlyDaySegment, nightlyNumberSegment)
     else None
     
 let private (|Nightly|_|) (input: string) =
@@ -122,6 +144,20 @@ let private (|Nightly|_|) (input: string) =
         let numberSegment = m.Groups[3].Value
         Some (daySegment, numberSegment)
     else None
+
+let private tryCreateReleaseCandidateNightlyBuild (rcNumberString: string, nightlyDayString: string, nightlyNumberString: string) =
+    match (UInt16.TryParse rcNumberString, Byte.TryParse nightlyDayString, UInt16.TryParse nightlyNumberString) with
+    | (true, rcNumber), (true, nightlyDay), (true, nightlyNumber) ->
+        let rcNightly = Build.ReleaseCandidateNightly ({ Number = rcNumber }, { Day = nightlyDay; Number = nightlyNumber })
+        Ok rcNightly
+    | _ -> Error BuildInvalidString
+    
+let private tryCreateReleaseCandidateBuild (numberString: string) =
+    match UInt16.TryParse numberString with
+    | true, buildNumber ->
+        let rc = Build.ReleaseCandidate { Number = buildNumber }
+        Ok rc
+    | _ -> Error BuildInvalidString
     
 let private tryCreateBetaNightlyBuild (betaNumberString: string, nightlyDayString: string, nightlyNumberString: string) =
     match (UInt16.TryParse betaNumberString, Byte.TryParse nightlyDayString, UInt16.TryParse nightlyNumberString) with
@@ -164,7 +200,13 @@ let private tryCreateBuild (buildString: string) =
         then
             return None
         else
-            match buildString with            
+            match buildString with
+            | ReleaseCandidateNightly (rcNumber, nightlyDay, nightlyNumber) ->                
+                let! rcNightlyBuild = tryCreateReleaseCandidateNightlyBuild (rcNumber, nightlyDay, nightlyNumber)
+                return Some rcNightlyBuild
+            | ReleaseCandidate number ->
+                let! rcBuild = tryCreateReleaseCandidateBuild number
+                return Some rcBuild
             | BetaNightly (betaNumber, nightlyDay, nightlyNumber) ->                
                 let! betaNightlyBuild = tryCreateBetaNightlyBuild (betaNumber, nightlyDay, nightlyNumber)
                 return Some betaNightlyBuild
