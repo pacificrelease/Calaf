@@ -1,9 +1,19 @@
+<h1 align="center">Calaf</h1>
+
+---
+
+<p align="center">
+<img alt="Logo Banner" src="assets/calaf_background.svg?sanitize=true"/>
+</p>
+
+---
+
 [![Build](https://github.com/pacificrelease/Calaf/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/pacificrelease/Calaf/actions/workflows/build.yml)
 [![NuGet](https://img.shields.io/nuget/v/Calaf.svg)](https://www.nuget.org/packages/Calaf/)
 [![NuGet](https://img.shields.io/nuget/dt/Calaf.svg?color=black)](https://www.nuget.org/packages/Calaf/)
 [![GitHub License](https://img.shields.io/badge/license-Apache%202-navy.svg)](https://raw.githubusercontent.com/pacificrelease/Calaf/main/LICENSE)
 
-# Calaf
+---
 
 Calaf is a command-line tool for managing Calendar Versioning ([CalVer](https://calver.org)) of .NET projects, written in F#.
 
