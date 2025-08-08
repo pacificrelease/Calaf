@@ -27,6 +27,7 @@ Calaf is a command-line tool for managing Calendar Versioning ([CalVer](https://
 - [Commands Reference](#commands-reference)
 - [Further Use](#further-use)
 - [License](#license)
+- [Special Thanks](#special-thanks)
 
 
 ## Features
@@ -325,3 +326,7 @@ jobs:
 ## License
 
 This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
+
+## Special Thanks
+
+Special thanks to [Anna Mazhaieva](https://www.linkedin.com/in/anna-mazhaieva-98b131183/) for designing the graphic assets used in this project.
