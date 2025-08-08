@@ -5,6 +5,7 @@ type MakeType =
     | Stable
     | Alpha
     | Beta
+    | RC
     | Nightly
     
 type Command =

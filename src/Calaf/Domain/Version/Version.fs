@@ -290,15 +290,21 @@ let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
                 match v.Build with
                 | Some build ->
                     match build with
+                    | Build.ReleaseCandidateNightly (rc, nightly) ->
+                        let priority = 4
+                        (v.Year, v.Month, v.Patch, priority, rc.Number, nightly.Day, nightly.Number)
+                    | Build.ReleaseCandidate rcBuild ->
+                        let priority = 4
+                        (v.Year, v.Month, v.Patch, priority, rcBuild.Number, noNightlyDay, noNightlyNumber)                    
                     | Build.BetaNightly (beta, nightly) ->
                         let priority = 3
-                        (v.Year, v.Month, v.Patch, priority, beta.Number, nightly.Day, nightly.Number )
+                        (v.Year, v.Month, v.Patch, priority, beta.Number, nightly.Day, nightly.Number)
                     | Build.Beta betaBuild ->
                         let priority = 3                        
                         (v.Year, v.Month, v.Patch, priority, betaBuild.Number, noNightlyDay, noNightlyNumber)
                     | Build.AlphaNightly (alpha, nightly) ->
                         let priority = 2
-                        (v.Year, v.Month, v.Patch, priority, alpha.Number, nightly.Day, nightly.Number )
+                        (v.Year, v.Month, v.Patch, priority, alpha.Number, nightly.Day, nightly.Number)
                     | Build.Alpha alphaBuild ->
                         let priority = 2
                         (v.Year, v.Month, v.Patch, priority, alphaBuild.Number, noNightlyDay, noNightlyNumber)
@@ -306,7 +312,7 @@ let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
                         let priority = 1
                         (v.Year, v.Month, v.Patch, priority, noPreReleaseNumber, nightlyBuild.Day, nightlyBuild.Number)
                 | None ->
-                    let priority = 4
+                    let priority = 5
                     (v.Year, v.Month, v.Patch, priority, noPreReleaseNumber, noNightlyDay, noNightlyNumber))
         Some maxVersion
 

@@ -16,12 +16,17 @@ module Values =
     type BetaBuild = {
         Number: BuildNumber
     }
+    type ReleaseCandidateBuild = {
+        Number: BuildNumber
+    }
     type Build =
-        | Nightly      of NightlyBuild
-        | Alpha        of AlphaBuild
-        | AlphaNightly of alpha: AlphaBuild * nightly: NightlyBuild
-        | Beta         of BetaBuild
-        | BetaNightly  of beta: BetaBuild * nightly: NightlyBuild
+        | Nightly                 of NightlyBuild
+        | Alpha                   of AlphaBuild
+        | AlphaNightly            of alpha: AlphaBuild * nightly: NightlyBuild
+        | Beta                    of BetaBuild
+        | BetaNightly             of beta: BetaBuild * nightly: NightlyBuild
+        | ReleaseCandidate        of ReleaseCandidateBuild
+        | ReleaseCandidateNightly of releaseCandidate: ReleaseCandidateBuild * nightly: NightlyBuild
     // SemVer
     type Major = uint32
     type Minor = uint32

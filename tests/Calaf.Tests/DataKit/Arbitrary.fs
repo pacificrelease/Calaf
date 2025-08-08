@@ -86,6 +86,31 @@ module Arbitrary =
                 static member numberNoUpperBoundaryBetaBuild() =
                     Arb.fromGen Generator.Build.Beta.numberNoUpperBoundaryBetaBuild
                     
+        module ReleaseCandidate =            
+            type rcString =
+                static member rcString() =
+                    Arb.fromGen Generator.Build.ReleaseCandidate.rcString
+                    
+            type containingReleaseCandidateBadString =
+                static member containingReleaseCandidateBadString() =
+                    Arb.fromGen Generator.Build.ReleaseCandidate.containingReleaseCandidateBadString
+            
+            type rc =
+                static member rc() =
+                    Arb.fromGen Generator.Build.ReleaseCandidate.rc
+                    
+            type rcBuild =
+                static member rcBuild() =
+                    Arb.fromGen Generator.Build.ReleaseCandidate.rcBuild
+                    
+            type rcBuildOption =
+                static member rcBuildOption() =
+                    Arb.fromGen Generator.Build.ReleaseCandidate.rcBuildOption
+                    
+            type numberNoUpperBoundaryReleaseCandidateBuild =
+                static member numberNoUpperBoundaryReleaseCandidateBuild() =
+                    Arb.fromGen Generator.Build.ReleaseCandidate.numberNoUpperBoundaryReleaseCandidateBuild
+                    
         module Nightly =
             type nightlyString =
                 static member nightlyString() =
@@ -151,7 +176,28 @@ module Arbitrary =
                 
             type numberNoUpperBoundaryBetaNightlyBuild =
                 static member numberNoUpperBoundaryBetaNightlyBuild() =
-                    Arb.fromGen Generator.Build.BetaNightly.numberNoUpperBoundaryBetaNightlyBuild 
+                    Arb.fromGen Generator.Build.BetaNightly.numberNoUpperBoundaryBetaNightlyBuild
+                    
+        module ReleaseCandidateNightly =
+            type rcNightlyString =
+                static member rcNightlyString() =
+                    Arb.fromGen Generator.Build.ReleaseCandidateNightly.rcNightlyString
+                    
+            type containingReleaseCandidateNightlyBadString =
+                static member containingReleaseCandidateNightlyBadString() =
+                    Arb.fromGen Generator.Build.ReleaseCandidateNightly.containingReleaseCandidateNightlyBadString
+                
+            type rcNightlyBuild =
+                static member rcNightlyBuild() =
+                    Arb.fromGen Generator.Build.ReleaseCandidateNightly.rcNightlyBuild
+                    
+            type rcNightlyBuildOption =
+                static member rcNightlyBuildOption() =
+                    Arb.fromGen Generator.Build.ReleaseCandidateNightly.rcNightlyBuildOption
+                
+            type numberNoUpperBoundaryReleaseCandidateNightlyBuild =
+                static member numberNoUpperBoundaryReleaseCandidateNightlyBuild() =
+                    Arb.fromGen Generator.Build.ReleaseCandidateNightly.numberNoUpperBoundaryReleaseCandidateNightlyBuild 
                 
     module internal Day =
         type inRangeByteDay =
@@ -405,15 +451,6 @@ module Arbitrary =
             static member semanticVersionStr() =
                 Arb.fromGen Generator.SematicVersion.semanticVersionStr
                 
-    module internal DateSteward =
-        type inRangeDateTimeOffset =
-            static member inRangeDateTimeOffset() =
-                Arb.fromGen Generator.DateSteward.inRangeDateTimeOffset
-                
-        type outOfRangeDateTimeOffset =
-            static member outOfRangeDateTimeOffset() =
-                Arb.fromGen Generator.DateSteward.outOfRangeDateTimeOffset
-    
     module internal Git =
         type branchName =
             static member branchName() =

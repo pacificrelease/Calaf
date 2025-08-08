@@ -18,6 +18,8 @@ let internal AlphaBuildType = "alpha"
 [<Literal>]
 let internal BetaBuildType = "beta"
 [<Literal>]
+let internal ReleaseCandidateBuildType = "rc"
+[<Literal>]
 let internal NightlyZeroBuildTypeDivider = "."
 [<Literal>]
 let internal BuildTypeDayDivider = "."
@@ -37,7 +39,11 @@ let private betaBuildPattern =
     $@"(?i:({BetaBuildType})){BuildTypeNumberDivider}([1-9][0-9]{{0,4}})$"
 let private betaNightlyBuildPattern =        
     $@"(?i:({BetaBuildType})){BuildTypeNumberDivider}([1-9][0-9]{{0,4}})\{PreReleaseNightlyDivider}([1-9]|[12][0-9]|3[0-1])\{DayNumberDivider}([1-9][0-9]{{0,4}})$"
-    
+let private releaseCandidateBuildPattern =        
+    $@"(?i:({ReleaseCandidateBuildType})){BuildTypeNumberDivider}([1-9][0-9]{{0,4}})$"
+let private releaseCandidateNightlyBuildPattern =        
+    $@"(?i:({BetaBuildType})){BuildTypeNumberDivider}([1-9][0-9]{{0,4}})\{PreReleaseNightlyDivider}([1-9]|[12][0-9]|3[0-1])\{DayNumberDivider}([1-9][0-9]{{0,4}})$"
+
 let private allowedNightlyBuildRegexString =
     $@"^{nightlyBuildPattern}"
 let private allowedAlphaBuildRegexString =
@@ -48,6 +54,10 @@ let private allowedBetaBuildRegexString =
     $@"^{betaBuildPattern}"
 let private allowedBetaNightlyBuildRegexString =
     $@"^{betaNightlyBuildPattern}"
+let private allowedReleaseCandidateBuildRegexString =
+    $@"^{releaseCandidateBuildPattern}"
+let private allowedReleaseCandidateNightlyBuildRegexString =
+    $@"^{releaseCandidateNightlyBuildPattern}"
     
 let private matchNightlyBuildRegex (input: string) =
     System.Text.RegularExpressions.Regex.Match(input, allowedNightlyBuildRegexString)
@@ -173,6 +183,9 @@ let private tryCreateBuild (buildString: string) =
             | _ ->
                 return! Error BuildInvalidString
     }
+
+let private createReleaseCandidate =
+    Build.ReleaseCandidate { Number = NumberStartValue }
     
 let private createBeta =
     Build.Beta { Number = NumberStartValue }
@@ -185,6 +198,12 @@ let private createNightly dayOfMonth =
     
 let private applyNightly (build, dayOfMonth) =
     match build with
+        | Build.ReleaseCandidate { Number = rcNumber } ->
+            Build.ReleaseCandidateNightly ({ Number = rcNumber }, { Day = dayOfMonth; Number = NumberStartValue })
+        | Build.ReleaseCandidateNightly ({ Number = rcNumber }, { Day = nightlyDay; Number = nightlyNumber }) when nightlyDay = dayOfMonth ->
+            Build.ReleaseCandidateNightly ({ Number = rcNumber }, { Day = dayOfMonth; Number = nextNumber nightlyNumber })
+        | Build.ReleaseCandidateNightly ({ Number = rcNumber }, _) ->
+            Build.ReleaseCandidateNightly ({ Number = rcNumber }, { Day = dayOfMonth; Number = NumberStartValue } )
         | Build.Beta { Number = betaNumber } ->
             Build.BetaNightly ({ Number = betaNumber }, { Day = dayOfMonth; Number = NumberStartValue })
         | Build.BetaNightly ({ Number = betaNumber }, { Day = nightlyDay; Number = nightlyNumber }) when nightlyDay = dayOfMonth  ->
@@ -202,18 +221,35 @@ let private applyNightly (build, dayOfMonth) =
         | Build.Nightly _ ->
             Build.Nightly { Day = dayOfMonth; Number = NumberStartValue }
 
-let private applyBeta build =
-    match build with    
-    | Build.BetaNightly ({ Number = betaNumber }, _)
-    | Build.Beta { Number = betaNumber } ->
-        Build.Beta { Number = nextNumber betaNumber }
+let private applyReleaseCandidate build =
+    match build with
+    | Build.ReleaseCandidateNightly ({ Number = rcNumber }, _)
+    | Build.ReleaseCandidate { Number = rcNumber } ->
+        Build.ReleaseCandidate { Number = nextNumber rcNumber }    
+    | Build.BetaNightly _
+    | Build.Beta _
     | Build.Alpha _
     | Build.AlphaNightly _
     | Build.Nightly _ ->
-        Build.Beta { Number = NumberStartValue }
+        Build.ReleaseCandidate { Number = NumberStartValue }
+        
+let private tryApplyBeta build =
+    match build with
+    | Build.ReleaseCandidate _
+    | Build.ReleaseCandidateNightly _ ->
+        Error BuildDowngradeProhibited
+    | Build.BetaNightly ({ Number = betaNumber }, _)
+    | Build.Beta { Number = betaNumber } ->
+        Ok (Build.Beta { Number = nextNumber betaNumber })
+    | Build.Alpha _
+    | Build.AlphaNightly _
+    | Build.Nightly _ ->
+        Ok (Build.Beta { Number = NumberStartValue })
         
 let private tryApplyAlpha build =
-    match build with    
+    match build with
+    | Build.ReleaseCandidateNightly _
+    | Build.ReleaseCandidate _    
     | Build.BetaNightly _
     | Build.Beta _ ->
         Error BuildDowngradeProhibited
@@ -225,6 +261,10 @@ let private tryApplyAlpha build =
     
 let toString (build: Build) : string =
     match build with
+    | Build.ReleaseCandidateNightly ({ Number = rcNumber }, { Day = nightlyDay; Number = nightlyNumber }) ->
+        $"{ReleaseCandidateBuildType}{BuildTypeNumberDivider}{rcNumber}{PreReleaseNightlyDivider}{nightlyDay}{DayNumberDivider}{nightlyNumber}"
+    | Build.ReleaseCandidate { Number = number } ->
+        $"{ReleaseCandidateBuildType}{BuildTypeNumberDivider}{number}"
     | Build.BetaNightly ({ Number = betaNumber }, { Day = nightlyDay; Number = nightlyNumber }) ->
         $"{BetaBuildType}{BuildTypeNumberDivider}{betaNumber}{PreReleaseNightlyDivider}{nightlyDay}{DayNumberDivider}{nightlyNumber}"
     | Build.Beta { Number = number } ->
@@ -238,11 +278,16 @@ let toString (build: Build) : string =
     
 let tryParseFromString (build: string) =
     tryCreateBuild build
+
+let tryReleaseCandidate (currentBuild: Build option) : Result<Build, DomainError> =
+    match currentBuild with
+    | None -> createReleaseCandidate |> Ok
+    | Some build -> applyReleaseCandidate build |> Ok
     
 let tryBeta (currentBuild: Build option) : Result<Build, DomainError> =
     match currentBuild with
     | None -> createBeta |> Ok
-    | Some build -> applyBeta build |> Ok
+    | Some build -> tryApplyBeta build
     
 let tryAlpha (currentBuild: Build option) : Result<Build, DomainError> =
     match currentBuild with

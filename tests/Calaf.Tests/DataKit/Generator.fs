@@ -182,6 +182,9 @@ module Generator =
         let private genBetaPrefix =
             Gen.elements ["beta"; "BETA"; "Beta"; "BeTa"; "bEtA"; "bETA"; "beTA"; "betA"; "BEta"; "BETa"]
             
+        let private genReleaseCandidatePrefix =
+            Gen.elements ["rc"; "RC"; "Rc"; "rC"]
+            
         let private genNightlyPrefix =
             Gen.elements ["nightly"; "NIGHTLY"; "Nightly"; "NiGhTlY"; "nIgHtLy"; "NIGHTly"; "nightLY"; "NightLy"; "nighTLY"; "NiGhTLy"; "nIGhTly"; "niGhtly"; "niGhTly"; "niGhTLy"; "nIghtly"; "NightLY"; "NIghtly"; "NigHtly"; "NightLy"; "NightlY"; "nIGHTLY"; "niGHTLY"; "niGhTLY"; "niGhTlY"; "niGHTly"; "niGHTLy"; "niGHTLY"; "nIGhTLY"; "nIGHTly"; "nIGHTLy"; "nIGHTLY"; "NIGhTLY"]
         
@@ -192,6 +195,12 @@ module Generator =
             }
         
         let private genBetaBuild : Gen<BetaBuild> =
+            gen {
+                let! number = genUInt16
+                return { Number = number }
+            }
+            
+        let private genReleaseCandidateBuild : Gen<ReleaseCandidateBuild> =
             gen {
                 let! number = genUInt16
                 return { Number = number }
@@ -216,6 +225,13 @@ module Generator =
                 let! betaBuild = genBetaBuild
                 let! nightlyBuild = genNightlyBuild
                 return (betaBuild, nightlyBuild)
+            }
+            
+        let private genReleaseCandidateNightlyBuild =
+            gen {
+                let! rcBuild = genReleaseCandidateBuild
+                let! nightlyBuild = genNightlyBuild
+                return (rcBuild, nightlyBuild)
             }
             
         let wrongString =
@@ -329,6 +345,42 @@ module Generator =
                 gen {
                     let! number = genBeforeUpperBoundaryUInt16
                     return Build.Beta { Number = number }                
+                }
+                
+        module ReleaseCandidate =
+            let rcString =
+                gen {
+                    let! rcPrefix = genReleaseCandidatePrefix
+                    let! rc = genReleaseCandidateBuild
+                    return $"{rcPrefix}{Calaf.Domain.Build.BuildTypeNumberDivider}{rc.Number}"
+                }
+                
+            let containingReleaseCandidateBadString =
+                gen {
+                    let! betaString = rcString
+                    let! badString = genContainingBadString betaString
+                    return badString
+                }
+                
+            let rc =
+                genReleaseCandidateBuild
+                
+            let rcBuild =
+                gen {
+                    let! rc = genReleaseCandidateBuild
+                    return Build.ReleaseCandidate rc
+                }
+                
+            let rcBuildOption =
+                Gen.frequency [
+                    1, Gen.constant None
+                    3, rcBuild |> Gen.map Some
+                ]
+                
+            let numberNoUpperBoundaryReleaseCandidateBuild =
+                gen {
+                    let! number = genBeforeUpperBoundaryUInt16
+                    return Build.ReleaseCandidate { Number = number }                
                 }
                 
         module Nightly =
@@ -453,6 +505,41 @@ module Generator =
                     let! nightlyDay = genDay
                     let! nightlyNumber = genBeforeUpperBoundaryUInt16
                     return Build.BetaNightly({ Number = betaNumber }, { Day = nightlyDay; Number = nightlyNumber })                
+                }
+                
+        module ReleaseCandidateNightly =
+            let rcNightlyString =
+                gen {
+                    let! rcPrefix = genReleaseCandidatePrefix
+                    let! rc, nightly = genReleaseCandidateNightlyBuild
+                    return $"{rcPrefix}{Calaf.Domain.Build.BuildTypeNumberDivider}{rc.Number}{Calaf.Domain.Build.PreReleaseNightlyDivider}{nightly.Day}{Calaf.Domain.Build.DayNumberDivider}{nightly.Number}"
+                } 
+            
+            let containingReleaseCandidateNightlyBadString =
+                gen {
+                    let! rcNightlyString = rcNightlyString
+                    let! badString = genContainingBadString rcNightlyString
+                    return badString
+                }
+                
+            let rcNightlyBuild =
+                gen {
+                    let! rcn = genReleaseCandidateNightlyBuild
+                    return Build.ReleaseCandidateNightly rcn
+                }
+                
+            let rcNightlyBuildOption =
+                Gen.frequency [
+                    1, Gen.constant None
+                    3, rcNightlyBuild |> Gen.map Some
+                ]
+            
+            let numberNoUpperBoundaryReleaseCandidateNightlyBuild =
+                gen {
+                    let! rcNumber = genBeforeUpperBoundaryUInt16
+                    let! nightlyDay = genDay
+                    let! nightlyNumber = genBeforeUpperBoundaryUInt16
+                    return Build.ReleaseCandidateNightly({ Number = rcNumber }, { Day = nightlyDay; Number = nightlyNumber })                
                 }
     
     module Day =
@@ -768,6 +855,65 @@ module Generator =
                 Gen.frequency
                     [ 1, Short
                       1, Patch ]
+                    
+        module ReleaseCandidate =
+            let ShortString =
+                gen {
+                    let! year  = Year.inRangeUInt16Year
+                    let! month = Month.inRangeByteMonth
+                    let! rcBuild = Build.ReleaseCandidate.rcString
+                    return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{rcBuild}"                 
+                }
+                
+            let PatchString =
+                gen {
+                    let! year  = Year.inRangeUInt16Year
+                    let! month = Month.inRangeByteMonth
+                    let! patch = validPatchUInt32
+                    let! rcBuild = Build.ReleaseCandidate.rcString
+                    return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.MonthPatchDivider}{patch}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{rcBuild}"                 
+                }
+                
+            let String =
+                Gen.frequency
+                    [ 1, ShortString
+                      1, PatchString ]
+                
+            let TagStrictString =
+                gen {
+                    let prefix = Calaf.Domain.Version.tagVersionPrefix
+                    let! version = String
+                    return $"{prefix}{version}"
+                }
+                
+            let TagString =
+                gen {
+                    let! prefix = genTagVersionPrefix
+                    let! version = Gen.frequency [
+                        1, ShortString
+                        1, PatchString
+                    ]
+                    return $"{prefix}{version}"
+                }
+                
+            let Short =
+                gen {
+                    let! shortCalendarVersion = Stable.Short
+                    let! rcBuild = Build.ReleaseCandidate.rcBuild
+                    return { shortCalendarVersion with Build = Some rcBuild }
+                }
+                
+            let Patch =
+                gen {
+                    let! patchCalendarVersion = Stable.Patch
+                    let! rcBuild = Build.ReleaseCandidate.rcBuild
+                    return { patchCalendarVersion with Build = Some rcBuild }
+                }
+                
+            let Accidental =
+                Gen.frequency
+                    [ 1, Short
+                      1, Patch ]
             
         module Nightly =
             let ShortString =
@@ -936,33 +1082,95 @@ module Generator =
                 Gen.frequency
                     [ 1, Short
                       1, Patch ]
+                    
+        module ReleaseCandidateNightly =
+            let ShortString =
+                gen {
+                    let! year  = Year.inRangeUInt16Year
+                    let! month = Month.inRangeByteMonth
+                    let! rcNightlyBuild = Build.ReleaseCandidateNightly.rcNightlyString
+                    return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{rcNightlyBuild}"                 
+                }
+                
+            let PatchString =
+                gen {
+                    let! year  = Year.inRangeUInt16Year
+                    let! month = Month.inRangeByteMonth
+                    let! patch = validPatchUInt32
+                    let! rcNightlyBuild = Build.BetaNightly.betaNightlyString
+                    return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.MonthPatchDivider}{patch}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{rcNightlyBuild}"                 
+                }
+                
+            let String =
+                Gen.frequency
+                    [ 1, ShortString
+                      1, PatchString ]
+                    
+            let TagStrictString =
+                gen {
+                    let prefix = Calaf.Domain.Version.tagVersionPrefix
+                    let! version = String
+                    return $"{prefix}{version}"
+                }
+                
+            let TagString =
+                gen {
+                    let! prefix = genTagVersionPrefix
+                    let! version = String
+                    return $"{prefix}{version}"
+                }
+                
+            let Short =
+                gen {
+                    let! shortCalendarVersion = Stable.Short
+                    let! rcNightlyBuild = Build.ReleaseCandidateNightly.rcNightlyBuild
+                    return { shortCalendarVersion with Build = Some rcNightlyBuild }
+                }
+                
+            let Patch =
+                gen {
+                    let! patchCalendarVersion = Stable.Patch
+                    let! betaNightlyBuild = Build.BetaNightly.betaNightlyBuild
+                    return { patchCalendarVersion with Build = Some betaNightlyBuild }
+                }
+                
+            let Accidental =
+                Gen.frequency
+                    [ 1, Short
+                      1, Patch ]
         
         let ShortString =
             Gen.frequency
                 [ 1, Stable.ShortString
                   1, Alpha.ShortString
                   1, Beta.ShortString
+                  1, ReleaseCandidate.ShortString
                   1, Nightly.ShortString
                   1, AlphaNightly.ShortString
-                  1, BetaNightly.ShortString ]
+                  1, BetaNightly.ShortString
+                  1, ReleaseCandidateNightly.ShortString ]
                 
         let PatchString =
             Gen.frequency
                 [ 1, Stable.PatchString
                   1, Alpha.PatchString
                   1, Beta.PatchString
+                  1, ReleaseCandidate.PatchString
                   1, Nightly.PatchString
                   1, AlphaNightly.PatchString
-                  1, BetaNightly.PatchString ]
+                  1, BetaNightly.PatchString
+                  1, ReleaseCandidateNightly.PatchString ]
                 
         let String =
             Gen.frequency
                 [ 1, Stable.String
                   1, Alpha.String
                   1, Beta.String
+                  1, ReleaseCandidate.String
                   1, Nightly.String
                   1, AlphaNightly.String
-                  1, BetaNightly.String ]
+                  1, BetaNightly.String
+                  1, ReleaseCandidateNightly.String ]
                 
         let ShortTagString =
             gen {
@@ -983,36 +1191,43 @@ module Generator =
                 [ 1, Stable.TagStrictString
                   1, Alpha.TagStrictString
                   1, Beta.TagStrictString
+                  1, ReleaseCandidate.TagStrictString
                   1, Nightly.TagStrictString
                   1, AlphaNightly.TagStrictString
-                  1, BetaNightly.TagStrictString ]
+                  1, BetaNightly.TagStrictString
+                  1, ReleaseCandidateNightly.TagStrictString ]
                 
         let TagString =
             Gen.frequency
                 [ 1, Stable.TagString
                   1, Alpha.TagString
                   1, Beta.TagString
+                  1, ReleaseCandidate.TagString
                   1, Nightly.TagString
                   1, AlphaNightly.TagString
-                  1, BetaNightly.TagString ]
+                  1, ReleaseCandidateNightly.TagString ]
         
         let AccidentalShort =
             Gen.frequency
                 [ 1, Stable.Short
                   1, Alpha.Short
                   1, Beta.Short
+                  1, ReleaseCandidate.Short
                   1, Nightly.Short
                   1, AlphaNightly.Short
-                  1, BetaNightly.Short ]
+                  1, BetaNightly.Short
+                  1, ReleaseCandidateNightly.Short ]
                 
         let AccidentalPatch =
             Gen.frequency
                 [ 1, Stable.Patch
                   1, Alpha.Patch
                   1, Beta.Patch
+                  1, ReleaseCandidate.Patch
                   1, Nightly.Patch
                   1, AlphaNightly.Patch
-                  1, BetaNightly.Patch ]
+                  1, BetaNightly.Patch
+                  1, ReleaseCandidateNightly.Patch ]
                 
         let AccidentalPreReleases =
             Gen.frequency
@@ -1020,12 +1235,16 @@ module Generator =
                   1, Alpha.Patch
                   1, Beta.Short
                   1, Beta.Patch
+                  1, ReleaseCandidate.Short
+                  1, ReleaseCandidate.Patch
                   1, Nightly.Short
                   1, Nightly.Patch
                   1, AlphaNightly.Short
                   1, AlphaNightly.Patch
                   1, BetaNightly.Short
-                  1, BetaNightly.Patch ]
+                  1, BetaNightly.Patch
+                  1, ReleaseCandidateNightly.Short
+                  1, ReleaseCandidateNightly.Patch ]
                 
         let Accidental =
             Gen.frequency
@@ -1035,12 +1254,16 @@ module Generator =
                   1, Alpha.Patch
                   1, Beta.Short
                   1, Beta.Patch
+                  1, ReleaseCandidate.Short
+                  1, ReleaseCandidate.Patch
                   1, Nightly.Short
                   1, Nightly.Patch
                   1, AlphaNightly.Short
                   1, AlphaNightly.Patch
                   1, BetaNightly.Short
-                  1, BetaNightly.Patch ]
+                  1, BetaNightly.Patch
+                  1, ReleaseCandidateNightly.Short
+                  1, ReleaseCandidateNightly.Patch ]
             
         let AccidentalsArray =
             gen {
@@ -1116,35 +1339,6 @@ module Generator =
                 let! validPrefix = genTagVersionPrefix
                 let! semVer = semanticVersionStr
                 return $"{validPrefix}{semVer}"
-            }
-            
-    module DateSteward =
-        let inRangeDateTimeOffset =
-            gen {
-                let min = System.DateTimeOffset(
-                    int Calaf.Domain.Year.LowerYearBoundary,
-                    int Calaf.Domain.Month.LowerMonthBoundary,
-                    int Calaf.Domain.Day.LowerDayBoundary, 0, 0, 0, System.TimeSpan.Zero)
-                let max = System.DateTimeOffset(
-                    int Calaf.Domain.Year.UpperYearBoundary,
-                    int Calaf.Domain.Month.UpperMonthBoundary,
-                    int Calaf.Domain.Day.UpperDayBoundary, 23, 59, 59, 999, System.TimeSpan.Zero)
-                let dateTimeOffset = Bogus.Faker().Date.BetweenOffset(min, max)
-                return dateTimeOffset
-            }
-            
-        let outOfRangeDateTimeOffset =
-            gen {
-                let min = System.DateTimeOffset(
-                    1,
-                    int Calaf.Domain.Month.LowerMonthBoundary,
-                    int Calaf.Domain.Day.LowerDayBoundary, 0, 0, 0, System.TimeSpan.Zero)
-                let max = System.DateTimeOffset(
-                    int Calaf.Domain.Year.LowerYearBoundary - 1,
-                    int Calaf.Domain.Month.UpperMonthBoundary,
-                    int Calaf.Domain.Day.UpperDayBoundary, 23, 59, 59, 999, System.TimeSpan.Zero)
-                let dateTimeOffset = Bogus.Faker().Date.BetweenOffset(min, max)
-                return dateTimeOffset
             }
         
     module Git =        
