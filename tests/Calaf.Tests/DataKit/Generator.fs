@@ -1097,7 +1097,7 @@ module Generator =
                     let! year  = Year.inRangeUInt16Year
                     let! month = Month.inRangeByteMonth
                     let! patch = validPatchUInt32
-                    let! rcNightlyBuild = Build.BetaNightly.betaNightlyString
+                    let! rcNightlyBuild = Build.ReleaseCandidateNightly.rcNightlyString
                     return $"{year}{Calaf.Domain.Version.YearMonthDivider}{month}{Calaf.Domain.Version.MonthPatchDivider}{patch}{Calaf.Domain.Version.CalendarVersionBuildTypeDivider}{rcNightlyBuild}"                 
                 }
                 
@@ -1130,8 +1130,8 @@ module Generator =
             let Patch =
                 gen {
                     let! patchCalendarVersion = Stable.Patch
-                    let! betaNightlyBuild = Build.BetaNightly.betaNightlyBuild
-                    return { patchCalendarVersion with Build = Some betaNightlyBuild }
+                    let! rcNightlyBuild = Build.ReleaseCandidateNightly.rcNightlyBuild
+                    return { patchCalendarVersion with Build = Some rcNightlyBuild }
                 }
                 
             let Accidental =

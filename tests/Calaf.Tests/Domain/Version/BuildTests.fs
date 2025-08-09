@@ -2,6 +2,7 @@
 
 open FsCheck.Xunit
 open Swensen.Unquote
+open Xunit
 
 open Calaf.Domain
 open Calaf.Domain.DomainTypes.Values
@@ -9,6 +10,15 @@ open Calaf.Domain.Build
 open Calaf.Tests
 
 module ToStringPropertyTests =
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Alpha.alphaBuild> |])>]
+    let ``Alpha build converts to non-empty string`` (alphaBuild: Build) =
+        test <@ toString alphaBuild |> System.String.IsNullOrWhiteSpace |> not @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Alpha.alphaBuild> |])>]
+    let ``Alpha build string starts with the right build type prefix`` (alphaBuild: Build) =
+        let alphaBuildString = toString alphaBuild
+        test <@ alphaBuildString.StartsWith AlphaBuildType @>
+        
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Beta.betaBuild> |])>]
     let ``Beta build converts to non-empty string`` (betaBuild: Build) =
         test <@ toString betaBuild |> System.String.IsNullOrWhiteSpace |> not @>
@@ -17,6 +27,15 @@ module ToStringPropertyTests =
     let ``Beta build string starts with the right build type prefix`` (betaBuild: Build) =
         let betaBuildString = toString betaBuild
         test <@ betaBuildString.StartsWith BetaBuildType @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidate.rcBuild> |])>]
+    let ``ReleaseCandidate build converts to non-empty string`` (rcBuild: Build) =
+        test <@ toString rcBuild |> System.String.IsNullOrWhiteSpace |> not @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidate.rcBuild> |])>]
+    let ``ReleaseCandidate build string starts with the right build type prefix`` (rcBuild: Build) =
+        let rcBuildString = toString rcBuild
+        test <@ rcBuildString.StartsWith ReleaseCandidateBuildType @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.nightlyBuild> |])>]
     let ``Nightly build converts to non-empty string`` (nightlyBuild: Build) =
@@ -35,22 +54,66 @@ module ToStringPropertyTests =
     let ``BetaNightly build string starts with the right build type prefix`` (betaNightlyBuild: Build) =
         let betaNightlyBuildString = toString betaNightlyBuild
         test <@ betaNightlyBuildString.StartsWith BetaBuildType @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidateNightly.rcNightlyBuild> |])>]
+    let ``ReleaseCandidateNightly build converts to non-empty string`` (rcNightlyBuild: Build) =
+        test <@ toString rcNightlyBuild |> System.String.IsNullOrWhiteSpace |> not @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidateNightly.rcNightlyBuild> |])>]
+    let ``ReleaseCandidateNightly build string starts with the right build type prefix`` (rcNightlyBuild: Build) =
+        let rcNightlyBuildString = toString rcNightlyBuild
+        test <@ rcNightlyBuildString.StartsWith ReleaseCandidateBuildType @>
             
 module TryParseFromStringPropertyTests =
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Alpha.alphaString> |])>]
+    let ``Alpha string recognizes correctly to the Alpha with number`` (alphaString: string) =
+        let result = tryParseFromString alphaString
+        match result with
+        | Ok (Some (Build.Alpha _)) ->
+            test <@ true @>
+        | _ -> test <@ false @>
+        
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Beta.betaString> |])>]
     let ``Beta string recognizes correctly to the Beta with number`` (betaString: string) =
         let result = betaString |> tryParseFromString
-        test <@ match result with | Ok (Some (Build.Beta _)) -> true | _ -> false @>
+        match result with
+        | Ok (Some (Build.Beta _)) ->
+            test <@ true @>
+        | _ -> test <@ false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidate.rcString> |])>]
+    let ``ReleaseCandidate string recognizes correctly to the ReleaseCandidate with number`` (rcString: string) =
+        let result = tryParseFromString rcString
+        match result with
+        | Ok (Some (Build.ReleaseCandidate _)) ->
+            test <@ true @>
+        | _ -> test <@ false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.nightlyString> |])>]
     let ``Nightly string recognizes correctly to the Nightly with day and number`` (nightlyString: string) =
         let build = tryParseFromString nightlyString
         test <@ match build with | Ok (Some (Build.Nightly _)) -> true | _ -> false @>
+    
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.AlphaNightly.alphaNightlyString> |])>]
+    let ``AlphaNightly string recognizes correctly to the Alpha with number`` (alphaNightlyString: string) =
+        let result = tryParseFromString alphaNightlyString
+        match result with
+        | Ok (Some (Build.AlphaNightly _)) ->
+            test <@ true @>
+        | _ -> test <@ false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.BetaNightly.betaNightlyString> |])>]
     let ``BetaNightly string recognizes correctly to the Beta with number`` (betaNightlyString: string) =
         let result = tryParseFromString betaNightlyString
         test <@ match result with | Ok (Some (Build.BetaNightly _)) -> true | _ -> false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidateNightly.rcNightlyString> |])>]
+    let ``ReleaseCandidateNightly string recognizes correctly to the ReleaseCandidate with number`` (rcNightlyString: string) =
+        let result = tryParseFromString rcNightlyString
+        match result with
+        | Ok (Some (Build.ReleaseCandidateNightly _)) ->
+            test <@ true @>
+        | _ -> test <@ false @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.nullOrWhiteSpaceString> |])>]
     let ``Null or empty or whitespace string parses to the None`` (nullOrWhiteSpaceString: string) =
@@ -63,18 +126,23 @@ module TryParseFromStringPropertyTests =
         test <@ build = Error BuildInvalidString @>
     
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Beta.containingBetaBadString> |])>]
-    let ``String containing Beta parses to BuildInvalidString error`` (containingBetaBadString: string) =
-        let build = containingBetaBadString |> tryParseFromString
+    let ``Bad string containing Beta parses to BuildInvalidString error`` (containingBetaBadString: string) =
+        let build = tryParseFromString containingBetaBadString
         test <@ build = Error BuildInvalidString @>
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.containingNightlyBadString> |])>]
-    let ``String containing Nightly parses to BuildInvalidString error`` (containingNightlyBadString: string) =
-        let result = containingNightlyBadString |> tryParseFromString
+    let ``Bad string containing Nightly parses to BuildInvalidString error`` (containingNightlyBadString: string) =
+        let result = tryParseFromString containingNightlyBadString
         result = Error BuildInvalidString
         
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.BetaNightly.containingBetaNightlyBadString> |])>]
-    let ``String containing BetaNightly parses to BuildInvalidString error`` (containingBetaNightlyBadString: string) =
-        let build = containingBetaNightlyBadString |> tryParseFromString
+    let ``Bad string containing BetaNightly parses to BuildInvalidString error`` (containingBetaNightlyBadString: string) =
+        let build = tryParseFromString containingBetaNightlyBadString
+        test <@ build = Error BuildInvalidString @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidateNightly.containingReleaseCandidateNightlyBadString> |])>]
+    let ``Bad string containing ReleaseCandidateNightly parses to BuildInvalidString error`` (containingReleaseCandidateNightlyBadString: string) =
+        let build = tryParseFromString containingReleaseCandidateNightlyBadString
         test <@ build = Error BuildInvalidString @>
         
 module TryAlphaTests =
@@ -281,6 +349,97 @@ module TryBetaTests =
             test <@ number' = NumberStartValue @>
         | _ -> test <@ false @>
         
+module TryReleaseCandidateTests =
+    // Result is always Build.ReleaseCandidate
+    [<Fact>]
+    let ``None build always releases a ReleaseCandidate build type`` () =
+        let result = tryReleaseCandidate None
+        test <@ match result with | Ok (Build.ReleaseCandidate _) -> true | _ -> false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidate.rcBuild> |])>]
+    let ``ReleaseCandidate always releases a ReleaseCandidate build type`` (build: Build) =
+        let build' = tryReleaseCandidate (Some build)
+        test <@ match build' with | Ok (Build.ReleaseCandidate _) -> true | _ -> false @>
+        
+    // Number is greater then assigned
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidate.rc> |])>]
+    let ``The number is increased for ReleaseCandidate build (no number overflow)`` (rc: ReleaseCandidateBuild) =
+        let rc = { rc with Number = Internals.preventNumberOverflow rc.Number }
+        let build' = tryReleaseCandidate (Some (Build.ReleaseCandidate rc))
+        test <@ match build' with
+                | Ok (Build.ReleaseCandidate { Number = number' }) -> number' > rc.Number
+                | _ -> false @>
+    
+    // Number increased on the step value     
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidate.rc> |])>]
+    let ``The number is increased on step value for ReleaseCandidate build (no number overflow)`` (rc: ReleaseCandidateBuild) =
+        let rc = { rc with Number = Internals.preventNumberOverflow rc.Number }
+        let build' = tryReleaseCandidate (Some (Build.ReleaseCandidate rc))        
+        test <@ match build' with
+                | Ok (Build.ReleaseCandidate { Number = number' }) ->
+                    number' - rc.Number = NumberIncrementStep
+                | _ -> false @>
+        
+    // Number resets to NumberStartValue on overflow
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidate.rc> |])>]
+    let ``The ReleaseCandidate number resets the number to NumberStartValue on overflow (max number)`` (rc: ReleaseCandidateBuild) =
+        let rc = { rc with Number = BuildNumber.MaxValue }
+        let build' = tryReleaseCandidate (Some (Build.ReleaseCandidate rc))        
+        test <@ match build' with
+                | Ok (Build.ReleaseCandidate { Number = number' }) ->
+                    number' = NumberStartValue
+                | _ -> false @>        
+    
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.nightlyBuild> |])>]
+    let ``Nightly always releases a ReleaseCandidate build type and starts with the initial number`` (build: Build) =
+        let build' = tryReleaseCandidate (Some build)   
+        match build' with
+        | Ok (Build.ReleaseCandidate { Number = number' }) ->
+            test <@ number' = NumberStartValue @>
+        | _ -> test <@ false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.Alpha.alphaBuild> |])>]
+    let ``Alpha always releases a ReleaseCandidate build type and starts with the initial number`` (build: Build) =
+        let build' = tryReleaseCandidate (Some build)   
+        match build' with
+        | Ok (Build.ReleaseCandidate { Number = number' }) ->
+            test <@ number' = NumberStartValue @>
+        | _ -> test <@ false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.AlphaNightly.alphaNightlyBuild> |])>]
+    let ``AlphaNightly always releases a ReleaseCandidate build type and starts with the initial number`` (build: Build) =        
+        let build' = tryReleaseCandidate (Some build)
+        match build' with
+        | Ok (Build.ReleaseCandidate { Number = number' }) ->
+            test <@ number' = NumberStartValue @>
+        | _ -> test <@ false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.BetaNightly.betaNightlyBuild> |])>]
+    let ``BetaNightly always releases a ReleaseCandidate build type and starts with the initial number`` (build: Build) =        
+        let build' = tryReleaseCandidate (Some build)   
+        match build' with
+        | Ok (Build.ReleaseCandidate { Number = number' }) ->
+            test <@ number' = NumberStartValue @>
+        | _ -> test <@ false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidate.rc>; typeof<Arbitrary.Build.Nightly.nightly> |])>]
+    let ``ReleaseCandidateNightly always releases a ReleaseCandidate build type and increases number of the ReleaseCandidate Number (no number overflow)`` (rc: ReleaseCandidateBuild, n: NightlyBuild) =
+        let rc = { rc with Number = Internals.preventNumberOverflow rc.Number }
+        let build' = tryReleaseCandidate (Some (Build.ReleaseCandidateNightly (rc, n)))   
+        match build' with
+        | Ok (Build.ReleaseCandidate { Number = number' }) ->
+            test <@ number' > rc.Number @>
+        | _ -> test <@ false @>
+        
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidate.rc>; typeof<Arbitrary.Build.Nightly.nightly> |])>]
+    let ``ReleaseCandidateNightly resets the number to NumberStartValue on overflow`` (rc: ReleaseCandidateBuild, n: NightlyBuild) =
+        let rc = { rc with Number = BuildNumber.MaxValue }
+        let build' = tryReleaseCandidate (Some (Build.ReleaseCandidateNightly (rc, n)))   
+        match build' with
+        | Ok (Build.ReleaseCandidate { Number = number' }) ->
+            test <@ number' = NumberStartValue @>
+        | _ -> test <@ false @>
+        
 module TryNightlyTests =
     // Result is always Build.Nightly
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Nightly.nightlyBuildOption> |])>]
@@ -455,6 +614,59 @@ module TryNightlyTests =
             | _ -> test <@ false @>            
         | _ -> test <@ false @>
         
+    // Result is always Build.ReleaseCandidateNightly
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidateNightly.rcNightlyBuild> |])>]
+    let ``ReleaseCandidateNightly build type always returns a ReleaseCandidateNightly build type when releases nightly``
+        (build: Build, dateTimeOffset: System.DateTimeOffset) =
+        let rcNightly = tryNightly (Some build) (byte dateTimeOffset.Day)
+        match rcNightly with
+        | Ok (Build.ReleaseCandidateNightly _) -> test <@ true @>
+        | _ -> test <@ false @>
+        
+    // Number resets to NumberStartValue on overflow
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidateNightly.rcNightlyBuild> |])>]
+    let ``ReleaseCandidateNightly build resets the number to NumberStartValue on overflow``
+        (rcNightlyBuild: Build, dateTimeOffset: System.DateTimeOffset) =
+        let dayOfMonth = (byte dateTimeOffset.Day) 
+        let rcNightlyBuild =
+            match rcNightlyBuild with
+            | Build.ReleaseCandidateNightly (rc, _) ->
+                Build.ReleaseCandidateNightly (rc, { Day = dayOfMonth; Number = BuildNumber.MaxValue}) |> Some
+            | _ -> Some rcNightlyBuild
+            
+        let nightlyBuild' = tryNightly rcNightlyBuild dayOfMonth        
+        match nightlyBuild' with
+        | Ok (Build.ReleaseCandidateNightly (_, { Number = number })) ->
+            test <@ number = NumberStartValue @>
+        | _ -> test <@ false @>
+        
+    // New day resets the number to the NumberStartValue
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidateNightly.rcNightlyBuild> |])>]
+    let ``ReleaseCandidateNightly build with different day resets the nightly number to NumberStartValue``
+        (rcNightlyBuild: Build, dateTimeOffset: System.DateTimeOffset) =
+        match rcNightlyBuild with
+        | Build.ReleaseCandidateNightly (_, { Day = dayOfMonth; Number = _ }) ->
+            let dayOfMonth = Internals.uniqueDay (dayOfMonth, dateTimeOffset)
+            let rcNightlyBuild' = tryNightly (Some rcNightlyBuild) dayOfMonth
+            match rcNightlyBuild' with
+            | Ok (Build.ReleaseCandidateNightly (_, { Number = number' })) ->
+                test <@ number' = NumberStartValue @>
+            | _ -> test <@ false @>            
+        | _ -> test <@ false @>
+        
+    // Always keeps a release candidate version on nightly for ReleaseCandidateNightly
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidateNightly.rcNightlyBuild> |])>]
+    let ``ReleaseCandidateNightly build always keeps it's release candidate's version when releases nightly``
+        (rcNightlyBuild: Build, dateTimeOffset: System.DateTimeOffset) =
+        match rcNightlyBuild with
+        | Build.ReleaseCandidateNightly ({ Number = number }, _) ->
+            let rcNightlyBuild' = tryNightly (Some rcNightlyBuild) (byte dateTimeOffset.Day)
+            match rcNightlyBuild' with
+            | Ok (Build.ReleaseCandidateNightly ({ Number = number' }, _)) ->
+                test <@ number' = number @>
+            | _ -> test <@ false @>            
+        | _ -> test <@ false @>
+        
     // Result is always Build.AlphaNightly
     [<Property(Arbitrary = [| typeof<Arbitrary.Build.Alpha.alphaBuild> |])>]
     let ``Alpha build type always returns a AlphaNightly build type when releases nightly``
@@ -519,6 +731,31 @@ module TryNightlyTests =
             let build' = tryNightly (Some build) dayOfMonth
             match build' with
             | Ok (Build.BetaNightly ({ Number = number' }, _)) ->
+                test <@ number' = number @>
+            | _ -> test <@ false @>
+        | _ -> test <@ false @>    
+        
+    // Result is always Build.ReleaseCandidateNightly corresponding to a day and the initial number
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidate.rcBuild> |])>]
+    let ``ReleaseCandidate always switch to ReleaseCandidateNightly with the corresponding day and initial number when releases nightly``
+        (build: Build, dateTimeOffset: System.DateTimeOffset) =
+        let dayOfMonth = (byte dateTimeOffset.Day)
+        let rcNightly = tryNightly (Some build) dayOfMonth
+        match rcNightly with
+        | Ok (Build.ReleaseCandidateNightly (_, { Day = day; Number = number })) ->
+            test <@ day = dayOfMonth && number = NumberStartValue @>
+        | _ -> test <@ false @>
+        
+    // ReleaseCandidate is always keeps it's ReleaseCandidate number
+    [<Property(Arbitrary = [| typeof<Arbitrary.Build.ReleaseCandidate.rcBuild> |])>]
+    let ``ReleaseCandidate build type always keeps it's release candidate's number when releases nightly``
+        (build: Build, dateTimeOffset: System.DateTimeOffset) =
+        match build with
+        | ReleaseCandidate { Number = number } ->       
+            let dayOfMonth = (byte dateTimeOffset.Day)
+            let build' = tryNightly (Some build) dayOfMonth
+            match build' with
+            | Ok (Build.ReleaseCandidateNightly ({ Number = number' }, _)) ->
                 test <@ number' = number @>
             | _ -> test <@ false @>
         | _ -> test <@ false @>

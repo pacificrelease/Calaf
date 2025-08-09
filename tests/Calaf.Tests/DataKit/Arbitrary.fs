@@ -326,6 +326,27 @@ module Arbitrary =
             type internal Accidental =
                 static member Accidental() =
                     Arb.fromGen Generator.CalendarVersion.Beta.Accidental
+                    
+        module ReleaseCandidate =
+            type internal String =
+                static member String() =
+                    Arb.fromGen Generator.CalendarVersion.ReleaseCandidate.String
+                    
+            type internal TagString =
+                static member TagString() =
+                    Arb.fromGen Generator.CalendarVersion.ReleaseCandidate.TagString
+                    
+            type internal Short =
+                static member calendarVersionShort() =
+                    Arb.fromGen Generator.CalendarVersion.ReleaseCandidate.Short
+                    
+            type internal Patch =
+                static member Patch() =
+                    Arb.fromGen Generator.CalendarVersion.ReleaseCandidate.Patch
+                    
+            type internal Accidental =
+                static member Accidental() =
+                    Arb.fromGen Generator.CalendarVersion.ReleaseCandidate.Accidental
             
         module Nightly =
             type internal String =
@@ -389,6 +410,27 @@ module Arbitrary =
             type internal Accidental =
                 static member Accidental() =
                         Arb.fromGen Generator.CalendarVersion.BetaNightly.Accidental
+                        
+        module ReleaseCandidateNightly =
+            type internal String =
+                static member String() =
+                    Arb.fromGen Generator.CalendarVersion.ReleaseCandidateNightly.String
+                    
+            type internal TagString =
+                static member TagString() =
+                    Arb.fromGen Generator.CalendarVersion.ReleaseCandidateNightly.TagString
+                
+            type internal Short =
+                static member Short() =
+                    Arb.fromGen Generator.CalendarVersion.ReleaseCandidateNightly.Short
+                    
+            type internal Patch =
+                static member Patch() =
+                    Arb.fromGen Generator.CalendarVersion.ReleaseCandidateNightly.Patch
+                    
+            type internal Accidental =
+                static member Accidental() =
+                    Arb.fromGen Generator.CalendarVersion.ReleaseCandidateNightly.Accidental
         
         type internal ShortString =
             static member ShortString() =
