@@ -18,7 +18,7 @@ env:
 
 jobs:
   publish:
-    name: Stable Release
+    name: release
     runs-on: ubuntu-latest
     
     steps:

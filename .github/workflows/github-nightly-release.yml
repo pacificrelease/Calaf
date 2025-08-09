@@ -19,7 +19,7 @@ env:
 
 jobs:    
     nightly-release:
-        name: Nightly Release
+        name: pre-release
         runs-on: ubuntu-latest
         steps:
             - name: Checkout

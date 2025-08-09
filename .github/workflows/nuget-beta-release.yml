@@ -19,7 +19,7 @@ env:
 
 jobs:
   beta-release:
-    name: Beta Release
+    name: pre-release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
