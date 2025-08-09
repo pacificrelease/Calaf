@@ -1,7 +1,5 @@
 # Calaf
 
----
-
 ![Calaf Logo](assets/calaf_logo.svg?sanitize=true)
 
 [![Build](https://github.com/pacificrelease/Calaf/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/pacificrelease/Calaf/actions/workflows/build.yml)
