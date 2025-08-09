@@ -3,7 +3,7 @@
 ---
 
 <p align="center">
-<img alt="Logo Banner" src="assets/calaf_background.svg?sanitize=true"/>
+<img alt="Logo Banner" src="assets/calaf_logo.svg?sanitize=true"/>
 </p>
 
 ---
@@ -33,7 +33,7 @@ Calaf is a command-line tool for managing Calendar Versioning ([CalVer](https://
 ## Features
 
 - Automatic Calendar Versioning based on the current UTC date
-- Support for `stable`, `alpha`, `beta`, and `nightly` release types
+- Support for `stable`, `alpha`, `beta`, `rc` and `nightly` release types
 - Git integration with automatic tagging (+version commit) for new versions
 - Works with C#/F# project formats (`*.csproj`/`*.fsproj`)
 - Generates versions compatible with Semantic Versioning 2.0.0
@@ -83,6 +83,11 @@ Calaf implements a Calendar Versioning ([CalVer](https://calver.org)) scheme tha
   * Example: `2025.8.1-beta.1`
   * Range `NUMBER`: `1` to `4294967295`
 
+* **Release Candidate:** `rc.NUMBER`
+
+  * Example: `2025.8.1-rc.1`
+  * Range `NUMBER`: `1` to `4294967295`
+
 * **Nightly builds:** `0.nightly.DAY.NUMBER`
 
   * The leading `0` ensures that nightly builds have lower precedence than other pre-release builds like `alpha`, `beta`.
@@ -103,14 +108,16 @@ Calaf implements a Calendar Versioning ([CalVer](https://calver.org)) scheme tha
 
 Versions are compared according to SemVer 2.0.0 rules. The following list shows an example of version progression from lowest to highest precedence:
 
-1. `2025.8.1-0.nightly.30.1` (Nightly)
-2. `2025.8.1-alpha.1` (Alpha)
-3. `2025.8.1-alpha.1.30.1` (Alpha Nightly)
-4. `2025.8.1-alpha.2` (Later Alpha)
-5. `2025.8.1-beta.1` (Beta)
-6. `2025.8.1-beta.1.30.1` (Beta Nightly)
-7. `2025.8.1-beta.2` (Later Beta)
-8. `2025.8.1` (Stable Release)
+1.  `2025.8.1-0.nightly.30.1` (Nightly)
+2.  `2025.8.1-alpha.1` (Alpha)
+3.  `2025.8.1-alpha.1.30.1` (Alpha Nightly)
+4.  `2025.8.1-alpha.2` (Later Alpha)
+5.  `2025.8.1-beta.1` (Beta)
+6.  `2025.8.1-beta.1.30.1` (Beta Nightly)
+7.  `2025.8.1-beta.2` (Later Beta)
+8.  `2025.8.1-rc.1` (Release Candidate)
+9.  `2025.8.1-rc.1.8.1` (Release Candidate Nightly)
+10. `2025.8.1` (Stable Release)
 
 
 ## Quick Start
@@ -121,7 +128,7 @@ Versions are compared according to SemVer 2.0.0 rules. The following list shows 
 dotnet tool install -g Calaf
 ```
 
-##### 2. Add an initial version to your project file(s) (`*.csproj` or `*.fsproj`):
+##### 2. Add an initial version to your project (`C#` / `F#`) file(s) (`*.csproj` or `*.fsproj`):
 
 ```xml
 <PropertyGroup>
@@ -142,19 +149,20 @@ calaf make stable
 
 **Synopsis:**
 ```console
-calaf make <stable|alpha|beta|nightly>
+calaf make <stable|alpha|beta|rc|nightly>
 ```
 
 **Description:** Generates and applies a new Calendar Version to all `.csproj` and `.fsproj` files in the current directory. Automatically creates Git commit and tag if repository is detected.
 
 **Arguments:**
 
-| Argument      | Description                                                                                                                                                               |
-|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **`stable`**  | Stable release. Creates a production-ready version.                                                                                                                       |
-| **`alpha`**   | Alpha release. Creates an early pre-release version for testing. Increments the alpha number. Alpha numbering starts from `1` and increments with each new beta release.  |
-| **`beta`**    | Beta release. Creates a pre-release version for testing. Increments the beta number. Beta numbering starts from `1` and increments with each new beta release.            |
-| **`nightly`** | Nightly (development) build. Creates a development build version. Uses the current day and an incremental number that's starts from `1` for that day.                     |
+| Argument      | Description                                                                                                                                                                   |
+|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **`stable`**  | Stable release. Creates a production-ready version.                                                                                                                           |
+| **`alpha`**   | Alpha release. Creates an early pre-release version for testing. Increments the alpha number. Alpha numbering starts from `1` and increments with each new alpha release.     |
+| **`beta`**    | Beta release. Creates a pre-release version for testing. Increments the beta number. Beta numbering starts from `1` and increments with each new beta release.                |
+| **`rc`**      | Release Candidate. Creates a version for final testing before stable release. Increments the rc number. Rc numbering starts from `1` and increments with each new rc release. |
+| **`nightly`** | Nightly (development) build. Creates a development build version. Uses the current day and an incremental number that's starts from `1` for that day.                         |
 
 **Examples:**
 
@@ -228,6 +236,29 @@ Version applied: 2025.8.1-beta.1
 <Version>2025.8.1-beta.1</Version>
 ```
 
+**RC Release**
+
+Creates a release candidate version for final testing before stable release.
+`2025.8.1` → `2025.8.1-rc.1`
+
+```console
+calaf make rc
+```
+
+* Output:
+```console
+Version applied: 2025.8.1-rc.1
+```
+
+* Project file(s) change:
+```xml
+<!-- Before -->
+<Version>2025.8.1</Version>
+
+<!-- After -->
+<Version>2025.8.1-rc.1</Version>
+```
+
 **Nightly Build**
 
 Creates a development build with daily identifier.
@@ -269,7 +300,7 @@ Project file change:
 <Version>2025.8.1-alpha.1</Version>
 
 <!-- After -->
-<Version>2025.7.1-alpha.1.27.1</Version>
+<Version>2025.8.1-alpha.1.27.1</Version>
 ```
 
 **Note:** Nightly from Beta
@@ -289,6 +320,25 @@ Project file change:
 
 <!-- After -->
 <Version>2025.8.1-beta.1.27.1</Version>
+```
+
+**Note:** Nightly from Release Candidate
+
+You can create nightly builds from existing rc versions.
+`2025.8.1-rc.1` → `2025.8.1-rc.1.27.1`
+
+* Output:
+```console
+Version applied: 2025.8.1-rc.1.27.1
+```
+
+Project file change:
+```xml
+<!-- Before -->
+<Version>2025.8.1-rc.1</Version>
+
+<!-- After -->
+<Version>2025.8.1-rc.1.27.1</Version>
 ```
 
 
