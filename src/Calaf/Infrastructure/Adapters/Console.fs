@@ -9,6 +9,7 @@ type MakeFlag =
     | [<CliPrefix(CliPrefix.None)>] Stable
     | [<CliPrefix(CliPrefix.None)>] Alpha
     | [<CliPrefix(CliPrefix.None)>] Beta
+    | [<CliPrefix(CliPrefix.None)>] RC
     | [<CliPrefix(CliPrefix.None)>] Nightly
     interface IArgParserTemplate with
         member flag.Usage =
@@ -16,6 +17,7 @@ type MakeFlag =
             | Stable  -> "Make a stable version"
             | Alpha   -> "Make an alpha version"
             | Beta    -> "Make a beta version"
+            | RC      -> "Make a release candidate version"
             | Nightly -> "Make a nightly version"
 
 type InputCommand = 
@@ -31,11 +33,12 @@ module internal ConsoleInputGateway =
             | [ Nightly ] -> Ok MakeType.Nightly
             | [ Alpha ]   -> Ok MakeType.Alpha
             | [ Beta ]    -> Ok MakeType.Beta
+            | [ RC ]      -> Ok MakeType.RC
             | [ Stable ]  -> Ok MakeType.Stable            
             | [] -> Ok MakeType.Stable
             | _  ->
                 $"{flags.Head}"
-                |> BuildFlagNotRecognized
+                |> MakeFlagNotRecognized
                 |> Input
                 |> Error    
                 

@@ -3,8 +3,8 @@ namespace Calaf.Application
 open Calaf.Domain
 
 type InputError =
-    | CommandNotRecognized   of command: string
-    | BuildFlagNotRecognized of flag: string
+    | CommandNotRecognized  of command: string
+    | MakeFlagNotRecognized of flag: string
     
 
 type ValidationError =
