@@ -1,10 +1,8 @@
-<h1 align="center">Calaf</h1>
+# Calaf
 
 ---
 
-<p align="center">
-<img alt="Logo Banner" src="assets/calaf_logo.svg?sanitize=true"/>
-</p>
+[![Calaf Logo](assets/calaf_logo.svg?sanitize=true)]
 
 ---
 
