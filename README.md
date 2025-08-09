@@ -1,8 +1,6 @@
-# Calaf
-
-![Calaf Logo](assets/calaf_logo.svg?sanitize=true)
-
----
+| # Calaf |
+|:------------:|
+| ![Calaf Logo](assets/calaf_logo.svg?sanitize=true) |
 
 [![Build](https://github.com/pacificrelease/Calaf/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/pacificrelease/Calaf/actions/workflows/build.yml)
 [![NuGet](https://img.shields.io/nuget/v/Calaf.svg)](https://www.nuget.org/packages/Calaf/)
