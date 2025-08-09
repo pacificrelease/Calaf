@@ -1,8 +1,6 @@
 # Calaf
 
----
-
-[![Calaf Logo](assets/calaf_logo.svg?sanitize=true)]
+![Calaf Logo](assets/calaf_logo.svg?sanitize=true)
 
 ---
 
