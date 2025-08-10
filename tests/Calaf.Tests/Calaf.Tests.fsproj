@@ -48,7 +48,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Update="FSharp.Core" Version="9.0.300" />
+    <PackageReference Update="FSharp.Core" Version="9.0.303" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Calaf\Calaf.fsproj" />
