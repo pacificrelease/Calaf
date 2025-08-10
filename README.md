@@ -68,22 +68,18 @@ Calaf implements a Calendar Versioning ([CalVer](https://calver.org)) scheme tha
 #### BUILD.FORMAT - Pre-release build identifier with a specific format suffix to indicate non-stable builds:
 
 * **Alpha releases:** `alpha.NUMBER`
-
   * Example: `2025.8.1-alpha.1`
   * Range `NUMBER`: `1` to `4294967295`
 
 * **Beta releases:** `beta.NUMBER`
-
   * Example: `2025.8.1-beta.1`
   * Range `NUMBER`: `1` to `4294967295`
 
 * **Release Candidate:** `rc.NUMBER`
-
   * Example: `2025.8.1-rc.1`
   * Range `NUMBER`: `1` to `4294967295`
 
 * **Nightly builds:** `0.nightly.DAY.NUMBER`
-
   * The leading `0` ensures that nightly builds have lower precedence than other pre-release builds like `alpha`, `beta`.
   * `DAY`: The day of the month
   * `NUMBER`: A sequential number for builds on the same day
@@ -91,12 +87,13 @@ Calaf implements a Calendar Versioning ([CalVer](https://calver.org)) scheme tha
   * Range `NUMBER`: `1` to `4294967295`
 
 * **Alpha nightly builds:** `alpha.ALPHA_NUMBER.DAY.NIGHTLY_NUMBER`
-
   * Example: `2025.8.1-alpha.1.30.1`
 
 * **Beta nightly builds:** `beta.BETA_NUMBER.DAY.NIGHTLY_NUMBER`
-
   * Example: `2025.8.1-beta.1.30.1`
+
+* **Release Candidate nightly builds:** `rc.RC_NUMBER.DAY.NIGHTLY_NUMBER`
+  * Example: `2025.8.1-rc.1.30.1`
 
 ### Version Precedence
 
