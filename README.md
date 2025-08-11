@@ -44,7 +44,7 @@ Calaf is a command-line tool for managing Calendar Versioning ([CalVer](https://
 
 Calaf implements a Calendar Versioning ([CalVer](https://calver.org)) scheme that is compatible with Semantic Versioning 2.0.0. This ensures that versions are chronological, sortable, and widely supported.
 
-**Format**: `YYYY.MM[.PATCH][-BUILD.FORMAT]`
+**Format**: `YYYY.MM[.MICRO][-BUILD.FORMAT]`
 
 ### Core Components:
 
@@ -58,7 +58,7 @@ Calaf implements a Calendar Versioning ([CalVer](https://calver.org)) scheme tha
 - Examples: `1`, `6`, `12`
 - Range: `1` to `12`
 
-#### PATCH - Patch number within the month (optional)
+#### MICRO - Micro number within the month (optional)
 
 - Examples: `1`, `2`, `3`
 - Range: `1` to `4294967295`
