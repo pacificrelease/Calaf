@@ -3,12 +3,12 @@
 module internal Internals =
     open Calaf.Domain.DomainTypes.Values
     
-    let internal preventPatchOverflow (patch: Patch option) =
-        match patch with
-        | Some p ->            
-            if p = Patch.MaxValue then
-                p - Calaf.Domain.Patch.PatchIncrementStep |> Some
-            else Some p
+    let internal preventMicroOverflow (micro: Micro option) =
+        match micro with
+        | Some mi ->            
+            if mi = Micro.MaxValue then
+                mi - Calaf.Domain.Micro.MicroIncrementStep |> Some
+            else Some mi
         | None -> None
     
     let internal preventNumberOverflow (number: BuildNumber) =

@@ -50,7 +50,7 @@
     <Compile Include="Domain\Events.fs" />
     <Compile Include="Domain\Version\Day.fs" />
     <Compile Include="Domain\Version\Build.fs" />
-    <Compile Include="Domain\Version\Patch.fs" />
+    <Compile Include="Domain\Version\Micro.fs" />
     <Compile Include="Domain\Version\Month.fs" />
     <Compile Include="Domain\Version\Year.fs" />    
     <Compile Include="Domain\Version\Version.fs" />

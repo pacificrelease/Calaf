@@ -19,7 +19,7 @@
     <Compile Include="DataKit\Arbitrary.fs" />
     <Compile Include="Domain\Version\DayTests.fs" />
     <Compile Include="Domain\Version\BuildTests.fs" />
-    <Compile Include="Domain\Version\PatchTests.fs" />
+    <Compile Include="Domain\Version\MicroTests.fs" />
     <Compile Include="Domain\Version\MonthTests.fs" />
     <Compile Include="Domain\Version\YearTests.fs" />
     <Compile Include="Domain\Version\VersionTests.fs" />

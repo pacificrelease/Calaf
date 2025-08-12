@@ -4,6 +4,7 @@ namespace Calaf.Domain.DomainTypes
 module Values =
     // Common
     type Patch = uint32
+    type Micro = uint32
     type DayOfMonth = uint8
     type BuildNumber = uint16
     type NightlyBuild = {
@@ -42,12 +43,12 @@ module Values =
         Patch: Patch
     }
 
-    //YYYY.MM.PATCH-SUFFIX
+    //YYYY.MM.MICRO-SUFFIX
     //YYYY.MM
     type CalendarVersion = {
         Year:  Year
         Month: Month
-        Patch: Patch option
+        Micro: Micro option
         Build: Build option
     }
 

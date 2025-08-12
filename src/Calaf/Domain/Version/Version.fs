@@ -9,7 +9,7 @@ open Calaf.Domain.DomainTypes.Values
 let internal YearMonthDivider =
     "."
 [<Literal>]
-let internal MonthPatchDivider =
+let internal MonthMicroDivider =
     "."
 [<Literal>]
 let internal CalendarVersionBuildTypeDivider =
@@ -36,7 +36,7 @@ type private CleanString = string
 type private VersionSegments = {
     YearOrMajor: string
     MonthOrMinor: string
-    Patch: string option
+    MicroOrPatch: string option
     Build: string option
 }
 
@@ -67,17 +67,28 @@ let private tryCreateVersionSegments (cleanString: CleanString) =
     if m.Success
     then
         {
-            YearOrMajor = m.Groups[1].Value
-            MonthOrMinor = m.Groups[2].Value
-            Patch = if m.Groups[3] |> validGroupValue then Some m.Groups[3].Value else None
-            Build = if m.Groups[4] |> validGroupValue then Some m.Groups[4].Value else None
+            YearOrMajor =
+                m.Groups[1].Value
+            MonthOrMinor =
+                m.Groups[2].Value
+            MicroOrPatch =
+                if m.Groups[3] |> validGroupValue
+                then Some m.Groups[3].Value
+                else None
+            Build =
+                if m.Groups[4] |> validGroupValue
+                then Some m.Groups[4].Value
+                else None
         } |> Some
     else None    
     
 let private tryCreateVersion (segments: VersionSegments) =
     result {
         match segments with
-        | { YearOrMajor = yearOrMajorSegment; MonthOrMinor = monthOrMinorSegment; Patch = Some patchSegment; Build = buildSegment } ->
+        | { YearOrMajor = yearOrMajorSegment
+            MonthOrMinor = monthOrMinorSegment
+            MicroOrPatch = Some microOrPatchSegment
+            Build = buildSegment } ->
             let! build =
                 buildSegment
                 |> Option.map Build.tryParseFromString
@@ -85,7 +96,7 @@ let private tryCreateVersion (segments: VersionSegments) =
            
             let major = tryToUInt32 yearOrMajorSegment
             let minor = tryToUInt32 monthOrMinorSegment
-            let patch = tryToUInt32 patchSegment                
+            let patch = tryToUInt32 microOrPatchSegment                
             let year =
                 match major with
                 | Some major -> major |> int32 |> Year.tryParseFromInt32
@@ -94,14 +105,14 @@ let private tryCreateVersion (segments: VersionSegments) =
                 match minor with
                 | Some minor -> minor |> int32 |> Month.tryParseFromInt32
                 | _ -> monthOrMinorSegment |> Month.tryParseFromString 
-            let patch =
+            let micro =
                 match patch with
                 | Some patch -> Some patch
-                | _ -> patchSegment |> Patch.tryParseFromString 
+                | _ -> microOrPatchSegment |> Micro.tryParseFromString 
             
-            match year, month, patch with
-            | Ok year, Ok month, patch ->
-                let calVer = CalVer({ Year = year; Month = month; Patch = patch; Build = build })
+            match year, month, micro with
+            | Ok year, Ok month, micro ->
+                let calVer = CalVer({ Year = year; Month = month; Micro = micro; Build = build })
                 return Some calVer
             | _ ->
                 match major, minor, patch with
@@ -110,7 +121,10 @@ let private tryCreateVersion (segments: VersionSegments) =
                     return Some semVer
                 | _ ->
                     return Unsupported |> Some
-        | { YearOrMajor = yearOrMajorSegment; MonthOrMinor = monthOrMinorSegment; Patch = None; Build = buildSegment } ->
+        | { YearOrMajor = yearOrMajorSegment
+            MonthOrMinor = monthOrMinorSegment
+            MicroOrPatch = None
+            Build = buildSegment } ->
             let! build =
                 buildSegment
                 |> Option.map Build.tryParseFromString
@@ -120,7 +134,7 @@ let private tryCreateVersion (segments: VersionSegments) =
             let month = Month.tryParseFromString monthOrMinorSegment        
             match year, month with
             | Ok year, Ok month ->
-                let calVer = CalVer({ Year = year; Month = month; Patch = None; Build = build })
+                let calVer = CalVer({ Year = year; Month = month; Micro = None; Build = build })
                 return Some calVer
             | _ ->
                 return Some Unsupported                
@@ -134,29 +148,29 @@ let private tryParse (cleanVersion: CleanString) : Version option =
         segments |> tryCreateVersion |> Result.toOption |> Option.flatten
     | None -> Some Unsupported
     
-let private patchRelease (currentVersion: CalendarVersion, build: Build option) =
+let private microRelease (currentVersion: CalendarVersion, build: Build option) =
     match currentVersion with
     | { Build = Some _ } ->
-        { Year = currentVersion.Year
+        { Year  = currentVersion.Year
           Month = currentVersion.Month
-          Patch = currentVersion.Patch
+          Micro = currentVersion.Micro
           Build = build }
         
     | { Build = None } ->
-        let newPatch =
-            currentVersion.Patch
-            |> Patch.release
+        let newMicro =
+            currentVersion.Micro
+            |> Micro.release
             |> Some
-        { Year = currentVersion.Year
+        { Year  = currentVersion.Year
           Month = currentVersion.Month
-          Patch = newPatch
+          Micro = newMicro
           Build = build }
 
 let toString (calVer: CalendarVersion) : string =
     let calVerStr =
-        match calVer.Patch with
-        | Some patch ->        
-            $"{calVer.Year}{YearMonthDivider}{calVer.Month}{MonthPatchDivider}{patch}"
+        match calVer.Micro with
+        | Some micro ->        
+            $"{calVer.Year}{YearMonthDivider}{calVer.Month}{MonthMicroDivider}{micro}"
         | None ->
             $"{calVer.Year}{YearMonthDivider}{calVer.Month}"
     let sb = System.Text.StringBuilder(calVerStr)
@@ -196,15 +210,15 @@ let tryReleaseCandidate (currentVersion: CalendarVersion) (dateTimeOffsetStamp: 
             | true, _ ->
                 { Year = stampYear
                   Month = stampMonth
-                  Patch = None
+                  Micro = None
                   Build = Some build }
             | false, true ->
                 { Year = currentVersion.Year
                   Month = stampMonth
-                  Patch = None
+                  Micro = None
                   Build = Some build }
             | false, false ->
-                patchRelease (currentVersion, Some build)
+                microRelease (currentVersion, Some build)
     }
     
 let tryBeta (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.DateTimeOffset) : Result<CalendarVersion, DomainError> =
@@ -219,17 +233,17 @@ let tryBeta (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.DateT
         return
             match shouldReleaseYear, shouldReleaseMonth with
             | true, _ ->
-                { Year = stampYear
+                { Year  = stampYear
                   Month = stampMonth
-                  Patch = None
+                  Micro = None
                   Build = Some build }
             | false, true ->
-                { Year = currentVersion.Year
+                { Year  = currentVersion.Year
                   Month = stampMonth
-                  Patch = None
+                  Micro = None
                   Build = Some build }
             | false, false ->
-                patchRelease (currentVersion, Some build)
+                microRelease (currentVersion, Some build)
     }
 
 let tryAlpha (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.DateTimeOffset) : Result<CalendarVersion, DomainError> =
@@ -246,15 +260,15 @@ let tryAlpha (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.Date
             | true, _ ->
                 { Year = stampYear
                   Month = stampMonth
-                  Patch = None
+                  Micro = None
                   Build = Some build }
             | false, true ->
                 { Year = currentVersion.Year
                   Month = stampMonth
-                  Patch = None
+                  Micro = None
                   Build = Some build }
             | false, false ->
-                patchRelease (currentVersion, Some build)
+                microRelease (currentVersion, Some build)
     }
      
 let tryNightly (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.DateTimeOffset) : Result<CalendarVersion, DomainError> =
@@ -269,7 +283,7 @@ let tryNightly (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.Da
         then
             return { Year  = stampYear
                      Month = stampMonth
-                     Patch = None
+                     Micro = None
                      Build = Some build }
         else
             let shouldReleaseMonth = shouldChange (currentVersion.Month,stampMonth)
@@ -277,10 +291,10 @@ let tryNightly (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.Da
             then
                 return { Year = currentVersion.Year
                          Month = stampMonth
-                         Patch = None
+                         Micro = None
                          Build = Some build }
             else
-                return patchRelease (currentVersion, Some build)        
+                return microRelease (currentVersion, Some build)        
     }
 
 let tryStable (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.DateTimeOffset) : Result<CalendarVersion, DomainError> =
@@ -292,14 +306,20 @@ let tryStable (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.Dat
         let yearRelease = shouldChange (currentVersion.Year, stampYear)
         if yearRelease
         then
-            return { Year = stampYear; Month = stampMonth; Patch = None; Build = noBuild }
+            return { Year = stampYear
+                     Month = stampMonth
+                     Micro = None
+                     Build = noBuild }
         else
             let monthRelease = shouldChange (currentVersion.Month, stampMonth)
             if monthRelease
             then
-                return { Year = currentVersion.Year; Month = stampMonth; Patch = None; Build = noBuild }
+                return { Year = currentVersion.Year
+                         Month = stampMonth
+                         Micro = None
+                         Build = noBuild }
             else            
-                return patchRelease (currentVersion, noBuild)
+                return microRelease (currentVersion, noBuild)
     }
 
 let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
@@ -317,28 +337,28 @@ let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
                     match build with
                     | Build.ReleaseCandidateNightly (rc, nightly) ->
                         let priority = 4
-                        (v.Year, v.Month, v.Patch, priority, rc.Number, nightly.Day, nightly.Number)
+                        (v.Year, v.Month, v.Micro, priority, rc.Number, nightly.Day, nightly.Number)
                     | Build.ReleaseCandidate rcBuild ->
                         let priority = 4
-                        (v.Year, v.Month, v.Patch, priority, rcBuild.Number, noNightlyDay, noNightlyNumber)                    
+                        (v.Year, v.Month, v.Micro, priority, rcBuild.Number, noNightlyDay, noNightlyNumber)                    
                     | Build.BetaNightly (beta, nightly) ->
                         let priority = 3
-                        (v.Year, v.Month, v.Patch, priority, beta.Number, nightly.Day, nightly.Number)
+                        (v.Year, v.Month, v.Micro, priority, beta.Number, nightly.Day, nightly.Number)
                     | Build.Beta betaBuild ->
                         let priority = 3                        
-                        (v.Year, v.Month, v.Patch, priority, betaBuild.Number, noNightlyDay, noNightlyNumber)
+                        (v.Year, v.Month, v.Micro, priority, betaBuild.Number, noNightlyDay, noNightlyNumber)
                     | Build.AlphaNightly (alpha, nightly) ->
                         let priority = 2
-                        (v.Year, v.Month, v.Patch, priority, alpha.Number, nightly.Day, nightly.Number)
+                        (v.Year, v.Month, v.Micro, priority, alpha.Number, nightly.Day, nightly.Number)
                     | Build.Alpha alphaBuild ->
                         let priority = 2
-                        (v.Year, v.Month, v.Patch, priority, alphaBuild.Number, noNightlyDay, noNightlyNumber)
+                        (v.Year, v.Month, v.Micro, priority, alphaBuild.Number, noNightlyDay, noNightlyNumber)
                     | Build.Nightly nightlyBuild ->
                         let priority = 1
-                        (v.Year, v.Month, v.Patch, priority, noPreReleaseNumber, nightlyBuild.Day, nightlyBuild.Number)
+                        (v.Year, v.Month, v.Micro, priority, noPreReleaseNumber, nightlyBuild.Day, nightlyBuild.Number)
                 | None ->
                     let priority = 5
-                    (v.Year, v.Month, v.Patch, priority, noPreReleaseNumber, noNightlyDay, noNightlyNumber))
+                    (v.Year, v.Month, v.Micro, priority, noPreReleaseNumber, noNightlyDay, noNightlyNumber))
         Some maxVersion
 
 let tryParseFromString (bareVersion: string) : Version option =

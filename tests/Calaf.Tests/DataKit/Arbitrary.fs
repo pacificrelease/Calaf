@@ -3,9 +3,9 @@
 open FsCheck.FSharp
 
 module Arbitrary =
-    type internal validPatchUInt32 =
-        static member validPatchUInt32() =
-            Arb.fromGen Generator.validPatchUInt32
+    type internal validMicroUInt32 =
+        static member validMicroUInt32() =
+            Arb.fromGen Generator.validMicroUInt32
             
     type internal greaterThanZeroBeforeUInt32MinusOne =
         static member greaterThanZeroUInt32() =
@@ -19,9 +19,9 @@ module Arbitrary =
         static member nullOrWhiteSpaceString() =
             Arb.fromGen Generator.nullOrWhiteSpaceString
             
-    type internal overflowPatchString =
-        static member overflowPatchString() =
-            Arb.fromGen Generator.overflowPatchString
+    type internal overflowMicroString =
+        static member overflowMicroString() =
+            Arb.fromGen Generator.overflowMicroString
             
     type internal invalidThreePartString =
         static member invalidThreePartString() =
@@ -277,9 +277,9 @@ module Arbitrary =
                 static member calendarVersionShort() =
                     Arb.fromGen Generator.CalendarVersion.Stable.Short
                     
-            type internal Patch =
-                static member Patch() =
-                    Arb.fromGen Generator.CalendarVersion.Stable.Patch
+            type internal Micro =
+                static member Micro() =
+                    Arb.fromGen Generator.CalendarVersion.Stable.Micro
                     
             type internal Accidental =
                 static member Accidental() =
@@ -298,9 +298,9 @@ module Arbitrary =
                 static member calendarVersionShort() =
                     Arb.fromGen Generator.CalendarVersion.Alpha.Short
                     
-            type internal Patch =
-                static member Patch() =
-                    Arb.fromGen Generator.CalendarVersion.Alpha.Patch
+            type internal Micro =
+                static member Micro() =
+                    Arb.fromGen Generator.CalendarVersion.Alpha.Micro
                     
             type internal Accidental =
                 static member Accidental() =
@@ -319,9 +319,9 @@ module Arbitrary =
                 static member calendarVersionShort() =
                     Arb.fromGen Generator.CalendarVersion.Beta.Short
                     
-            type internal Patch =
-                static member Patch() =
-                    Arb.fromGen Generator.CalendarVersion.Beta.Patch
+            type internal Micro =
+                static member Micro() =
+                    Arb.fromGen Generator.CalendarVersion.Beta.Micro
                     
             type internal Accidental =
                 static member Accidental() =
@@ -340,9 +340,9 @@ module Arbitrary =
                 static member calendarVersionShort() =
                     Arb.fromGen Generator.CalendarVersion.ReleaseCandidate.Short
                     
-            type internal Patch =
-                static member Patch() =
-                    Arb.fromGen Generator.CalendarVersion.ReleaseCandidate.Patch
+            type internal Micro =
+                static member Micro() =
+                    Arb.fromGen Generator.CalendarVersion.ReleaseCandidate.Micro
                     
             type internal Accidental =
                 static member Accidental() =
@@ -361,9 +361,9 @@ module Arbitrary =
                 static member Short() =
                     Arb.fromGen Generator.CalendarVersion.Nightly.Short
                     
-            type internal Patch =
-                static member Patch() =
-                    Arb.fromGen Generator.CalendarVersion.Nightly.Patch
+            type internal Micro =
+                static member Micro() =
+                    Arb.fromGen Generator.CalendarVersion.Nightly.Micro
                     
             type internal Accidental =
                 static member Accidental() =
@@ -382,9 +382,9 @@ module Arbitrary =
                 static member Short() =
                     Arb.fromGen Generator.CalendarVersion.AlphaNightly.Short
                     
-            type internal Patch =
-                static member Patch() =
-                    Arb.fromGen Generator.CalendarVersion.AlphaNightly.Patch
+            type internal Micro =
+                static member Micro() =
+                    Arb.fromGen Generator.CalendarVersion.AlphaNightly.Micro
                     
             type internal Accidental =
                 static member Accidental() =
@@ -403,9 +403,9 @@ module Arbitrary =
                 static member Short() =
                     Arb.fromGen Generator.CalendarVersion.BetaNightly.Short
                     
-            type internal Patch =
-                static member Patch() =
-                    Arb.fromGen Generator.CalendarVersion.BetaNightly.Patch
+            type internal Micro =
+                static member Micro() =
+                    Arb.fromGen Generator.CalendarVersion.BetaNightly.Micro
                     
             type internal Accidental =
                 static member Accidental() =
@@ -424,9 +424,9 @@ module Arbitrary =
                 static member Short() =
                     Arb.fromGen Generator.CalendarVersion.ReleaseCandidateNightly.Short
                     
-            type internal Patch =
-                static member Patch() =
-                    Arb.fromGen Generator.CalendarVersion.ReleaseCandidateNightly.Patch
+            type internal Micro =
+                static member Micro() =
+                    Arb.fromGen Generator.CalendarVersion.ReleaseCandidateNightly.Micro
                     
             type internal Accidental =
                 static member Accidental() =
@@ -436,9 +436,9 @@ module Arbitrary =
             static member ShortString() =
                 Arb.fromGen Generator.CalendarVersion.ShortString
                 
-        type internal PatchString =
-            static member PatchString() =
-                Arb.fromGen Generator.CalendarVersion.PatchString
+        type internal MicroString =
+            static member MicroString() =
+                Arb.fromGen Generator.CalendarVersion.MicroString
                 
         type internal String =
             static member String() =
@@ -448,9 +448,9 @@ module Arbitrary =
             static member ShortTagString() =
                 Arb.fromGen Generator.CalendarVersion.ShortTagString
         
-        type internal PatchTagString =
-            static member PatchTagString() =
-                Arb.fromGen Generator.CalendarVersion.PatchTagString
+        type internal MicroTagString =
+            static member MicroTagString() =
+                Arb.fromGen Generator.CalendarVersion.MicroTagString
         
         type internal TagStrictString =
             static member TagStrictString() =
@@ -464,9 +464,9 @@ module Arbitrary =
             static member AccidentalShort() =
                 Arb.fromGen Generator.CalendarVersion.AccidentalShort
                 
-        type internal AccidentalPatch =
-            static member AccidentalPatch() =
-                Arb.fromGen Generator.CalendarVersion.AccidentalPatch
+        type internal AccidentalMicro =
+            static member AccidentalMicro() =
+                Arb.fromGen Generator.CalendarVersion.AccidentalMicro
                 
         type AccidentalPreReleases =
             static member AccidentalPreReleases() =
