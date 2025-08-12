@@ -49,7 +49,7 @@ jobs:
         with:
           reports: '**/coverage.cobertura.xml'
           targetdir: 'coverage-report'
-          reporttypes: 'HtmlInline;Cobertura.JsonSummary'
+          reporttypes: 'HtmlInline;Cobertura;JsonSummary'
           verbosity: 'Warning'
           tag: '${{ github.run_number }}_${{ github.run_id }}_${{ github.sha }}'
           
