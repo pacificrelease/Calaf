@@ -1,4 +1,4 @@
-name: Build Solution
+name: build
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
       - main
   
 jobs:
-  build-test-pack:
+  build-test:
     runs-on: ubuntu-latest
 
     steps:
