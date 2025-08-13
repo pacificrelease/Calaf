@@ -39,7 +39,7 @@ module internal Make =
             let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
             let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
             let (TagQuantity tagCount) = settings.TagsToLoad
-            let! repo = context.Git.tryRead path tagCount Version.versionPrefixes dateTimeOffset                
+            let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, _ =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain
@@ -70,7 +70,7 @@ module internal Make =
             let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
             let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
             let (TagQuantity tagCount) = settings.TagsToLoad
-            let! repo = context.Git.tryRead path tagCount Version.versionPrefixes dateTimeOffset                
+            let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace,  _ = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
             let! version =
                 Version.tryBeta workspace.Version dateTimeOffset
@@ -99,7 +99,7 @@ module internal Make =
             let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
             let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
             let (TagQuantity tagCount) = settings.TagsToLoad
-            let! repo = context.Git.tryRead path tagCount Version.versionPrefixes dateTimeOffset                
+            let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, _ =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain
@@ -130,7 +130,7 @@ module internal Make =
             let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
             let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
             let (TagQuantity tagCount) = settings.TagsToLoad
-            let! repo = context.Git.tryRead path tagCount Version.versionPrefixes dateTimeOffset
+            let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes dateTimeOffset
             let! workspace,  _ =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain
@@ -161,7 +161,7 @@ module internal Make =
             let (DotNetXmlFilePattern searchPatternStr) = dependencies.Settings.ProjectsSearchPattern
             let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatternStr                
             let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
-            let! repo = dependencies.Git.tryRead dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
+            let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, captureEvents =
                 Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
             let! version =
@@ -191,7 +191,7 @@ module internal Make =
             let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
             let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
             let (TagQuantity tagCount) = settings.TagsToLoad
-            let! repo = context.Git.tryRead path tagCount Version.versionPrefixes dateTimeOffset                
+            let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace,  _ =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain
@@ -222,7 +222,7 @@ module internal Make =
             let (DotNetXmlFilePattern searchPatternStr) = dependencies.Settings.ProjectsSearchPattern
             let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatternStr                
             let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
-            let! repo = dependencies.Git.tryRead dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
+            let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, captureEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
             let! version =
                 Version.tryStable workspace.Version dateTimeOffset

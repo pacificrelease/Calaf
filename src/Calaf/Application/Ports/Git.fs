@@ -3,7 +3,7 @@ namespace Calaf.Application
 open Calaf.Contracts
 
 type IGit =
-    abstract tryRead:
+    abstract tryGetRepo:
         directory: string ->
         maxTagsToRead: byte ->
         tagsPrefixesToFilter: string list ->

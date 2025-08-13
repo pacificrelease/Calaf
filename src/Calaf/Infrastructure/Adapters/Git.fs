@@ -199,7 +199,7 @@ module internal GitWrapper =
 
 type Git() =
     interface IGit with
-        member _.tryRead directory maxTagsToRead tagsPrefixesToFilter timeStamp =
+        member _.tryGetRepo directory maxTagsToRead tagsPrefixesToFilter timeStamp =
             GitWrapper.read directory maxTagsToRead tagsPrefixesToFilter timeStamp
             |> Result.mapError CalafError.Infrastructure
             
