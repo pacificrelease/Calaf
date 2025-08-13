@@ -20,7 +20,7 @@ module TryReadTests =
         
         let git2 = Git() :> IGit
         
-        let info = git2.tryRead dir tagsToRead prefixes timeStamp
+        let info = git2.tryGetRepo dir tagsToRead prefixes timeStamp
         let isOk = info.IsOk
         
         test <@ isOk @>

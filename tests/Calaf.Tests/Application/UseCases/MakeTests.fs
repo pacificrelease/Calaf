@@ -99,7 +99,7 @@ module Run2Tests =
             let mutable appliedOperations = []
             
             interface IGit with
-                member _.tryRead directory maxTagsToRead tagsPrefixesToFilter timeStamp =
+                member _.tryGetRepo directory maxTagsToRead tagsPrefixesToFilter timeStamp =
                     repositoryResult
                     
                 member _.tryApply (directory, files) commitMessage tagName =
