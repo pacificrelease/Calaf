@@ -57,6 +57,19 @@ module internal GitWrapper =
                 else return None
         }
         
+    let private listCommits
+        (tagName: string option)
+        (gitProcess: string -> Result<string,InfrastructureError>) =
+        result {
+            let! commits =
+                match tagName with
+                | Some t ->
+                    gitProcess $"log {t}..HEAD --pretty=format:%%s"
+                | None ->
+                    gitProcess "log --pretty=format:%s"
+            return commits
+        }
+        
     let private getCommit
         (name: string option)
         (gitProcess: string -> Result<string,InfrastructureError>) =
@@ -179,6 +192,19 @@ module internal GitWrapper =
                 }
         }
         
+    let list
+        (directory: string)
+        (tagName: string option) =
+        result {
+            if not (gitDirectory directory)
+            then
+                return! Error (Git RepoNotInitialized)
+            else                   
+                let git = runGit directory
+                let! commits = git |> listCommits tagName
+                return commits
+        }
+        
     let apply
         (directory: string)
         (files: string list)
@@ -201,6 +227,10 @@ type Git() =
     interface IGit with
         member _.tryGetRepo directory maxTagsToRead tagsPrefixesToFilter timeStamp =
             GitWrapper.read directory maxTagsToRead tagsPrefixesToFilter timeStamp
+            |> Result.mapError CalafError.Infrastructure
+            
+        member _.tryListCommits directory tagName=
+            GitWrapper.list directory tagName
             |> Result.mapError CalafError.Infrastructure
             
         member _.tryApply (directory, files) commitMessage tagName =

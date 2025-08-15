@@ -9,6 +9,10 @@ type IGit =
         tagsPrefixesToFilter: string list ->
         timeStamp: System.DateTimeOffset -> Result<GitRepositoryInfo option, CalafError>
         
+    abstract tryListCommits:
+        directory: string ->
+        tagName: string option -> Result<string, CalafError>
+        
     abstract tryApply:
         directory: string * files: string list ->
         commitMessage: string ->

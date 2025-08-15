@@ -102,6 +102,10 @@ module Run2Tests =
                 member _.tryGetRepo directory maxTagsToRead tagsPrefixesToFilter timeStamp =
                     repositoryResult
                     
+                member _.tryListCommits directory tagName=
+                    // For current tests, commit listing isn't asserted; return empty list as string.
+                    Ok ""
+                                        
                 member _.tryApply (directory, files) commitMessage tagName =
                     appliedOperations <- (directory, files, commitMessage, tagName) :: appliedOperations
                     applyResults 

@@ -26,6 +26,24 @@ module TryReadTests =
         test <@ isOk @>
         
     [<Fact(Skip = "TBD")>]
+    let ``tryListCommits returns correct list of commits from the previous tag`` () =
+        let dir = "../../../../.."
+        let absPath = System.IO.DirectoryInfo(dir)
+        let dir = absPath.FullName
+        
+        let tagName = Some "v2025.8"
+        
+        let git = Git() :> IGit
+        
+        let commits = git.tryListCommits dir tagName
+        let isOk =
+            match commits with
+            | Ok c -> System.String.IsNullOrWhiteSpace c |> not
+            | _ -> false
+        
+        test <@ isOk @>
+        
+    [<Fact(Skip = "TBD")>]
     let ``tryApply returns updated expected info `` () =
         let dir = "../../../../.."
         let absPath = System.IO.DirectoryInfo(dir)
