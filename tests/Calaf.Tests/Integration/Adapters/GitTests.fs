@@ -38,7 +38,7 @@ module TryReadTests =
         let commits = git.tryListCommits dir tagName
         let isOk =
             match commits with
-            | Ok c -> System.String.IsNullOrWhiteSpace c |> not
+            | Ok c -> not c.IsEmpty
             | _ -> false
         
         test <@ isOk @>

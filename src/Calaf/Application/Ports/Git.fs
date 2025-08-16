@@ -11,7 +11,7 @@ type IGit =
         
     abstract tryListCommits:
         directory: string ->
-        tagName: string option -> Result<string, CalafError>
+        fromTagName: string option -> Result<string list, CalafError>
         
     abstract tryApply:
         directory: string * files: string list ->

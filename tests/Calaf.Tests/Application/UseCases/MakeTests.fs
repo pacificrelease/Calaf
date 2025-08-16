@@ -104,7 +104,7 @@ module Run2Tests =
                     
                 member _.tryListCommits directory tagName=
                     // For current tests, commit listing isn't asserted; return empty list as string.
-                    Ok ""
+                    Ok List.Empty
                                         
                 member _.tryApply (directory, files) commitMessage tagName =
                     appliedOperations <- (directory, files, commitMessage, tagName) :: appliedOperations
