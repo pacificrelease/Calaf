@@ -39,6 +39,20 @@ module internal GitWrapper =
             |> RepoAccessFailed
             |> Git
             |> Error
+            
+    let private toGitCommitInfo (hashMessageWhenCommitString: string) =
+        if not (String.IsNullOrWhiteSpace hashMessageWhenCommitString)
+        then
+            let parts = hashMessageWhenCommitString.Split('|')
+            if parts.Length >= 3 then
+                match DateTimeOffset.TryParse(parts[2]) with
+                | true, dateTimeOffset -> 
+                    Some { Hash = parts[0]
+                           Message = parts[1]
+                           When = dateTimeOffset }
+                | _ -> None
+            else None
+        else None        
     
     let private gitDirectory directory =
         let gitPath = System.IO.Path.Combine(directory, ".git")
@@ -55,49 +69,7 @@ module internal GitWrapper =
             if not (String.IsNullOrWhiteSpace branch)
                 then return Some branch
                 else return None
-        }
-        
-    let private listCommits
-        (tagName: string option)
-        (gitProcess: string -> Result<string,InfrastructureError>) =
-        result {
-            let! output =
-                match tagName with
-                | Some t ->
-                    gitProcess $"log {t}..HEAD --pretty=format:%%s"
-                | None ->
-                    gitProcess "log --pretty=format:%s"
-                
-            if (not (String.IsNullOrWhiteSpace output))
-            then
-                return
-                    output.Split([|'\n'; '\r'|], StringSplitOptions.RemoveEmptyEntries)
-                    |> Array.toList                
-            else return []
-        }
-        
-    let private getCommit
-        (name: string option)
-        (gitProcess: string -> Result<string,InfrastructureError>) =
-        result {
-            let! commit =
-                match name with
-                | Some n when not (String.IsNullOrWhiteSpace n) ->
-                    gitProcess $"log -1 --format=%%H|%%s|%%ci {n}"
-                | _ -> gitProcess "log -1 --format=%H|%s|%ci"
-            if not (String.IsNullOrWhiteSpace commit)
-            then
-                let parts = commit.Split('|')
-                if parts.Length >= 3 then
-                    match DateTimeOffset.TryParse(parts[2]) with
-                    | true, w -> 
-                        return Some { Hash = parts[0]
-                                      Message = parts[1]
-                                      When = w }
-                    | _ -> return None
-                else return None
-            else return None
-        }
+        }    
         
     let private getSignature
         (timeStamp: DateTimeOffset)
@@ -110,6 +82,18 @@ module internal GitWrapper =
             then
                 return Some { Email = email; Name = name; When = timeStamp }
             else return None
+        }
+        
+    let private getCommit
+        (name: string option)
+        (gitProcess: string -> Result<string,InfrastructureError>) =
+        result {
+            let! commit =
+                match name with
+                | Some n when not (String.IsNullOrWhiteSpace n) ->
+                    gitProcess $"log -1 --format=%%H|%%s|%%ci {n}"
+                | _ -> gitProcess "log -1 --format=%H|%s|%ci"
+            return toGitCommitInfo commit
         }
         
     let private listTags
@@ -138,6 +122,26 @@ module internal GitWrapper =
                             let! c = gitProcess |> getCommit (Some tagName)
                             return { Name = tagName; Commit = c }
                         })
+            else return []
+        }
+        
+    let private listCommits
+        (tagName: string option)
+        (gitProcess: string -> Result<string,InfrastructureError>) =
+        result {
+            let! output =
+                match tagName with
+                | Some t ->
+                    gitProcess $"log {t}..HEAD --pretty=format:%%H|%%s|%%ci"
+                | None ->
+                    gitProcess "log --pretty=format:%H|%s|%ci"
+                
+            if (not (String.IsNullOrWhiteSpace output))
+            then
+                return
+                    output.Split([|'\n'; '\r'|], StringSplitOptions.RemoveEmptyEntries)
+                    |> Array.choose toGitCommitInfo                    
+                    |> Array.toList                
             else return []
         }
         
