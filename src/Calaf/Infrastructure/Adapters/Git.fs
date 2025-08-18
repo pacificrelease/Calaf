@@ -147,7 +147,10 @@ module internal GitWrapper =
         
     let private isUnborn
         (gitProcess: string -> Result<string,InfrastructureError>) =
-        let head = gitProcess "rev-parse HEAD"
+        //let head = gitProcess "rev-parse --verify HEAD"
+        let head = gitProcess "rev-parse --quiet --verify HEAD^{commit}"
+        //Exit 0 ⇒ repo has at least one commit. Non-zero (typically 128) ⇒ unborn.
+        
         match head with
         | Error (Git (GitProcessErrorExit _)) -> Ok true
         | Error e -> Error e 
@@ -182,14 +185,22 @@ module internal GitWrapper =
             if not (gitDirectory directory)
             then
                 return None
-            else                   
+            else
                 let git = runGit directory
-                let! status    = git |> getStatus
-                let! branch    = git |> getBranch
-                let! commit    = git |> getCommit None
-                let! signature = git |> getSignature timeStamp    
-                let! tags      = git |> listTags tagsPrefixesToFilter (int maxTagsToRead)
+                
                 let! unborn    = git |> isUnborn
+                let! status    = git |> getStatus
+                let! branch    = git |> getBranch                
+                let! signature = git |> getSignature timeStamp                
+                let! commit =
+                    if unborn
+                    then Ok None
+                    else git |> getCommit None
+                let! tags =
+                    if unborn
+                    then Ok []
+                    else git |> listTags tagsPrefixesToFilter (int maxTagsToRead)
+                
                 return Some {                    
                     Directory = directory
                     Unborn = unborn
