@@ -85,7 +85,9 @@ module Run2Tests =
                     readXmlResults 
                     |> Map.tryFind absolutePath 
                     |> Option.defaultValue (Error (CalafError.Infrastructure (InfrastructureError.FileSystem FileSystemError.DirectoryDoesNotExist)))
-                    
+                
+                member _.tryReadMarkdown _ =
+                    None |> Ok
                 member _.tryWriteXml (absolutePath, content) =
                     writtenFiles <- (absolutePath, content) :: writtenFiles
                     writeXmlResults 

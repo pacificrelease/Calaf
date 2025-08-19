@@ -149,7 +149,6 @@ module internal GitWrapper =
         (gitProcess: string -> Result<string,InfrastructureError>) =
         //let head = gitProcess "rev-parse --verify HEAD"
         let head = gitProcess "rev-parse --quiet --verify HEAD^{commit}"
-        //Exit 0 ⇒ repo has at least one commit. Non-zero (typically 128) ⇒ unborn.
         
         match head with
         | Error (Git (GitProcessErrorExit _)) -> Ok true

@@ -10,5 +10,8 @@ type IFileSystem =
     abstract tryReadXml:
         absolutePath: string -> Result<System.Xml.Linq.XElement, CalafError>
         
+    abstract tryReadMarkdown:
+        absolutePath: string -> Result<string option, CalafError>
+        
     abstract tryWriteXml:
         absolutePath: string * content: System.Xml.Linq.XElement -> Result<unit, CalafError>

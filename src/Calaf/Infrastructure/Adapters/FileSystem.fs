@@ -23,6 +23,31 @@ module internal FileSystemGateway =
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module internal FileSystem =    
+    module Markdown =
+        let load
+            (absolutePath: string) : Result<string option, InfrastructureError> =
+            try
+                if not (System.IO.File.Exists absolutePath)
+                then Ok None
+                else
+                    let utf8 = System.Text.UTF8Encoding(false, true)
+                    System.IO.File.ReadAllText(absolutePath, utf8) |> Some |> Ok
+            with
+            | :? System.IO.FileNotFoundException
+            | :? System.IO.DirectoryNotFoundException ->
+                // The file may disappear between the check and the read
+                Ok None
+            | :? System.UnauthorizedAccessException as exn ->
+                (absolutePath, exn :> System.Exception)
+                |> FileAccessDenied
+                |> FileSystem
+                |> Error            
+            | exn ->
+                (absolutePath, exn)
+                |> MarkdownLoadFailed
+                |> FileSystem
+                |> Error
+        
     module Xml =
         let load
             (absolutePath: string) : Result<System.Xml.Linq.XElement, InfrastructureError> =
@@ -63,7 +88,7 @@ module internal FileSystem =
                 |> FileSystem
                 |> Error
                 
-    module Directory =
+    module Directory =        
         open FsToolkit.ErrorHandling
         open System.IO
         
@@ -121,10 +146,14 @@ type FileSystem() =
     interface IFileSystem with
         member _.tryReadDirectory directory pattern =
             FileSystem.Directory.list directory pattern
-            |> Result.mapError CalafError.Infrastructure
+            |> Result.mapError CalafError.Infrastructure        
             
         member _.tryReadXml absolutePath =
             FileSystem.Xml.load absolutePath
+            |> Result.mapError CalafError.Infrastructure
+            
+        member _.tryReadMarkdown absolutePath=
+            FileSystem.Markdown.load absolutePath
             |> Result.mapError CalafError.Infrastructure
             
         member _.tryWriteXml (absolutePath, content) =
