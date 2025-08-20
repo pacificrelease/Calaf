@@ -24,6 +24,7 @@ type FileSystemError =
     | FileAccessDenied      of absolutePath: string * ex: exn
     | FilesScanFailed       of ex: exn
     | MarkdownLoadFailed    of absolutePath: string * ex: exn
+    | MarkdownSaveFailed    of absolutePath: string * ex: exn
     | XmlLoadFailed         of absolutePath: string * ex: exn
     | XmlSaveFailed         of absolutePath: string * ex: exn
     

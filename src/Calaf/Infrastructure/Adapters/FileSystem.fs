@@ -24,14 +24,15 @@ module internal FileSystemGateway =
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module internal FileSystem =    
     module Markdown =
+        let private utf8NoBom = System.Text.UTF8Encoding(false, true)
+        
         let load
             (absolutePath: string) : Result<string option, InfrastructureError> =
             try
                 if not (System.IO.File.Exists absolutePath)
                 then Ok None
                 else
-                    let utf8 = System.Text.UTF8Encoding(false, true)
-                    System.IO.File.ReadAllText(absolutePath, utf8) |> Some |> Ok
+                    System.IO.File.ReadAllText(absolutePath, utf8NoBom) |> Some |> Ok
             with
             | :? System.IO.FileNotFoundException
             | :? System.IO.DirectoryNotFoundException ->
@@ -45,6 +46,28 @@ module internal FileSystem =
             | exn ->
                 (absolutePath, exn)
                 |> MarkdownLoadFailed
+                |> FileSystem
+                |> Error
+                
+        let append
+            (absolutePath: string)
+            (content: string) : Result<unit, InfrastructureError> =
+            try
+                absolutePath
+                |> System.IO.Path.GetDirectoryName
+                |> System.IO.Directory.CreateDirectory
+                |> ignore
+                
+                System.IO.File.AppendAllText(absolutePath, content, utf8NoBom) |> Ok
+            with
+            | :? System.UnauthorizedAccessException as exn ->
+                (absolutePath, exn :> System.Exception)
+                |> FileAccessDenied
+                |> FileSystem
+                |> Error
+            | exn ->
+                (absolutePath, exn)
+                |> MarkdownSaveFailed
                 |> FileSystem
                 |> Error
         
