@@ -56,11 +56,21 @@ module Values =
         | CalVer of CalendarVersion
         | SemVer of SemanticVersion
         | Unsupported
+        
+    type Changelog = {
+        Features : string list
+        Fixes : string list
+        BreakingChanges : string list
+    }
 
     // Repository
     type SignatureName = string
     type SignatureEmail = string
     type CommitMessage = string
+    type AdoptedCommitMessage =
+        | Feature of breakingChange: bool * adoptedMessage: string
+        | Fix     of breakingChange: bool * adoptedMessage: string
+        | Other   of adoptedMessage: string
     type CommitHash = string
     type TagName = string
     type BranchName = string
@@ -70,9 +80,9 @@ module Values =
         Email: SignatureEmail
         When: System.DateTimeOffset
     }
-
+    
     type Commit = {
-        Message: CommitMessage
+        Message: CommitMessage        
         Hash: CommitHash
         When: System.DateTimeOffset
     }
