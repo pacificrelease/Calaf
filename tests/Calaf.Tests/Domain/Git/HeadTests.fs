@@ -16,7 +16,7 @@ module CreatePropertiesTests =
         let head = tryCreate detachedHead gitCommitInfo (Some branchName)
         match head with        
         | Ok (Attached (commit, branch)) ->
-            commit.Message = gitCommitInfo.Message &&
+            commit.Text = gitCommitInfo.Text &&
             commit.Hash = gitCommitInfo.Hash &&
             commit.When = gitCommitInfo.When &&
             branch = branchName
@@ -29,7 +29,7 @@ module CreatePropertiesTests =
         let head = tryCreate detachedHead gitCommitInfo (Some branchName)
         match head with        
         | Ok (Detached commit) ->
-            commit.Message = gitCommitInfo.Message &&
+            commit.Text = gitCommitInfo.Text &&
             commit.Hash = gitCommitInfo.Hash &&
             commit.When = gitCommitInfo.When
         | _ -> false
@@ -41,7 +41,7 @@ module CreatePropertiesTests =
         let head = tryCreate detachedHead gitCommitInfo None
         match head with        
         | Ok (Detached commit) ->
-            commit.Message = gitCommitInfo.Message &&
+            commit.Text = gitCommitInfo.Text &&
             commit.Hash = gitCommitInfo.Hash &&
             commit.When = gitCommitInfo.When
         | _ -> false        
@@ -56,7 +56,7 @@ module CreatePropertiesTests =
                 match head with
                 | Detached c
                 | Attached (c, _) -> c
-            commit.Message = gitCommitInfo.Message &&
+            commit.Text = gitCommitInfo.Text &&
             commit.Hash = gitCommitInfo.Hash &&
             commit.When = gitCommitInfo.When
         | _ -> false

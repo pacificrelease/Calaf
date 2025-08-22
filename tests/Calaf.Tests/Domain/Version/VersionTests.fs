@@ -1985,30 +1985,30 @@ module ToTagNamePropertiesTests =
             not (System.String.IsNullOrWhiteSpace releaseTagName) &&
             releaseTagName |> Seq.forall (fun c -> not (System.Char.IsWhiteSpace c)) @>
 
-module ToCommitMessagePropertiesTests =
+module ToCommitTextPropertiesTests =
     // Prefix Prepending
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
-    let ``Commit message starts with commitVersionPrefix`` (release: CalendarVersion) =
-        let commitMessage = toCommitMessage release
-        test <@ commitMessage.StartsWith commitVersionPrefix @>
+    let ``Commit text starts with commitVersionPrefix`` (release: CalendarVersion) =
+        let commitText = toCommitText release
+        test <@ commitText.StartsWith commitVersionPrefix @>
 
      // Suffix Format
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
-    let ``Commit message ends with a string representation of the version`` (release: CalendarVersion) =
-        let commitMessage = toCommitMessage release
-        test <@ commitMessage.EndsWith (toString release) @>
+    let ``Commit text ends with a string representation of the version`` (release: CalendarVersion) =
+        let commitText = toCommitText release
+        test <@ commitText.EndsWith (toString release) @>
 
     // Contains commit version prefix
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
-    let ``Commit message does not contain unexpected empty or whitespace and contains commit version prefix`` (release: CalendarVersion) =
-        let commitMessage = toCommitMessage release
+    let ``Commit text does not contain unexpected empty or whitespace and contains commit version prefix`` (release: CalendarVersion) =
+        let commitText = toCommitText release
         test <@
-            System.String.IsNullOrWhiteSpace commitMessage |> not &&
-            commitMessage.Contains commitVersionPrefix @>
+            System.String.IsNullOrWhiteSpace commitText |> not &&
+            commitText.Contains commitVersionPrefix @>
 
     // Commit string contains 2 whitespace
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Accidental> |])>]
-    let ``Commit message contains two whitespaces on its format`` (release: CalendarVersion) =
-        let commitMessage = toCommitMessage release
-        let spaceCount = commitMessage |> Seq.filter (fun c -> c = ' ') |> Seq.length
+    let ``Commit text contains two whitespaces on its format`` (release: CalendarVersion) =
+        let commitText = toCommitText release
+        let spaceCount = commitText |> Seq.filter (fun c -> c = ' ') |> Seq.length
         test <@ spaceCount = 2 @>

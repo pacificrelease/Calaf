@@ -15,7 +15,7 @@ module Generator =
             return neg
         }
         
-    let private genFloat =        
+    let private genFloat = 
         gen {
             let! sign = Gen.elements [""; "-"]
             let! integer = Gen.choose(0, 1_000_000)
@@ -1354,7 +1354,7 @@ module Generator =
                             3, branchName |> Gen.map Some ]
             
             
-        let commitMessage =
+        let commitText =
             Gen.frequency [ 3, Gen.constant (Bogus.Faker().Lorem.Sentence())
                             1, Gen.elements [""; " "]]
         
@@ -1365,10 +1365,10 @@ module Generator =
             
         let gitCommitInfo : Gen<GitCommitInfo> =
             gen {
-                let! commitMessage = commitMessage
+                let! commitText = commitText
                 let! commitHash = commitHash
                 let! timeStamp = genValidDateTimeOffset
-                return { Message = commitMessage; Hash = commitHash; When = timeStamp }
+                return { Text = commitText; Hash = commitHash; When = timeStamp }
             }
             
         let gitSignatureInfo : Gen<GitSignatureInfo> =
@@ -1382,7 +1382,7 @@ module Generator =
         let gitTagInfo =
             gen {
                 let! commit = gitCommitInfo
-                let name = commit.Message 
+                let name    = commit.Text 
                 let! commit = Gen.frequency [
                     1, Gen.constant None
                     3, Gen.constant (Some commit)
@@ -1393,10 +1393,10 @@ module Generator =
             
         let commit: Gen<Commit> =
             gen {
-                let! commitMessage = commitMessage
+                let! commitText = commitText
                 let! commitHash = commitHash
                 let! timeStamp = genValidDateTimeOffset
-                return { Message = commitMessage; Hash = commitHash; When = timeStamp }
+                return { Text = commitText; Hash = commitHash; When = timeStamp }
             }
             
         let calVerGitTagInfo =

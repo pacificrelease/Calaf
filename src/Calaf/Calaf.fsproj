@@ -58,6 +58,7 @@
     <Compile Include="Domain\Git\Tag.fs" />
     <Compile Include="Domain\Git\Head.fs" />
     <Compile Include="Domain\Git\Repository.fs" />
+    <Compile Include="Domain\Git\Changelog.fs" />
     <Compile Include="Domain\Suite\Language.fs" />
     <Compile Include="Domain\Suite\Project.fs" />
     <Compile Include="Domain\Suite\Suite.fs" />

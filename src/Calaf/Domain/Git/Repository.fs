@@ -88,12 +88,12 @@ let tryProfile (repo: Repository) (pendingFilesPaths: string list) =
     | Ready (dir, _, signature, Some currentVersion)        
     | Dirty (dir, _, signature, Some currentVersion) ->
         let tagName = Version.toTagName currentVersion
-        let commitMessage = Version.toCommitMessage currentVersion
+        let commitText = Version.toCommitText currentVersion
         Some { Directory = dir
                Files = pendingFilesPaths
                Signature = signature
                TagName = tagName
-               CommitMessage = commitMessage }
+               CommitText = commitText }
     | _ -> None    
     
 let tryRelease (repo: Repository) (nextVersion: CalendarVersion) =

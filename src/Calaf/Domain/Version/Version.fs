@@ -190,10 +190,10 @@ let toTagName (calVer: CalendarVersion) : string =
     $"{tagVersionPrefix}{toString calVer}"
 
 /// <summary>
-/// Converts a CalendarVersion to a Git commit message string.
+/// Converts a CalendarVersion to a Git commit text.
 /// </summary>
 /// <param name="calVer">Calendar version to convert</param>
-let toCommitMessage (calVer: CalendarVersion) : string =
+let toCommitText (calVer: CalendarVersion) : string =
     $"{commitVersionPrefix}{toString calVer}"
     
 let tryReleaseCandidate (currentVersion: CalendarVersion) (dateTimeOffsetStamp: System.DateTimeOffset) : Result<CalendarVersion, DomainError> =

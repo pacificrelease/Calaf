@@ -56,7 +56,7 @@ module internal Make =
                 |> Result.map ignore                
             do! profile.Repository
                 |> Option.map (fun p ->
-                    context.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName
+                    context.Git.tryApply (p.Directory, p.Files) p.CommitText p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
@@ -85,7 +85,7 @@ module internal Make =
                 |> Result.map ignore                
             do! profile.Repository
                 |> Option.map (fun p ->
-                    context.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName
+                    context.Git.tryApply (p.Directory, p.Files) p.CommitText p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
@@ -116,7 +116,7 @@ module internal Make =
                 |> Result.map ignore                
             do! profile.Repository
                 |> Option.map (fun p ->
-                    context.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName
+                    context.Git.tryApply (p.Directory, p.Files) p.CommitText p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
@@ -147,7 +147,7 @@ module internal Make =
                 |> Result.map ignore                
             do! profile.Repository
                 |> Option.map (fun p ->
-                    context.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName
+                    context.Git.tryApply (p.Directory, p.Files) p.CommitText p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
@@ -177,7 +177,7 @@ module internal Make =
                 |> Result.map ignore                
             do! profile.Repository
                 |> Option.map (fun p ->
-                    dependencies.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName
+                    dependencies.Git.tryApply (p.Directory, p.Files) p.CommitText p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
@@ -208,7 +208,7 @@ module internal Make =
                 |> Result.map ignore                
             do! profile.Repository
                 |> Option.map (fun p ->
-                    context.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName
+                    context.Git.tryApply (p.Directory, p.Files) p.CommitText p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
@@ -237,7 +237,7 @@ module internal Make =
                 |> Result.map ignore                
             do! profile.Repository
                 |> Option.map (fun p ->
-                    dependencies.Git.tryApply (p.Directory, p.Files) p.CommitMessage p.TagName
+                    dependencies.Git.tryApply (p.Directory, p.Files) p.CommitText p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                

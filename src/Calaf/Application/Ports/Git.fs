@@ -15,5 +15,5 @@ type IGit =
         
     abstract tryApply:
         directory: string * files: string list ->
-        commitMessage: string ->
+        commitText: string ->
         tagName: string -> Result<unit, CalafError>

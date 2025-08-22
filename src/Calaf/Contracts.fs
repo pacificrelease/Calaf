@@ -20,7 +20,7 @@ type GitSignatureInfo = {
 
 type GitCommitInfo = {
     Hash: string
-    Message: string
+    Text: string
     When: System.DateTimeOffset
 }
 

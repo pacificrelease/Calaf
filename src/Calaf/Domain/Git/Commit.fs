@@ -6,47 +6,86 @@ open Calaf.Domain.DomainTypes.Values
 [<Literal>]
 let internal FeaturePrefix = "feat"
 [<Literal>]
+let internal FixPrefix = "fix"
+[<Literal>]
 let internal EndOfPattern = ":"
 [<Literal>]
 let internal BreakingChange = "!"
 let private featureNonBreakingChangeCommitPattern =        
-    @$"^{FeaturePrefix}(?:\([^)]*\))?{EndOfPattern}"
+    @$"^{FeaturePrefix}(?:\(([^)]*)\))?{EndOfPattern}\s*(.*)"
 let private featureBreakingChangeCommitPattern =        
-    @$"^{FeaturePrefix}(?:\([^)]*\))?{BreakingChange}{EndOfPattern}"    
+    @$"^{FeaturePrefix}(?:\(([^)]*)\))?{BreakingChange}{EndOfPattern}\s*(.*)"
+let private fixNonBreakingChangeCommitPattern =
+    @$"^{FixPrefix}(?:\(([^)]*)\))?{EndOfPattern}\s*(.*)"
+let private fixBreakingChangeCommitPattern =        
+    @$"^{FixPrefix}(?:\(([^)]*)\))?{BreakingChange}{EndOfPattern}\s*(.*)"
 let private featureNonBreakingChangeCommitPatternRegexString =
     $@"^{featureNonBreakingChangeCommitPattern}"
 let private featureBreakingChangeCommitPatternRegexString =
     $@"^{featureBreakingChangeCommitPattern}"
+let private fixNonBreakingChangeCommitPatternRegexString =
+    $@"^{fixNonBreakingChangeCommitPattern}"
+let private fixBreakingChangeCommitPatternRegexString =
+    $@"^{fixBreakingChangeCommitPattern}"
     
 let private matchFeatureNonBreakingChangeCommitPatternRegexString (input: string) =
     System.Text.RegularExpressions.Regex.Match(input, featureNonBreakingChangeCommitPatternRegexString)
 let private matchFeatureBreakingChangeCommitPatternRegexString (input: string) =
     System.Text.RegularExpressions.Regex.Match(input, featureBreakingChangeCommitPatternRegexString)
+let private matchFixNonBreakingChangeCommitPatternRegexString (input: string) =
+    System.Text.RegularExpressions.Regex.Match(input, fixNonBreakingChangeCommitPatternRegexString)
+let private matchFixBreakingChangeCommitPatternRegexString (input: string) =
+    System.Text.RegularExpressions.Regex.Match(input, fixBreakingChangeCommitPatternRegexString)    
+
+let private toValueOrNone (s: string) =
+    if not (System.String.IsNullOrWhiteSpace s)
+    then s.Trim() |> Some
+    else None
     
 let private (|FeatureNonBreakingChange|_|) (input: string) =
     let m = matchFeatureNonBreakingChangeCommitPatternRegexString input
     if m.Success then
-        let numberSegment = m.Groups[2].Value
-        Some numberSegment
+        let scope       = m.Groups[1].Value |> toValueOrNone
+        let description = m.Groups[2].Value |> toValueOrNone
+        Some (scope, description)
     else None
     
 let private (|FeatureBreakingChange|_|) (input: string) =
     let m = matchFeatureNonBreakingChangeCommitPatternRegexString input
     if m.Success then
-        let numberSegment = m.Groups[2].Value
-        Some numberSegment
+        let scope       = m.Groups[1].Value |> toValueOrNone
+        let description = m.Groups[2].Value |> toValueOrNone
+        Some (scope, description)
     else None
     
-let private createAdoptedCommitMessage message =
+let private (|FixNonBreakingChange|_|) (input: string) =
+    let m = matchFixNonBreakingChangeCommitPatternRegexString input
+    if m.Success then
+        let scope       = m.Groups[1].Value |> toValueOrNone
+        let description = m.Groups[2].Value |> toValueOrNone
+        Some (scope, description)
+    else None
+    
+let private (|FixBreakingChange|_|) (input: string) =
+    let m = matchFixNonBreakingChangeCommitPatternRegexString input
+    if m.Success then
+        let scope       = m.Groups[1].Value |> toValueOrNone
+        let description = m.Groups[2].Value |> toValueOrNone
+        Some (scope, description)
+    else None
+    
+let private createCommitMessage message =
+    let nonBreakingChange = false
+    let breakingChange = true
     match message with
-    | FeatureNonBreakingChange m ->
-        AdoptedCommitMessage.Feature (false, m)
-    | FeatureBreakingChange m ->
-        AdoptedCommitMessage.Feature (true, m)    
+    | FeatureNonBreakingChange (s, m) ->        
+        CommitMessage.Feature (nonBreakingChange, s, m)
+    | FeatureBreakingChange (s, m) ->
+        CommitMessage.Feature (breakingChange, s, m)    
     | _ ->
-        AdoptedCommitMessage.Other message
+        CommitMessage.Other (toValueOrNone message)
 
 let create (commitInfo: GitCommitInfo) =
-    { Message = commitInfo.Message
+    { Text = commitInfo.Text
       Hash = commitInfo.Hash
       When = commitInfo.When }

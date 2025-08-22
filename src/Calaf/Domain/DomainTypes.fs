@@ -66,11 +66,11 @@ module Values =
     // Repository
     type SignatureName = string
     type SignatureEmail = string
-    type CommitMessage = string
-    type AdoptedCommitMessage =
-        | Feature of breakingChange: bool * adoptedMessage: string
-        | Fix     of breakingChange: bool * adoptedMessage: string
-        | Other   of adoptedMessage: string
+    type CommitText = string
+    type CommitMessage =
+        | Feature of breakingChange: bool * scope: string option * message: string option
+        | Fix     of breakingChange: bool * scope: string option * message: string option
+        | Other   of message: string option
     type CommitHash = string
     type TagName = string
     type BranchName = string
@@ -82,7 +82,7 @@ module Values =
     }
     
     type Commit = {
-        Message: CommitMessage        
+        Text: CommitText        
         Hash: CommitHash
         When: System.DateTimeOffset
     }
@@ -134,7 +134,7 @@ module Values =
         Files: string list
         Signature: Signature
         TagName: TagName
-        CommitMessage: CommitMessage
+        CommitText: CommitText
     }   
     
     type WorkspaceActionProfile = {        

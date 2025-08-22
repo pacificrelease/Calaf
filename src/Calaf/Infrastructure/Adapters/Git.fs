@@ -40,15 +40,15 @@ module internal GitWrapper =
             |> Git
             |> Error
             
-    let private toGitCommitInfo (hashMessageWhenCommitString: string) =
-        if not (String.IsNullOrWhiteSpace hashMessageWhenCommitString)
+    let private toGitCommitInfo (hashTextWhenCommitString: string) =
+        if not (String.IsNullOrWhiteSpace hashTextWhenCommitString)
         then
-            let parts = hashMessageWhenCommitString.Split('|')
+            let parts = hashTextWhenCommitString.Split('|')
             if parts.Length >= 3 then
                 match DateTimeOffset.TryParse(parts[2]) with
                 | true, dateTimeOffset -> 
                     Some { Hash = parts[0]
-                           Message = parts[1]
+                           Text = parts[1]
                            When = dateTimeOffset }
                 | _ -> None
             else None
@@ -166,9 +166,9 @@ module internal GitWrapper =
             gitProcess $"add {files}"
             
     let private commit
-        (commitMessage: string)
+        (commitText: string)
         (gitProcess: string -> Result<string,InfrastructureError>) =
-        gitProcess $"commit -m \"{commitMessage}\""
+        gitProcess $"commit -m \"{commitText}\""
         
     let private tag
         (tagName: string)
@@ -227,7 +227,7 @@ module internal GitWrapper =
     let apply
         (directory: string)
         (files: string list)
-        (commitMessage: string)
+        (commitText: string)
         (tagName: string)=
         result {
             if not (gitDirectory directory)
@@ -237,7 +237,7 @@ module internal GitWrapper =
                 let git = runGit directory
                 let! _ = git |> unstage
                 let! _ = git |> stage files
-                let! _ = git |> commit commitMessage
+                let! _ = git |> commit commitText
                 let! _ = git |> tag tagName
                 return ()
         }
@@ -252,6 +252,6 @@ type Git() =
             GitWrapper.list directory fromTagName
             |> Result.mapError CalafError.Infrastructure
             
-        member _.tryApply (directory, files) commitMessage tagName =
-            GitWrapper.apply directory files commitMessage tagName
+        member _.tryApply (directory, files) commitText tagName =
+            GitWrapper.apply directory files commitText tagName
             |> Result.mapError CalafError.Infrastructure

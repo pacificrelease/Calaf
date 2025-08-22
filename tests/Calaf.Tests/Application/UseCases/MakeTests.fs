@@ -38,7 +38,7 @@ module Run2Tests =
                 CurrentBranch = Some "main"
                 CurrentCommit = Some {
                     Hash = "abc123"
-                    Message = "Initial commit"
+                    Text = "Initial commit"
                     When = System.DateTimeOffset.Now
                 }
                 Signature = Some {
@@ -52,7 +52,7 @@ module Run2Tests =
                         Name = "v2025.7"  // Use calendar version format
                         Commit = Some {
                             Hash = "abc123"
-                            Message = "Release v2025.7"
+                            Text = "Release v2025.7"
                             When = System.DateTimeOffset.Now
                         }
                     }
@@ -108,8 +108,8 @@ module Run2Tests =
                     // For current tests, commit listing isn't asserted; return empty list as string.
                     Ok List.Empty
                                         
-                member _.tryApply (directory, files) commitMessage tagName =
-                    appliedOperations <- (directory, files, commitMessage, tagName) :: appliedOperations
+                member _.tryApply (directory, files) commitText tagName =
+                    appliedOperations <- (directory, files, commitText, tagName) :: appliedOperations
                     applyResults 
                     |> Map.tryFind directory 
                     |> Option.defaultValue (Ok ())
@@ -163,7 +163,7 @@ module Run2Tests =
         let appliedOps = mockGit.GetAppliedOperations()
         test <@ List.length appliedOps = 1 @>
         
-        let directory, files, commitMessage, tagName = List.head appliedOps
+        let directory, files, commitText, tagName = List.head appliedOps
         test <@ directory = "/test/workspace" @>
 
     [<Fact>]

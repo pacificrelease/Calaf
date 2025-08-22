@@ -36,7 +36,7 @@ module CreatePropertiesTests =
     let ``CalVer or SemVer named tag with the commit option creates Tag.Versioned with the corresponding commit option`` (gitTagInfo: GitTagInfo) =
         match create gitTagInfo, gitTagInfo.Commit with
         | Tag.Versioned(_, _, Some commit), Some expectedCommit ->
-            expectedCommit.Message = commit.Message &&
+            expectedCommit.Text = commit.Text &&
             expectedCommit.Hash = commit.Hash &&
             expectedCommit.When = commit.When
         | Tag.Versioned(_, _, None), None ->
