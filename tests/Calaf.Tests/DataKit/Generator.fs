@@ -1361,7 +1361,71 @@ module Generator =
         let commitHash =
             gen {
                 return Bogus.Faker().Random.Hash()
-            }        
+            }
+            
+        module Commit =
+            let private leftBracketOrEmpty scope =
+                if System.String.IsNullOrWhiteSpace scope
+                then System.String.Empty
+                else "("
+                
+            let private rightBracketOrEmpty scope =
+                if System.String.IsNullOrWhiteSpace scope
+                then System.String.Empty
+                else ")"
+                
+            let private otherCommitMessage =
+                gen {
+                    let! text =
+                        Gen.frequency [ 3, Gen.constant (Bogus.Faker().Lorem.Sentence())
+                                        1, Gen.elements [""; " "]]
+                    if System.String.IsNullOrWhiteSpace text
+                    then return (text, CommitMessage.Other None)
+                    else return (text, CommitMessage.Other (Some text))
+                }
+                
+            let private fixNonBreakingChangeCommitMessage =
+                gen {
+                    let! desc =
+                        Gen.frequency [ 3, Gen.constant (Bogus.Faker().Lorem.Sentence())
+                                        1, Gen.elements [""; " "]]
+                    let! scope =
+                        Gen.frequency [ 3, Gen.map (fun word -> $"{word}") (Gen.constant (Bogus.Faker().Lorem.Word()))
+                                        1, Gen.elements [""; " "]]
+                    let text = $"{Calaf.Domain.Commit.FixPrefix}{leftBracketOrEmpty scope}{scope}{rightBracketOrEmpty scope}{Calaf.Domain.Commit.EndOfPattern} {desc}"
+                    let desc =
+                        if System.String.IsNullOrWhiteSpace desc
+                        then None
+                        else Some desc
+                    let scope =
+                        if System.String.IsNullOrWhiteSpace scope
+                        then None
+                        else Some scope
+                    
+                    return (text, CommitMessage.Fix (false, scope, desc))
+                }
+                
+            let otherCommit: Gen<Commit> =
+                gen {
+                    let! text, message = otherCommitMessage
+                    let! commitHash = commitHash
+                    let! timeStamp = genValidDateTimeOffset
+                    return { Message = message
+                             Text    = text
+                             Hash    = commitHash
+                             When    = timeStamp }
+                }
+                
+            let fixNonBreakingChangeCommit: Gen<Commit> =
+                gen {
+                    let! text, message = fixNonBreakingChangeCommitMessage
+                    let! commitHash = commitHash
+                    let! timeStamp = genValidDateTimeOffset
+                    return { Message = message
+                             Text    = text
+                             Hash    = commitHash
+                             When    = timeStamp }
+                }
             
         let gitCommitInfo : Gen<GitCommitInfo> =
             gen {
@@ -1388,17 +1452,8 @@ module Generator =
                     3, Gen.constant (Some commit)
                 ]
                 return { Name = name; Commit = commit }
-            }
-            
-            
-        let commit: Gen<Commit> =
-            gen {
-                let! commitText = commitText
-                let! commitHash = commitHash
-                let! timeStamp = genValidDateTimeOffset
-                return { Text = commitText; Hash = commitHash; When = timeStamp }
-            }
-            
+            }        
+                
         let calVerGitTagInfo =
             gen {
                 let! validCalVerString = CalendarVersion.TagString
@@ -1459,7 +1514,8 @@ module Generator =
         let commitOrNone =
             Gen.frequency [
                 1, Gen.constant None
-                3, commit |> Gen.map Some
+                2, Commit.otherCommit |> Gen.map Some
+                2, Commit.fixNonBreakingChangeCommit |> Gen.map Some
             ]
             
         let calendarVersionTag : Gen<Tag> =            
