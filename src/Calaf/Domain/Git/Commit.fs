@@ -81,11 +81,17 @@ let private createCommitMessage message =
     | FeatureNonBreakingChange (s, m) ->        
         CommitMessage.Feature (nonBreakingChange, s, m)
     | FeatureBreakingChange (s, m) ->
-        CommitMessage.Feature (breakingChange, s, m)    
+        CommitMessage.Feature (breakingChange, s, m)
+    | FixNonBreakingChange (s, m) ->
+        CommitMessage.Fix (nonBreakingChange, s, m)
+    | FixBreakingChange (s, m) ->
+        CommitMessage.Fix (breakingChange, s, m)
     | _ ->
         CommitMessage.Other (toValueOrNone message)
 
 let create (commitInfo: GitCommitInfo) =
-    { Text = commitInfo.Text
+    let message = createCommitMessage commitInfo.Text
+    { Message = message
+      Text = commitInfo.Text
       Hash = commitInfo.Hash
       When = commitInfo.When }

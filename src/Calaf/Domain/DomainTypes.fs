@@ -82,6 +82,7 @@ module Values =
     }
     
     type Commit = {
+        Message: CommitMessage
         Text: CommitText        
         Hash: CommitHash
         When: System.DateTimeOffset
