@@ -46,4 +46,5 @@ module internal Internals =
             newMonth dt
             
     let internal asDateTimeOffset (calVer: CalendarVersion) =
-        (int calVer.Year, int calVer.Month, 1) |> System.DateTime |> System.DateTimeOffset
+        (int calVer.Year, int calVer.Month, 1, 0, 0, 0, System.TimeSpan.Zero)        
+        |> System.DateTimeOffset
