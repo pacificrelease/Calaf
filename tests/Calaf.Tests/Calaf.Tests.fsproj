@@ -38,6 +38,7 @@
     <Compile Include="Application\UseCases\MakeTests.fs" />
     <Compile Include="Cli\CliTests.fs" />
     <Compile Include="Integration\Adapters\GitTests.fs" />
+    <Compile Include="Integration\Adapters\FileSystemTests.fs" />
     <Compile Include="Program.fs" />    
   </ItemGroup>
   <ItemGroup>
