@@ -1386,25 +1386,18 @@ module Git =
             then System.String.Empty
             else ")"
             
-        let private otherCommitMessage =
+        let private commitEntry breakingChange =
             gen {
-                let! text =
-                    Gen.frequency [ 3, Gen.constant (Bogus.Faker().Lorem.Sentence())
-                                    1, Gen.elements [""; " "]]
-                if System.String.IsNullOrWhiteSpace text
-                then return (text, CommitMessage.Other None)
-                else return (text, CommitMessage.Other (Some text))
-            }
-            
-        let private fixNonBreakingChangeCommitMessage =
-            gen {
-                let! desc =
-                    Gen.frequency [ 3, Gen.constant (Bogus.Faker().Lorem.Sentence())
-                                    1, Gen.elements [""; " "]]
+                let! desc = commitText
                 let! scope =
                     Gen.frequency [ 3, Gen.map (fun word -> $"{word}") (Gen.constant (Bogus.Faker().Lorem.Word()))
                                     1, Gen.elements [""; " "]]
-                let text = $"{Calaf.Domain.Commit.FixPrefix}{leftBracketOrEmpty scope}{scope}{rightBracketOrEmpty scope}{Calaf.Domain.Commit.EndOfPattern} {desc}"
+                let breakingChange =
+                    if breakingChange
+                    then Calaf.Domain.Commit.BreakingChange
+                    else System.String.Empty                    
+                let text =
+                    $"{Calaf.Domain.Commit.FixPrefix}{leftBracketOrEmpty scope}{scope}{rightBracketOrEmpty scope}{breakingChange}{Calaf.Domain.Commit.EndOfPattern} {desc}"
                 let desc =
                     if System.String.IsNullOrWhiteSpace desc
                     then None
@@ -1413,8 +1406,43 @@ module Git =
                     if System.String.IsNullOrWhiteSpace scope
                     then None
                     else Some scope
-                
-                return (text, CommitMessage.Fix (false, scope, desc))
+                return (text, desc, scope)
+            }
+            
+        let private otherCommitMessage =
+            gen {                
+                let! text = commitText                    
+                if System.String.IsNullOrWhiteSpace text
+                then return (text, CommitMessage.Other None)
+                else return (text, CommitMessage.Other (Some text))
+            }
+            
+        let private fixNonBreakingChangeCommitMessage =
+            gen {
+                let nonBreakingChange = false
+                let! text, desc, scope = commitEntry nonBreakingChange                
+                return (text, CommitMessage.Fix (nonBreakingChange, scope, desc))
+            }
+            
+        let private fixBreakingChangeCommitMessage =
+            gen {
+                let breakingChange = true
+                let! text, desc, scope = commitEntry breakingChange                
+                return (text, CommitMessage.Fix (breakingChange, scope, desc))
+            }
+            
+        let private featNonBreakingChangeCommitMessage =
+            gen {
+                let nonBreakingChange = false
+                let! text, desc, scope = commitEntry nonBreakingChange                
+                return (text, CommitMessage.Feature (nonBreakingChange, scope, desc))
+            }
+            
+        let private featBreakingChangeCommitMessage =
+            gen {
+                let breakingChange = true
+                let! text, desc, scope = commitEntry breakingChange                
+                return (text, CommitMessage.Feature (breakingChange, scope, desc))
             }
             
         let otherCommit: Gen<Commit> =
@@ -1431,6 +1459,39 @@ module Git =
         let fixNonBreakingChangeCommit: Gen<Commit> =
             gen {
                 let! text, message = fixNonBreakingChangeCommitMessage
+                let! commitHash = commitHash
+                let! timeStamp = genValidDateTimeOffset
+                return { Message = message
+                         Text    = text
+                         Hash    = commitHash
+                         When    = timeStamp }
+            }
+            
+        let fixBreakingChangeCommit: Gen<Commit> =
+            gen {
+                let! text, message = fixBreakingChangeCommitMessage
+                let! commitHash = commitHash
+                let! timeStamp = genValidDateTimeOffset
+                return { Message = message
+                         Text    = text
+                         Hash    = commitHash
+                         When    = timeStamp }
+            }
+            
+        let featNonBreakingChangeCommit: Gen<Commit> =
+            gen {
+                let! text, message = featNonBreakingChangeCommitMessage
+                let! commitHash = commitHash
+                let! timeStamp = genValidDateTimeOffset
+                return { Message = message
+                         Text    = text
+                         Hash    = commitHash
+                         When    = timeStamp }
+            }
+            
+        let featBreakingChangeCommit: Gen<Commit> =
+            gen {
+                let! text, message = featBreakingChangeCommitMessage
                 let! commitHash = commitHash
                 let! timeStamp = genValidDateTimeOffset
                 return { Message = message
@@ -1528,6 +1589,9 @@ module Git =
             1, Gen.constant None
             2, Commit.otherCommit |> Gen.map Some
             2, Commit.fixNonBreakingChangeCommit |> Gen.map Some
+            2, Commit.fixBreakingChangeCommit |> Gen.map Some
+            2, Commit.featNonBreakingChangeCommit |> Gen.map Some
+            2, Commit.featBreakingChangeCommit |> Gen.map Some
         ]
         
     let calendarVersionTag : Gen<Tag> =            
