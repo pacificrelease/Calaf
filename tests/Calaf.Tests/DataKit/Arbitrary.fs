@@ -5,31 +5,31 @@ open FsCheck.FSharp
 module Arbitrary =
     type internal validMicroUInt32 =
         static member validMicroUInt32() =
-            Arb.fromGen Generator.Primitive.validMicroUInt32
+            Arb.fromGen Generator.Common.validMicroUInt32
             
     type internal greaterThanZeroBeforeUInt32MinusOne =
         static member greaterThanZeroUInt32() =
-            Arb.fromGen Generator.Primitive.greaterThanZeroBeforeUInt32MinusOne
+            Arb.fromGen Generator.Common.greaterThanZeroBeforeUInt32MinusOne
             
     type internal nonNumericString =
         static member nonNumericString() =
-            Arb.fromGen Generator.Primitive.nonNumericString
+            Arb.fromGen Generator.Common.nonNumericString
             
     type internal nullOrWhiteSpaceString =
         static member nullOrWhiteSpaceString() =
-            Arb.fromGen Generator.Primitive.nullOrWhiteSpaceString
+            Arb.fromGen Generator.Common.nullOrWhiteSpaceString
             
     type internal overflowMicroString =
         static member overflowMicroString() =
-            Arb.fromGen Generator.Primitive.overflowMicroString
+            Arb.fromGen Generator.Common.overflowMicroString
             
     type internal invalidThreePartString =
         static member invalidThreePartString() =
-            Arb.fromGen Generator.Primitive.invalidThreePartString 
+            Arb.fromGen Generator.Common.invalidThreePartString 
             
     type internal directoryPathString =
         static member directoryPathString() =
-            Arb.fromGen Generator.Primitive.directoryPathString
+            Arb.fromGen Generator.Common.directoryPathString
             
     module Build =
         type wrongString =

@@ -15,15 +15,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="DataKit\Internals.fs" />
-    <Compile Include="DataKit\Generator\Primitive.fs" />
-    <Compile Include="DataKit\Generator\Build.fs" />
-    <Compile Include="DataKit\Generator\Day.fs" />
-    <Compile Include="DataKit\Generator\Month.fs" />
-    <Compile Include="DataKit\Generator\Year.fs" />
-    <Compile Include="DataKit\Generator\CalendarVersion.fs" />
-    <Compile Include="DataKit\Generator\SemanticVersion.fs" />
-    <Compile Include="DataKit\Generator\Git.fs" />
-    <Compile Include="DataKit\Generator\Contracts.fs" />
+    <Compile Include="DataKit\Generator.fs" />
     <Compile Include="DataKit\Arbitrary.fs" />
     <Compile Include="Domain\Version\DayTests.fs" />
     <Compile Include="Domain\Version\BuildTests.fs" />
