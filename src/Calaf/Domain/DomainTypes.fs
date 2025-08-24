@@ -56,12 +56,6 @@ module Values =
         | CalVer of CalendarVersion
         | SemVer of SemanticVersion
         | Unsupported
-        
-    type Changelog = {
-        Features : string list
-        Fixes : string list
-        BreakingChanges : string list
-    }
 
     // Repository
     type SignatureName = string
@@ -95,6 +89,12 @@ module Values =
     // DU for events
     [<Struct>] 
     type RepositoryState = | Damaged | Unsigned | Unborn | Dirty | Ready
+    
+    type Changelog = {
+        Features : CommitMessage list
+        Fixes : CommitMessage list
+        BreakingChanges : CommitMessage list
+    }
     
     // File System
     [<Struct>]
