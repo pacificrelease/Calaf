@@ -493,7 +493,7 @@ module Arbitrary =
             static member semanticVersionStr() =
                 Arb.fromGen Generator.SematicVersion.semanticVersionStr
                 
-    module internal Git =
+    module internal Git =                    
         type branchName =
             static member branchName() =
                 Arb.fromGen Generator.Git.branchName
@@ -541,3 +541,24 @@ module Arbitrary =
         type baseGitRepositoryInfo =
             static member baseGitRepositoryInfo() =
                 Arb.fromGen Generator.Git.baseGitRepositoryInfo
+        
+        module Commit =
+            type internal Accidental =
+                static member Accidental() =
+                    Arb.fromGen Generator.Git.Commit.Accidental
+                    
+            type internal FeatList =
+                static member FeatList() =
+                    Arb.fromGen Generator.Git.Commit.FeatList
+                    
+            type internal FixList =
+                static member FixList() =
+                    Arb.fromGen Generator.Git.Commit.FixList
+                    
+            type internal OtherList =
+                static member OtherList() =
+                    Arb.fromGen Generator.Git.Commit.OtherList
+                    
+            type internal AccidentalsList =
+                static member AccidentalsList() =
+                    Arb.fromGen Generator.Git.Commit.AccidentalsList

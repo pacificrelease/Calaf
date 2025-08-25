@@ -1500,6 +1500,73 @@ module Git =
                          When    = timeStamp }
             }
         
+        let Feat : Gen<Commit> =
+            Gen.frequency [ 1, featBreakingChangeCommit
+                            1, featNonBreakingChangeCommit ]
+            
+        let Fix : Gen<Commit> =
+            Gen.frequency [ 1, fixBreakingChangeCommit
+                            1, fixNonBreakingChangeCommit ]
+            
+        let Other : Gen<Commit> =
+            Gen.frequency [ 1, otherCommit ]
+            
+        let Accidental : Gen<Commit> =
+            Gen.frequency [ 1, Feat
+                            1, Fix ]
+            
+        let FeatList =
+            gen {
+                let! smallCount = Gen.choose(1, 50)
+                let! middleCount = Gen.choose(51, 100)            
+                let! bigCount = Gen.choose(101, 500)            
+                let! choice = Gen.frequency [
+                    1, Gen.arrayOfLength smallCount  Feat
+                    2, Gen.arrayOfLength middleCount Feat
+                    1, Gen.arrayOfLength bigCount    Feat
+                ]
+                return choice |> Array.toList
+            }
+            
+        let FixList =
+            gen {
+                let! smallCount = Gen.choose(1, 50)
+                let! middleCount = Gen.choose(51, 100)            
+                let! bigCount = Gen.choose(101, 500)            
+                let! choice = Gen.frequency [
+                    1, Gen.arrayOfLength smallCount  Fix
+                    2, Gen.arrayOfLength middleCount Fix
+                    1, Gen.arrayOfLength bigCount    Fix
+                ]
+                return choice |> Array.toList
+            }
+            
+        let OtherList =
+            gen {
+                let! smallCount = Gen.choose(1, 50)
+                let! middleCount = Gen.choose(51, 100)            
+                let! bigCount = Gen.choose(101, 500)            
+                let! choice = Gen.frequency [
+                    1, Gen.arrayOfLength smallCount  Other
+                    2, Gen.arrayOfLength middleCount Other
+                    1, Gen.arrayOfLength bigCount    Other
+                ]
+                return choice |> Array.toList
+            }
+            
+        let AccidentalsList =
+            gen {
+                let! smallCount = Gen.choose(1, 50)
+                let! middleCount = Gen.choose(51, 100)            
+                let! bigCount = Gen.choose(101, 500)            
+                let! choice = Gen.frequency [
+                    1, Gen.arrayOfLength smallCount  Accidental
+                    2, Gen.arrayOfLength middleCount Accidental
+                    1, Gen.arrayOfLength bigCount    Accidental
+                ]
+                return choice |> Array.toList
+            }
+        
     let gitCommitInfo : Gen<GitCommitInfo> =
         gen {
             let! commitText = commitText
