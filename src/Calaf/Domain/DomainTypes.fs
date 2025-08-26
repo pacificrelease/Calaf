@@ -146,8 +146,14 @@ module Values =
 module Entities =
     open Values
     
+    type VersionedTag = {
+        Name: TagName
+        Version: Version
+        Commit: Commit option
+    }
+    
     type Tag =
-        | Versioned   of name: TagName * version: Version * commit: Commit option
+        | Versioned   of VersionedTag
         | Unversioned of name: TagName
 
     type Repository =

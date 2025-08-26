@@ -12,7 +12,7 @@ module CreatePropertiesTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.Git.calVerGitTagInfo> |])>]
     let ``CalVer-named tag always creates Tag.Versioned with the corresponding CalVer version`` (contract: GitTagInfo)  =
         match create contract with
-        | Tag.Versioned(name, CalVer _, commitOption) ->
+        | Tag.Versioned { Name = name; Version = CalVer _; Commit = commitOption } ->
             name = contract.Name &&
             Option.isSome contract.Commit = Option.isSome commitOption
         | _ -> false
@@ -20,7 +20,7 @@ module CreatePropertiesTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.Git.semVerGitTagInfo> |])>]
     let ``SemVer-named tag always creates Tag.Versioned with the corresponding SemVer version`` (contract: GitTagInfo) =
         match create contract with
-        | Tag.Versioned(name, SemVer _, commitOption) ->
+        | Tag.Versioned { Name = name; Version = SemVer _; Commit = commitOption } ->
             name = contract.Name &&
             Option.isSome contract.Commit = Option.isSome commitOption
         | _ -> false
@@ -35,11 +35,11 @@ module CreatePropertiesTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.Git.calendarVersionOrSemanticVersionGitTagInfo> |])>]
     let ``CalVer or SemVer named tag with the commit option creates Tag.Versioned with the corresponding commit option`` (gitTagInfo: GitTagInfo) =
         match create gitTagInfo, gitTagInfo.Commit with
-        | Tag.Versioned(_, _, Some commit), Some expectedCommit ->
+        | Tag.Versioned { Commit = Some commit }, Some expectedCommit ->
             expectedCommit.Text = commit.Text &&
             expectedCommit.Hash = commit.Hash &&
             expectedCommit.When = commit.When
-        | Tag.Versioned(_, _, None), None ->
+        | Tag.Versioned { Commit = None }, None ->
             true
         | _ -> false
         

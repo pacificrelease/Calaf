@@ -1668,14 +1668,18 @@ module Git =
             let tagNameSb = System.Text.StringBuilder($"{calendarVersion.Year}.{calendarVersion.Month}")
             let tagNameSb = if calendarVersion.Micro.IsSome then tagNameSb.Append calendarVersion.Micro.Value else tagNameSb 
             let! maybeCommit = commitOrNone
-            return Tag.Versioned (tagNameSb.ToString(), (calendarVersion |> CalVer), maybeCommit)
+            return Tag.Versioned {
+                Name = tagNameSb.ToString()
+                Version = (calendarVersion |> CalVer)
+                Commit = maybeCommit
+            }
         }
         
     let sematicVersionTag : Gen<Tag> =            
         gen {
             let! semanticVersion, stringEquivalent = SematicVersion.semanticVersion2
             let! maybeCommit = commitOrNone
-            return Tag.Versioned (stringEquivalent, (SemVer semanticVersion), maybeCommit)
+            return Tag.Versioned { Name = stringEquivalent; Version = (SemVer semanticVersion); Commit = maybeCommit }
         }
         
     let unversionedTag : Gen<Tag> =            
