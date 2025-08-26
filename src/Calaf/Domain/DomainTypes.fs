@@ -85,6 +85,12 @@ module Values =
     type Head =
         | Attached of commit: Commit * branchName: BranchName
         | Detached of commit: Commit
+        
+    type RepositoryMetadata = {
+        Head: Head
+        Signature: Signature
+        Version: CalendarVersion option
+    }
 
     // DU for events
     [<Struct>] 
@@ -160,8 +166,8 @@ module Entities =
         | Damaged  of directory: string
         | Unsigned of directory: string
         | Unborn   of directory: string
-        | Dirty    of directory: string * head: Head * signature: Signature * version: CalendarVersion option
-        | Ready    of directory: string * head: Head * signature: Signature * version: CalendarVersion option
+        | Dirty    of directory: string * metadata: RepositoryMetadata
+        | Ready    of directory: string * metadata: RepositoryMetadata
 
     type Project =
         | Versioned   of VersionedProject

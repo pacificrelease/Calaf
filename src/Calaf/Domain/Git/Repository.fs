@@ -19,8 +19,8 @@ module Events =
         let state = toState repo
         let version =
             match repo with
-            | Dirty (_, _, _, calendarVersion)
-            | Ready (_, _, _, calendarVersion) -> Option.map CalVer calendarVersion
+            | Dirty (_, { Version = Some calendarVersion })
+            | Ready (_, { Version = Some calendarVersion }) -> Some (CalVer calendarVersion)
             | _ -> None
         { Version = version; State = state }
         |> RepositoryEvent.StateCaptured
@@ -48,7 +48,7 @@ let tryCapture (repoInfo: GitRepositoryInfo) =
                            |> Seq.map Tag.create
                            |> Tag.chooseCalendarVersions        
                            |> Version.tryMax
-                return ctor (repoInfo.Directory, head, signature, version)
+                return ctor (repoInfo.Directory, { Head = head; Signature = signature; Version = version })
             }
         let! path = tryValidatePath repoInfo.Directory
         match repoInfo with        
@@ -79,14 +79,14 @@ let tryCapture (repoInfo: GitRepositoryInfo) =
     
 let tryGetCalendarVersion repo =
     match repo with
-    | Ready (_, _, _, version) -> version
-    | Dirty (_, _, _, version) -> version
+    | Ready (_, { Version = version }) -> version
+    | Dirty (_, { Version = version }) -> version
     | _ -> None
     
 let tryProfile (repo: Repository) (pendingFilesPaths: string list) =    
     match repo with        
-    | Ready (dir, _, signature, Some currentVersion)        
-    | Dirty (dir, _, signature, Some currentVersion) ->
+    | Ready (dir, { Signature = signature; Version = Some currentVersion })        
+    | Dirty (dir, { Signature = signature; Version = Some currentVersion }) ->
         let tagName = Version.toTagName currentVersion
         let commitText = Version.toCommitText currentVersion
         Some { Directory = dir
@@ -97,23 +97,24 @@ let tryProfile (repo: Repository) (pendingFilesPaths: string list) =
     | _ -> None    
     
 let tryRelease (repo: Repository) (nextVersion: CalendarVersion) =
-    let performBump (ctor, dir, head, signature, currentVersion) =
-        let sameVersion = currentVersion
-                            |> Option.map ((=) nextVersion)
-                            |> Option.exists id
+    let release (ctor, dir, metadata: RepositoryMetadata) =
+        let sameVersion =
+            metadata.Version
+            |> Option.map ((=) nextVersion)
+            |> Option.exists id
         if sameVersion
         then
             Error RepositoryAlreadyCurrent
         else
-            let repo = ctor (dir, head, signature, Some nextVersion)
-            let event = Events.toRepositoryBumped repo nextVersion signature
+            let repo = ctor (dir, { metadata with Version = Some nextVersion })
+            let event = Events.toRepositoryBumped repo nextVersion metadata.Signature
             Ok (repo, [event])
     
     match repo with        
-    | Ready (dir, head, signature, currentVersion) ->
-        performBump (Repository.Ready, dir, head, signature, currentVersion)
-    | Dirty (dir, head, signature, currentVersion) ->
-        performBump (Repository.Dirty, dir, head, signature, currentVersion)
+    | Ready (dir, metadata) ->
+        release (Repository.Ready, dir, metadata)
+    | Dirty (dir, metadata) ->
+        release (Repository.Dirty, dir, metadata)
     | Unborn   _ -> RepositoryHeadUnborn |> Error
     | Unsigned _ -> RepositoryUnsigned   |> Error
     | Damaged  _ -> RepositoryCorrupted  |> Error
