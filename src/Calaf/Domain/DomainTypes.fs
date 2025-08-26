@@ -89,7 +89,7 @@ module Values =
     type RepositoryMetadata = {
         Head: Head
         Signature: Signature
-        Version: CalendarVersion option
+        Version: Version option
     }
 
     // DU for events
