@@ -4,7 +4,7 @@ open FsCheck.Xunit
 open Xunit
 open Swensen.Unquote
 
-open Calaf.Domain.DomainTypes.Values
+open Calaf.Domain.DomainTypes
 open Calaf.Domain.Version
 open Calaf.Tests
 

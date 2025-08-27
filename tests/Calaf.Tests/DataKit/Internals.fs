@@ -1,7 +1,7 @@
 ﻿namespace Calaf.Tests
 
 module internal Internals =
-    open Calaf.Domain.DomainTypes.Values
+    open Calaf.Domain.DomainTypes
     
     let internal preventMicroOverflow (micro: Micro option) =
         match micro with

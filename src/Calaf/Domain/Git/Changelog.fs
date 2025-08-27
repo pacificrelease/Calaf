@@ -1,6 +1,6 @@
 module internal Calaf.Domain.Changelog
 
-open Calaf.Domain.DomainTypes.Values
+open Calaf.Domain.DomainTypes
 
 let tryCreate (commits: Commit list) =
     if commits.IsEmpty then

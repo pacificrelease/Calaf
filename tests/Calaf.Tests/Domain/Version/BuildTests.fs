@@ -5,7 +5,7 @@ open Swensen.Unquote
 open Xunit
 
 open Calaf.Domain
-open Calaf.Domain.DomainTypes.Values
+open Calaf.Domain.DomainTypes
 open Calaf.Domain.Build
 open Calaf.Tests
 

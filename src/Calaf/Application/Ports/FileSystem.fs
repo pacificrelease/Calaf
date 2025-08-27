@@ -2,7 +2,6 @@ namespace Calaf.Application
 
 open Calaf.Contracts
 
-
 type IFileSystem =
     abstract tryReadDirectory:
         directory: string -> pattern: string -> Result<DirectoryInfo, CalafError>

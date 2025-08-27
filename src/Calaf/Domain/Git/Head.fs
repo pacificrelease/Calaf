@@ -1,7 +1,7 @@
 ﻿module internal Calaf.Domain.Head
 
 open Calaf.Contracts
-open Calaf.Domain.DomainTypes.Values
+open Calaf.Domain.DomainTypes
 
 let tryCreate (detached: bool) (commitInfo: GitCommitInfo) (branchName: string option) =
     let commit = Commit.create commitInfo    

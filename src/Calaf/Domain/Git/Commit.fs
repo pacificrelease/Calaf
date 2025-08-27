@@ -1,7 +1,7 @@
 ﻿module internal Calaf.Domain.Commit
 
 open Calaf.Contracts
-open Calaf.Domain.DomainTypes.Values
+open Calaf.Domain.DomainTypes
 
 [<Literal>]
 let internal FeaturePrefix = "feat"

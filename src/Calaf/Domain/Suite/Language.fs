@@ -1,6 +1,6 @@
 ﻿module internal Calaf.Domain.Language
 
-open Calaf.Domain.DomainTypes.Values
+open Calaf.Domain.DomainTypes
 
 [<Literal>]
 let internal FSharpProjExtension = ".fsproj"

@@ -3,8 +3,7 @@ module internal Calaf.Domain.Suite
 open FsToolkit.ErrorHandling
 
 open Calaf.Extensions.InternalExtensions
-open Calaf.Domain.DomainTypes.Values
-open Calaf.Domain.DomainTypes.Entities
+open Calaf.Domain.DomainTypes
 open Calaf.Domain.DomainEvents
 open Calaf.Domain.Project
 

@@ -1,6 +1,6 @@
 module internal Calaf.Domain.Day
 
-open Calaf.Domain.DomainTypes.Values
+open Calaf.Domain.DomainTypes
 
 [<Literal>]
 let internal LowerDayBoundary= 1uy

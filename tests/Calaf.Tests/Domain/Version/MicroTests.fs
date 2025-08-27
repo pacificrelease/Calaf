@@ -28,18 +28,18 @@ module TryParseFromStringPropertyTests =
         
 module ReleasePropertiesTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.greaterThanZeroBeforeUInt32MinusOne> |], MaxTest = 200)>]
-    let ``Release Micro with value less than uint32 - 1 increments value by one`` (micro: Calaf.Domain.DomainTypes.Values.Micro) =        
+    let ``Release Micro with value less than uint32 - 1 increments value by one`` (micro: Calaf.Domain.DomainTypes.Micro) =        
         micro
          |> Some
          |> release = micro + 1u
          
     [<Property(Arbitrary = [| typeof<Arbitrary.greaterThanZeroBeforeUInt32MinusOne> |], MaxTest = 200)>]
-    let ``Release Micro always returns a positive value`` (micro: Calaf.Domain.DomainTypes.Values.Micro option) =
+    let ``Release Micro always returns a positive value`` (micro: Calaf.Domain.DomainTypes.Micro option) =
         micro
         |> release > 0u
         
     [<Property(Arbitrary = [| typeof<Arbitrary.greaterThanZeroBeforeUInt32MinusOne> |], MaxTest = 200)>]
-    let ``Release Micro always preserves ordering`` (micro: Calaf.Domain.DomainTypes.Values.Micro) =
+    let ``Release Micro always preserves ordering`` (micro: Calaf.Domain.DomainTypes.Micro) =
         let release   = micro    |> Some |> Calaf.Domain.Micro.release
         let release'  = release  |> Some |> Calaf.Domain.Micro.release
         let release'' = release' |> Some |> Calaf.Domain.Micro.release

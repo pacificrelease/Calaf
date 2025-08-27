@@ -1,6 +1,6 @@
 namespace Calaf.Domain.DomainEvents
 
-open Calaf.Domain.DomainTypes.Values
+open Calaf.Domain.DomainTypes
 
 // Repository events
 type RepositoryStateCaptured = {    

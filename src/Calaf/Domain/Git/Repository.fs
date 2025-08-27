@@ -3,8 +3,7 @@
 open FsToolkit.ErrorHandling
 
 open Calaf.Contracts
-open Calaf.Domain.DomainTypes.Values
-open Calaf.Domain.DomainTypes.Entities
+open Calaf.Domain.DomainTypes
 open Calaf.Domain.DomainEvents
 
 module Events =

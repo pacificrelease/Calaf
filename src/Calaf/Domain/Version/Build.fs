@@ -3,7 +3,7 @@ module internal Calaf.Domain.Build
 open System
 open FsToolkit.ErrorHandling
 
-open Calaf.Domain.DomainTypes.Values
+open Calaf.Domain.DomainTypes
 
 [<Literal>]
 let internal NumberIncrementStep = 1us

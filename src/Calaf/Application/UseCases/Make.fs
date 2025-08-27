@@ -5,7 +5,7 @@ open FsToolkit.ErrorHandling
 
 open Calaf.Contracts
 open Calaf.Domain
-open Calaf.Domain.DomainTypes.Entities
+open Calaf.Domain.DomainTypes
 open Calaf.Application
 
 module internal Make =

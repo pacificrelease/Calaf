@@ -3,7 +3,7 @@
 open FsToolkit.ErrorHandling
 
 open Calaf.Extensions.InternalExtensions.RegularExpressions
-open Calaf.Domain.DomainTypes.Values
+open Calaf.Domain.DomainTypes
 
 [<Literal>]
 let internal YearMonthDivider =

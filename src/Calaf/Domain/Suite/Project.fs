@@ -4,8 +4,7 @@ open FsToolkit.ErrorHandling
 
 open Calaf.Extensions.InternalExtensions
 open Calaf.Contracts
-open Calaf.Domain.DomainTypes.Values
-open Calaf.Domain.DomainTypes.Entities
+open Calaf.Domain.DomainTypes
 
 module XmlSchema =
     [<Literal>]

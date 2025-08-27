@@ -1,188 +1,184 @@
 ﻿// Domain Types
 namespace Calaf.Domain.DomainTypes
 
-module Values =
-    // Common
-    type Patch = uint32
-    type Micro = uint32
-    type DayOfMonth = uint8
-    type BuildNumber = uint16
-    type NightlyBuild = {
-        Day:    DayOfMonth
-        Number: BuildNumber
-    }
-    type AlphaBuild = {
-        Number: BuildNumber
-    }
-    type BetaBuild = {
-        Number: BuildNumber
-    }
-    type ReleaseCandidateBuild = {
-        Number: BuildNumber
-    }
-    type Build =
-        | Nightly                 of NightlyBuild
-        | Alpha                   of AlphaBuild
-        | AlphaNightly            of alpha: AlphaBuild * nightly: NightlyBuild
-        | Beta                    of BetaBuild
-        | BetaNightly             of beta: BetaBuild * nightly: NightlyBuild
-        | ReleaseCandidate        of ReleaseCandidateBuild
-        | ReleaseCandidateNightly of releaseCandidate: ReleaseCandidateBuild * nightly: NightlyBuild
-    // SemVer
-    type Major = uint32
-    type Minor = uint32
-    // CalVer
-    type Year  = uint16
-    type Month = uint8
+// Common
+type Patch = uint32
+type Micro = uint32
+type DayOfMonth = uint8
+type BuildNumber = uint16
+type NightlyBuild = {
+    Day:    DayOfMonth
+    Number: BuildNumber
+}
+type AlphaBuild = {
+    Number: BuildNumber
+}
+type BetaBuild = {
+    Number: BuildNumber
+}
+type ReleaseCandidateBuild = {
+    Number: BuildNumber
+}
+type Build =
+    | Nightly                 of NightlyBuild
+    | Alpha                   of AlphaBuild
+    | AlphaNightly            of alpha: AlphaBuild * nightly: NightlyBuild
+    | Beta                    of BetaBuild
+    | BetaNightly             of beta: BetaBuild * nightly: NightlyBuild
+    | ReleaseCandidate        of ReleaseCandidateBuild
+    | ReleaseCandidateNightly of releaseCandidate: ReleaseCandidateBuild * nightly: NightlyBuild
+// SemVer
+type Major = uint32
+type Minor = uint32
+// CalVer
+type Year  = uint16
+type Month = uint8
 
-    // Value Object
-    // MAJOR.MINOR.PATCH-SUFFIX
-    type SemanticVersion = {
-        Major: Major
-        Minor: Minor
-        Patch: Patch
-    }
+// Value Object
+// MAJOR.MINOR.PATCH-SUFFIX
+type SemanticVersion = {
+    Major: Major
+    Minor: Minor
+    Patch: Patch
+}
 
-    //YYYY.MM.MICRO-SUFFIX
-    //YYYY.MM
-    type CalendarVersion = {
-        Year:  Year
-        Month: Month
-        Micro: Micro option
-        Build: Build option
-    }
+//YYYY.MM.MICRO-SUFFIX
+//YYYY.MM
+type CalendarVersion = {
+    Year:  Year
+    Month: Month
+    Micro: Micro option
+    Build: Build option
+}
+
+type VersionSource =
+    | Tag     of tagName: string
+    | Project of absolutePath : string
+
+type Version =
+    | CalVer of CalendarVersion
+    | SemVer of SemanticVersion
+    | Unsupported
+
+// Repository
+type SignatureName = string
+type SignatureEmail = string
+type CommitText = string
+type CommitMessage =
+    | Feature of breakingChange: bool * scope: string option * message: string option
+    | Fix     of breakingChange: bool * scope: string option * message: string option
+    | Other   of message: string option
+type CommitHash = string
+type TagName = string
+type BranchName = string
+
+type Signature = {
+    Name: SignatureName
+    Email: SignatureEmail
+    When: System.DateTimeOffset
+}
+
+type Commit = {
+    Message: CommitMessage
+    Text: CommitText        
+    Hash: CommitHash
+    When: System.DateTimeOffset
+}
+
+type Head =
+    | Attached of commit: Commit * branchName: BranchName
+    | Detached of commit: Commit
     
-    type VersionSource =
-        | Tag     of tagName: string
-        | Project of absolutePath : string
+type RepositoryMetadata = {
+    Head: Head
+    Signature: Signature
+    Version: Version option
+}
 
-    type Version =
-        | CalVer of CalendarVersion
-        | SemVer of SemanticVersion
-        | Unsupported
+// DU for events
+[<Struct>] 
+type RepositoryState = | Damaged | Unsigned | Unborn | Dirty | Ready
 
-    // Repository
-    type SignatureName = string
-    type SignatureEmail = string
-    type CommitText = string
-    type CommitMessage =
-        | Feature of breakingChange: bool * scope: string option * message: string option
-        | Fix     of breakingChange: bool * scope: string option * message: string option
-        | Other   of message: string option
-    type CommitHash = string
-    type TagName = string
-    type BranchName = string
+type VersionedTag = {
+    Name: TagName
+    Version: Version
+    Commit: Commit option
+}    
 
-    type Signature = {
-        Name: SignatureName
-        Email: SignatureEmail
-        When: System.DateTimeOffset
-    }
+type Changelog = {
+    Features : CommitMessage list
+    Fixes : CommitMessage list
+    BreakingChanges : CommitMessage list
+}    
+
+// File System
+[<Struct>]
+type Language =
+    | FSharp
+    | CSharp
     
-    type Commit = {
-        Message: CommitMessage
-        Text: CommitText        
-        Hash: CommitHash
-        When: System.DateTimeOffset
-    }
-    
-    type Head =
-        | Attached of commit: Commit * branchName: BranchName
-        | Detached of commit: Commit
-        
-    type RepositoryMetadata = {
-        Head: Head
-        Signature: Signature
-        Version: Version option
-    }
+type ProjectMetadata = {
+    Name : string
+    Extension: string
+    Directory : string
+    AbsolutePath : string
+}
 
-    // DU for events
-    [<Struct>] 
-    type RepositoryState = | Damaged | Unsigned | Unborn | Dirty | Ready
+type ProjectContent = 
+    | Xml  of System.Xml.Linq.XElement
+    | Json of System.Text.Json.JsonDocument
     
-    type Changelog = {
-        Features : CommitMessage list
-        Fixes : CommitMessage list
-        BreakingChanges : CommitMessage list
-    }
-    
-    // File System
-    [<Struct>]
-    type Language =
-        | FSharp
-        | CSharp
-        
-    type ProjectMetadata = {
-        Name : string
-        Extension: string
-        Directory : string
-        AbsolutePath : string
-    }
+type UnversionedProject = {
+    Metadata: ProjectMetadata
+    Language: Language
+}
 
-    type ProjectContent = 
-        | Xml  of System.Xml.Linq.XElement
-        | Json of System.Text.Json.JsonDocument
-        
-    type UnversionedProject = {
-        Metadata: ProjectMetadata
-        Language: Language
-    }
+type VersionedProject = {
+    Metadata: ProjectMetadata
+    Language: Language
+    Content: ProjectContent
+    Version: Version
+}
 
-    type VersionedProject = {
-        Metadata: ProjectMetadata
-        Language: Language
-        Content: ProjectContent
-        Version: Version
-    }
-    
-    type ProjectActionProfile = {
-        AbsolutePath: string
-        Content: System.Xml.Linq.XElement
-    }
-    
-    type RepositoryActionProfile = {
-        Directory: string
-        Files: string list
-        Signature: Signature
-        TagName: TagName
-        CommitText: CommitText
-    }   
-    
-    type WorkspaceActionProfile = {        
-        Projects: ProjectActionProfile list
-        Repository: RepositoryActionProfile option
-    }
+type ProjectActionProfile = {
+    AbsolutePath: string
+    Content: System.Xml.Linq.XElement
+}
 
-module Entities =
-    open Values
-    
-    type VersionedTag = {
-        Name: TagName
-        Version: Version
-        Commit: Commit option
-    }
-    
-    type Tag =
-        | Versioned   of VersionedTag
-        | Unversioned of name: TagName
+type RepositoryActionProfile = {
+    Directory: string
+    Files: string list
+    Signature: Signature
+    TagName: TagName
+    CommitText: CommitText
+}   
 
-    type Repository =
-        | Damaged  of directory: string
-        | Unsigned of directory: string
-        | Unborn   of directory: string
-        | Dirty    of directory: string * metadata: RepositoryMetadata
-        | Ready    of directory: string * metadata: RepositoryMetadata
+type WorkspaceActionProfile = {        
+    Projects: ProjectActionProfile list
+    Repository: RepositoryActionProfile option
+}
 
-    type Project =
-        | Versioned   of VersionedProject
-        | Unversioned of UnversionedProject    
+type Tag =
+    | Versioned   of VersionedTag
+    | Unversioned of name: TagName
 
-    type Suite =
-        | StandardSet of version: CalendarVersion * projects: Project list
+type Repository =
+    | Damaged  of directory: string
+    | Unsigned of directory: string
+    | Unborn   of directory: string
+    | Dirty    of directory: string * metadata: RepositoryMetadata
+    | Ready    of directory: string * metadata: RepositoryMetadata
 
-    type Workspace = {
-        Directory: string
-        Version: CalendarVersion
-        Repository: Repository option
-        Suite: Suite
-    }
+type Project =
+    | Versioned   of VersionedProject
+    | Unversioned of UnversionedProject    
+
+type Suite =
+    | StandardSet of version: CalendarVersion * projects: Project list
+
+type Workspace = {
+    Directory: string
+    Version: CalendarVersion
+    Repository: Repository option
+    Suite: Suite
+}

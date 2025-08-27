@@ -3,7 +3,8 @@
 open FsCheck
 open FsCheck.FSharp
 
-open Calaf.Domain.DomainTypes.Values
+open Calaf.Contracts
+open Calaf.Domain.DomainTypes
 
 module Common =
     let genBool =
@@ -1352,10 +1353,7 @@ module SematicVersion =
         }
         
 module Git =
-    open Common
-    
-    open Calaf.Contracts
-    open Calaf.Domain.DomainTypes.Entities
+    open Common   
     
     let branchName =            
         Gen.frequency [ 1, SematicVersion.semanticVersionTagStr
@@ -1758,7 +1756,6 @@ module Git =
 module Contracts =
     open System.Xml.Linq
     
-    open Calaf.Contracts
     open Calaf.Domain.Project.XmlSchema
     open Calaf.Application
       
