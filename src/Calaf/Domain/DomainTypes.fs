@@ -51,6 +51,10 @@ module Values =
         Micro: Micro option
         Build: Build option
     }
+    
+    type VersionSource =
+        | Tag     of tagName: string
+        | Project of absolutePath : string
 
     type Version =
         | CalVer of CalendarVersion
