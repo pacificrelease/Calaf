@@ -36,6 +36,7 @@ type DomainError =
     
     // Repository bump errors
     | RepositoryAlreadyCurrent
+    | RepositoryVersionCommitMessageMissing
     | RepositoryCorrupted
     | RepositoryHeadUnborn
     | RepositoryUnsigned
