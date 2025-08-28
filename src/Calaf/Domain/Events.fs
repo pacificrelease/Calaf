@@ -19,23 +19,23 @@ type RepositoryEvent =
     | ReleaseProvided of RepositoryReleaseProvided
 
     
-// Suite events
-type SuiteStateCaptured = {
+// Collection events
+type CollectionStateCaptured = {
     CalendarVersion: CalendarVersion
     CalendarVersionProjectsCount: uint16
     TotalProjectsCount: uint16
 }
 
-type SuiteReleaseCreated = {
+type CollectionReleaseCreated = {
     PreviousCalendarVersion: CalendarVersion
     NewCalendarVersion: CalendarVersion
     ProjectsBumpedCount: uint16
     TotalProjectsCount: uint16
 }
 
-type SuiteEvent =
-    | StateCaptured  of SuiteStateCaptured
-    | ReleaseCreated of SuiteReleaseCreated
+type CollectionEvent =
+    | StateCaptured  of CollectionStateCaptured
+    | ReleaseCreated of CollectionReleaseCreated
     
 // Workspace events
 type WorkspaceStateCaptured = {
@@ -43,7 +43,7 @@ type WorkspaceStateCaptured = {
     Version: CalendarVersion
     RepositoryExist: bool
     RepositoryVersion: CalendarVersion option
-    SuiteVersion: CalendarVersion
+    CollectionVersion: CalendarVersion
 }
 
 type WorkspaceReleaseCreated = {
@@ -59,5 +59,5 @@ type WorkspaceEvent =
     
 type DomainEvent =
     | Repository of RepositoryEvent
-    | Suite      of SuiteEvent
+    | Collection of CollectionEvent
     | Workspace  of WorkspaceEvent

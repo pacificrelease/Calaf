@@ -13,7 +13,7 @@ module Events =
           Version = workspace.Version
           RepositoryExist = workspace.Repository |> Option.isSome
           RepositoryVersion = workspace.Repository |> Option.bind Repository.tryGetCalendarVersion
-          SuiteVersion = Suite.getCalendarVersion workspace.Suite }
+          CollectionVersion = Collection.getCalendarVersion workspace.Collection }
         |> WorkspaceEvent.StateCaptured
         |> DomainEvent.Workspace
         
@@ -25,9 +25,9 @@ module Events =
         |> WorkspaceEvent.ReleaseCreated
         |> DomainEvent.Workspace
     
-let private combineVersions suite repoOption =
+let private combineVersions collection repoOption =
     [
-        yield Suite.getCalendarVersion suite
+        yield Collection.getCalendarVersion collection
         match repoOption |> Option.bind Repository.tryGetCalendarVersion with
         | Some version -> yield version
         | None -> ()
@@ -42,11 +42,11 @@ let private combineEvents primaryEvents secondaryEventsOption =
 
 let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
     result {
-        let! suite, suiteEvents =
+        let! collection, collectionEvents =
             directory.Projects
             |> List.map Project.tryCapture
             |> List.choose id
-            |> Suite.tryCapture
+            |> Collection.tryCapture
             
         let! repoResult =
             repoInfo
@@ -54,26 +54,32 @@ let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
         let events =
             match repoResult with
             | Some (_, repoEvents) ->
-                suiteEvents @ repoEvents
-            | None -> suiteEvents
+                collectionEvents @ repoEvents
+            | None -> collectionEvents
         let maybeRepo = repoResult |> Option.map fst
-        let! version = combineVersions suite maybeRepo |> Version.tryMax |> Option.toResult CalendarVersionMissing 
+        let! version =
+            combineVersions collection maybeRepo
+            |> Version.tryMax
+            |> Option.toResult CalendarVersionMissing 
         
         let workspace = {
             Directory  = directory.Directory
             Version    = version
             Repository = maybeRepo
-            Suite      = suite
+            Collection = collection
         }
         
         let event = Events.toWorkspaceCaptured workspace
         let events = event :: events
-        return workspace, events        
+        return workspace, events     
     }
     
 let profile (workspace: Workspace) =
-    let projectsProfiles  = Suite.tryProfile workspace.Suite
-    let repositoryProfile = workspace.Repository |> Option.bind(fun p -> Repository.tryProfile p (projectsProfiles |> List.map _.AbsolutePath))
+    let projectsProfiles  = Collection.tryProfile workspace.Collection
+    let repositoryProfile =
+        workspace.Repository
+        |> Option.bind (fun p ->
+            Repository.tryProfile p (projectsProfiles |> List.map _.AbsolutePath))
     { Projects = projectsProfiles
       Repository = repositoryProfile }
 
@@ -83,18 +89,18 @@ let tryRelease (workspace: Workspace) (nextVersion: CalendarVersion) =
         then
             return! WorkspaceAlreadyCurrent |> Error
         else
-            let! suite', suiteEvents = Suite.tryRelease workspace.Suite nextVersion
+            let! collection', collectionEvents = Collection.tryRelease workspace.Collection nextVersion
             let! repo' =
                 workspace.Repository
                 |> Option.traverseResult (fun repo -> Repository.tryRelease repo nextVersion)
             
             let events =
-               combineEvents suiteEvents (repo' |> Option.map snd)
+               combineEvents collectionEvents (repo' |> Option.map snd)
                 
             let workspace' =
                 { workspace with
                     Version = nextVersion
-                    Suite = suite'
+                    Collection = collection'
                     Repository = repo' |> Option.map fst }
             let event = Events.toWorkspaceReleased workspace' workspace.Version
             return workspace', events @ [event] 

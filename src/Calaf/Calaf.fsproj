@@ -59,9 +59,9 @@
     <Compile Include="Domain\Git\Head.fs" />
     <Compile Include="Domain\Git\Repository.fs" />
     <Compile Include="Domain\Git\Changelog.fs" />
-    <Compile Include="Domain\Suite\Language.fs" />
-    <Compile Include="Domain\Suite\Project.fs" />
-    <Compile Include="Domain\Suite\Suite.fs" />
+    <Compile Include="Domain\Collection\Language.fs" />
+    <Compile Include="Domain\Collection\Project.fs" />
+    <Compile Include="Domain\Collection\Collection.fs" />
     <Compile Include="Domain\Workspace.fs" />    
     <Compile Include="Application\Errors.fs" />
     <Compile Include="Application\Settings.fs" />

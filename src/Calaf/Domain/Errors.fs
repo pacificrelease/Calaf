@@ -21,9 +21,9 @@ type DomainError =
     | VersionElementMissing
     | VersionElementUpdateFailed
     
-    // Suite
+    // Collection
     // create error
-    | ProjectSuiteEmpty
+    | ProjectCollectionEmpty
     // bump errors
     | CalendarVersionMissing
     

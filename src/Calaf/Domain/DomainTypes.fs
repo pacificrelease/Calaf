@@ -173,12 +173,12 @@ type Project =
     | Versioned   of VersionedProject
     | Unversioned of UnversionedProject    
 
-type Suite =
-    | StandardSet of version: CalendarVersion * projects: Project list
+type Collection =
+    | Standard of version: CalendarVersion * projects: Project list
 
 type Workspace = {
     Directory: string
     Version: CalendarVersion
     Repository: Repository option
-    Suite: Suite
+    Collection: Collection
 }
