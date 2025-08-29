@@ -84,15 +84,23 @@ let profile (workspace: Workspace) =
       Repository = repositoryProfile }
 
 let tryRelease (workspace: Workspace) (nextVersion: CalendarVersion) =
-    result {        
-        if workspace.Version = nextVersion
+    result {
+        let sameVersion =
+            workspace.Version
+            |> (=) nextVersion
+        if sameVersion
         then
             return! WorkspaceAlreadyCurrent |> Error
         else
             let! collection', collectionEvents = Collection.tryRelease workspace.Collection nextVersion
+            
             let! repo' =
-                workspace.Repository
-                |> Option.traverseResult (fun repo -> Repository.tryRelease repo nextVersion)
+                match workspace.Repository with
+                | Some repo ->                    
+                    let r = Repository.tryRelease repo nextVersion
+                    r |> Result.map Some
+                | None ->
+                    Ok None
             
             let events =
                combineEvents collectionEvents (repo' |> Option.map snd)

@@ -360,6 +360,50 @@ let tryMax (versions: CalendarVersion seq) : CalendarVersion option =
                     let priority = 5
                     (v.Year, v.Month, v.Micro, priority, noPreReleaseNumber, noNightlyDay, noNightlyNumber))
         Some maxVersion
+        
+let tryMax2 (versions: RepositoryVersion seq) : RepositoryVersion option =
+    let noPreReleaseNumber = 0us
+    let noNightlyDay       = 0uy
+    let noNightlyNumber    = 0us
+    
+    match versions with
+    | _ when Seq.isEmpty versions -> None
+    | _ ->
+        let validVersions =
+            versions
+            |> Seq.choose (fun v ->
+                match v.Version with
+                | CalVer { Year = year; Month = month; Micro = micro; Build = Some build } ->
+                    let priority, preReleaseNum, nightlyDay, nightlyNum =
+                        match build with
+                        | Build.ReleaseCandidateNightly (rc, nightly) ->
+                            (4, rc.Number, nightly.Day, nightly.Number)
+                        | Build.ReleaseCandidate rcBuild ->
+                            (4, rcBuild.Number, noNightlyDay, noNightlyNumber)                    
+                        | Build.BetaNightly (beta, nightly) ->
+                            (3, beta.Number, nightly.Day, nightly.Number)
+                        | Build.Beta betaBuild ->
+                            (3, betaBuild.Number, noNightlyDay, noNightlyNumber)
+                        | Build.AlphaNightly (alpha, nightly) ->
+                            (2, alpha.Number, nightly.Day, nightly.Number)
+                        | Build.Alpha alphaBuild ->
+                            (2, alphaBuild.Number, noNightlyDay, noNightlyNumber)
+                        | Build.Nightly nightlyBuild ->
+                            (1, noPreReleaseNumber, nightlyBuild.Day, nightlyBuild.Number)
+                    Some (v, (year, month, micro, priority, preReleaseNum, nightlyDay, nightlyNum))
+                | CalVer { Year = year; Month = month; Micro = micro; Build = None } ->
+                    let priority = 5
+                    Some (v, (year, month, micro, priority, noPreReleaseNumber, noNightlyDay, noNightlyNumber))
+                | SemVer _ | Unsupported ->
+                    None)
+        
+        if Seq.isEmpty validVersions then
+            None
+        else
+            validVersions
+            |> Seq.maxBy snd
+            |> fst
+            |> Some
 
 let tryParseFromString (bareVersion: string) : Version option =
     option {

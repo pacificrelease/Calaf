@@ -74,7 +74,7 @@ let private (|FixBreakingChange|_|) (input: string) =
         Some (scope, description)
     else None
     
-let private createCommitMessage message =
+let createCommitMessage message =
     let nonBreakingChange = false
     let breakingChange = true
     match message with

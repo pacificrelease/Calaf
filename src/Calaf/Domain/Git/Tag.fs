@@ -10,9 +10,12 @@ let create (tagInfo: GitTagInfo) =
         Tag.Versioned { Name = tagInfo.Name; Version = v; Commit = commit }
     | _ ->
         Tag.Unversioned tagInfo.Name
-        
-let chooseCalendarVersions (tags: Tag seq) : CalendarVersion seq =
+    
+let chooseCalendarVersions (tags: Tag seq) : RepositoryVersion seq =
     tags
     |> Seq.choose (function
-        | Tag.Versioned { Version = CalVer version } -> Some version
+        | Tag.Versioned { Name = tagName; Version = CalVer version; Commit = commit } ->
+            Some { TagName = tagName
+                   Version = CalVer version
+                   CommitMessage = commit |> Option.map _.Message }
         | _ -> None)

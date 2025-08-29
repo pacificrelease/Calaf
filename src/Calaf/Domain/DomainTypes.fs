@@ -50,16 +50,13 @@ type CalendarVersion = {
     Micro: Micro option
     Build: Build option
 }
-
 type VersionSource =
     | Tag     of tagName: string
     | Project of absolutePath : string
-
 type Version =
     | CalVer of CalendarVersion
     | SemVer of SemanticVersion
     | Unsupported
-
 // Repository
 type SignatureName = string
 type SignatureEmail = string
@@ -71,30 +68,30 @@ type CommitMessage =
 type CommitHash = string
 type TagName = string
 type BranchName = string
-
 type Signature = {
     Name: SignatureName
     Email: SignatureEmail
     When: System.DateTimeOffset
 }
-
 type Commit = {
     Message: CommitMessage
     Text: CommitText        
     Hash: CommitHash
     When: System.DateTimeOffset
 }
-
 type Head =
     | Attached of commit: Commit * branchName: BranchName
     | Detached of commit: Commit
-    
+type RepositoryVersion = {
+    TagName: TagName
+    CommitMessage: CommitMessage option
+    Version: Version
+}
 type RepositoryMetadata = {
     Head: Head
     Signature: Signature
-    Version: Version option
+    Version: RepositoryVersion option
 }
-
 // DU for events
 [<Struct>] 
 type RepositoryState = | Damaged | Unsigned | Unborn | Dirty | Ready

@@ -18,8 +18,8 @@ module Events =
         let state = toState repo
         let version =
             match repo with
-            | Dirty (_, { Version = Some calendarVersion })
-            | Ready (_, { Version = Some calendarVersion }) -> Some calendarVersion
+            | Dirty (_, { Version = Some { Version = calendarVersion } })
+            | Ready (_, { Version = Some { Version = calendarVersion } }) -> Some calendarVersion
             | _ -> None
         { Version = version; State = state }
         |> RepositoryEvent.StateCaptured
@@ -30,6 +30,12 @@ module Events =
         { Version = version; Signature = signature; State = state}
         |> RepositoryEvent.ReleaseProvided
         |> DomainEvent.Repository
+        
+let private createRepositoryCalendarVersion calendarVersion =
+    { TagName = Version.toTagName calendarVersion
+      Version = CalVer calendarVersion
+      CommitMessage =
+          Version.toCommitText calendarVersion |> Commit.createCommitMessage |> Some }
 
 let tryCapture (repoInfo: GitRepositoryInfo) =
     let tryValidatePath path =
@@ -47,8 +53,7 @@ let tryCapture (repoInfo: GitRepositoryInfo) =
                    repoInfo.Tags
                    |> Seq.map Tag.create
                    |> Tag.chooseCalendarVersions        
-                   |> Version.tryMax
-                   |> Option.map CalVer
+                   |> Version.tryMax2
                 return ctor (repoInfo.Directory, { Head = head; Signature = signature; Version = version })
             }
         let! path = tryValidatePath repoInfo.Directory
@@ -80,14 +85,15 @@ let tryCapture (repoInfo: GitRepositoryInfo) =
     
 let tryGetCalendarVersion repo =
     match repo with
-    | Ready (_, { Version = Some (CalVer version) }) -> Some version
-    | Dirty (_, { Version = Some (CalVer version) }) -> Some version
+    | Ready (_, { Version = Some { Version = (CalVer version) } }) -> Some version
+    | Dirty (_, { Version = Some { Version = (CalVer version) } }) -> Some version
     | _ -> None
     
 let tryProfile (repo: Repository) (pendingFilesPaths: string list) =    
     match repo with        
-    | Ready (dir, { Signature = signature; Version = Some (CalVer currentVersion) })        
-    | Dirty (dir, { Signature = signature; Version = Some (CalVer currentVersion) }) ->
+    | Ready (dir, { Signature = signature; Version = Some { Version = (CalVer currentVersion) } })        
+    | Dirty (dir, { Signature = signature; Version = Some { Version = (CalVer currentVersion) } }) ->
+        //TODO: Remove all
         let tagName = Version.toTagName currentVersion
         let commitText = Version.toCommitText currentVersion
         Some { Directory = dir
@@ -101,13 +107,14 @@ let tryRelease (repo: Repository) (nextVersion: CalendarVersion) =
     let release (ctor, dir, metadata: RepositoryMetadata) =
         let sameVersion =
             metadata.Version
-            |> Option.map ((=) (CalVer nextVersion))
+            //|> Option.map ((=) (CalVer nextVersion))
+            |> Option.map (fun x -> x.Version = (CalVer nextVersion))
             |> Option.exists id
         if sameVersion
         then
             Error RepositoryAlreadyCurrent
-        else
-            let repo = ctor (dir, { metadata with Version = Some (CalVer nextVersion) })
+        else            
+            let repo = ctor (dir, { metadata with Version = createRepositoryCalendarVersion nextVersion |> Some })
             let event = Events.toRepositoryBumped repo nextVersion metadata.Signature
             Ok (repo, [event])
     
