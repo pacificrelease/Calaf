@@ -542,6 +542,55 @@ module Arbitrary =
             static member baseGitRepositoryInfo() =
                 Arb.fromGen Generator.Git.baseGitRepositoryInfo
         
+        module CommitMessage =
+            type internal FeatNonBreakingChangeString =
+                static member FeatNonBreakingChangeString() =
+                    Arb.fromGen Generator.Git.CommitMessage.FeatNonBreakingChangeString
+                    
+            type internal FeatBreakingChangeString =
+                static member FeatBreakingChangeString() =
+                    Arb.fromGen Generator.Git.CommitMessage.FeatBreakingChangeString
+                    
+            type internal FixNonBreakingChangeString =
+                static member FixNonBreakingChangeString() =
+                    Arb.fromGen Generator.Git.CommitMessage.FixNonBreakingChangeString
+                    
+            type internal FixBreakingChangeString =
+                static member FixBreakingChangeString() =
+                    Arb.fromGen Generator.Git.CommitMessage.FixBreakingChangeString
+                    
+            type internal OtherString =
+                static member OtherString() =
+                    Arb.fromGen Generator.Git.CommitMessage.OtherString
+                    
+            type internal EmptyString =
+                static member EmptyString() =
+                    Arb.fromGen Generator.Git.CommitMessage.EmptyString
+                    
+            type internal FeatNonBreakingChange =
+                static member FeatNonBreakingChange() =
+                    Arb.fromGen Generator.Git.CommitMessage.FeatNonBreakingChange
+                    
+            type internal FeatBreakingChange =
+                static member FeatBreakingChange() =
+                    Arb.fromGen Generator.Git.CommitMessage.FeatBreakingChange
+                    
+            type internal FixNonBreakingChange =
+                static member FixNonBreakingChange() =
+                    Arb.fromGen Generator.Git.CommitMessage.FixNonBreakingChange
+                    
+            type internal FixBreakingChange =
+                static member FixBreakingChange() =
+                    Arb.fromGen Generator.Git.CommitMessage.FixBreakingChange
+                    
+            type internal Other =
+                static member Other() =
+                    Arb.fromGen Generator.Git.CommitMessage.Other
+                    
+            type internal Empty =
+                static member Empty() =
+                    Arb.fromGen Generator.Git.CommitMessage.Empty
+            
         module Commit =
             type internal Accidental =
                 static member Accidental() =

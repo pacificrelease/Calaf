@@ -13,13 +13,13 @@ let internal BreakingChange = "!"
 [<Literal>]
 let internal BreakingChangeFooter = "BREAKING CHANGE"
 let private featureNonBreakingChangeCommitPattern =        
-    @$"^(?i){FeaturePrefix}(?:\(([^)]*)\))?{EndOfPattern}\s*(\S.*)"
+    @$"^(?i){FeaturePrefix}\s*(?:\(([^)]*)\))?\s*{EndOfPattern}\s*(.*)"
 let private featureBreakingChangeCommitPattern =        
-    @$"^(?i){FeaturePrefix}(?:\(([^)]*)\))?{BreakingChange}{EndOfPattern}\s*(\S.*)"
+    @$"^(?i){FeaturePrefix}\s*(?:\(([^)]*)\))?\s*{BreakingChange}{EndOfPattern}\s*(.*)"
 let private fixNonBreakingChangeCommitPattern =
-    @$"^(?i){FixPrefix}(?:\(([^)]*)\))?{EndOfPattern}\s*(\S.*)"
+    @$"^(?i){FixPrefix}\s*(?:\(([^)]*)\))?\s*{EndOfPattern}\s*(.*)"
 let private fixBreakingChangeCommitPattern =        
-    @$"^(?i){FixPrefix}(?:\(([^)]*)\))?{BreakingChange}{EndOfPattern}\s*(\S.*)"
+    @$"^(?i){FixPrefix}\s*(?:\(([^)]*)\))?\s*{BreakingChange}{EndOfPattern}\s*(.*)"
 let private featureNonBreakingChangeCommitPatternRegexString =
     $@"^{featureNonBreakingChangeCommitPattern}"
 let private featureBreakingChangeCommitPatternRegexString =
@@ -78,7 +78,7 @@ let private (|FixNonBreakingChange|_|) (input: string) =
     else None
     
 let private (|FixBreakingChange|_|) (input: string) =
-    let m = matchFixNonBreakingChangeCommitPatternRegexString input
+    let m = matchFixBreakingChangeCommitPatternRegexString input
     if m.Success then
         createConventionalCommitDetails
             m.Groups[1].Value

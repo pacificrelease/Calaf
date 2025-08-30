@@ -1353,32 +1353,17 @@ module SematicVersion =
         }
         
 module Git =
-    open Common   
+    open Common
     
-    let branchName =            
-        Gen.frequency [ 1, SematicVersion.semanticVersionTagStr
-                        1, Gen.elements [ "master"; "main"; "develop"; "feature"; "bugfix"; "release"; "hotfix"; "experiment" ] ]   
-
-    let branchNameOrNone =
-        Gen.frequency [ 1, Gen.constant None
-                        3, branchName |> Gen.map Some ]        
-    
-    let commitDesc =
-        Gen.frequency [ 3, Gen.constant (Bogus.Faker().Lorem.Sentence())
-                        1, Gen.constant System.String.Empty
-                        1, genWhiteSpacesString ]
-        
-    let commitText =
-        Gen.frequency [ 1, Gen.constant (Bogus.Faker().Lorem.Sentence())
-                        1, Gen.constant (Bogus.Faker().Lorem.Sentences())
-                        1, Gen.constant (Bogus.Faker().Lorem.Paragraph()) ]
-        
-    let commitTextOrEmpty =
-        Gen.frequency [ 3, commitText
-                        1, Gen.constant System.String.Empty ]
-
-    let commitHash =
-        Gen.constant (Bogus.Faker().Random.Hash())        
+    let private leftBracketOrEmpty scope =
+        if System.String.IsNullOrWhiteSpace scope
+        then System.String.Empty
+        else "("
+            
+    let private rightBracketOrEmpty scope =
+        if System.String.IsNullOrWhiteSpace scope
+        then System.String.Empty
+        else ")"
 
     let private genFeatString =
         Gen.elements [ "feat"; "FEAT"; "Feat"; "FeAt"
@@ -1493,17 +1478,68 @@ module Git =
             "TEst"; "TEsT"; "TESt"; "TEST"
         ]
         
-    module Commit =
-        let private leftBracketOrEmpty scope =
-            if System.String.IsNullOrWhiteSpace scope
-            then System.String.Empty
-            else "("
-            
-        let private rightBracketOrEmpty scope =
-            if System.String.IsNullOrWhiteSpace scope
-            then System.String.Empty
-            else ")"
-            
+    let branchName =            
+        Gen.frequency [ 1, SematicVersion.semanticVersionTagStr
+                        1, Gen.elements [ "master"; "main"; "develop"; "feature"; "bugfix"; "release"; "hotfix"; "experiment" ] ]   
+
+    let branchNameOrNone =
+        Gen.frequency [ 1, Gen.constant None
+                        3, branchName |> Gen.map Some ]        
+    
+    let commitDesc =
+        Gen.frequency [ 3, Gen.constant (Bogus.Faker().Lorem.Sentence())
+                        1, Gen.constant System.String.Empty
+                        1, genWhiteSpacesString ]
+        
+    let commitHash =
+        Gen.constant (Bogus.Faker().Random.Hash())    
+        
+    let commitText =
+        Gen.frequency [ 1, Gen.constant (Bogus.Faker().Lorem.Sentence())
+                        1, Gen.constant (Bogus.Faker().Lorem.Sentences())
+                        1, Gen.constant (Bogus.Faker().Lorem.Paragraph()) ]
+        
+    let commitTextOrEmpty =
+        Gen.frequency [ 3, commitText
+                        1, Gen.constant System.String.Empty ]
+        
+    let accidentalOtherCommitText =
+        gen {
+            let! conventionalCommitType = Gen.frequency [                
+                2, genBuildString
+                2, genChoreString
+                2, genCiString
+                2, genDocsString
+                2, genPerfString
+                2, genRefactorString
+                2, genRevertString
+                2, genStyleString
+                2, genTestString
+                2, commitText
+                4, Gen.constant System.String.Empty
+            ]
+            let hasType = not (System.String.IsNullOrWhiteSpace conventionalCommitType)
+            let! scope =
+                if hasType
+                then
+                    Gen.frequency [ 3, Gen.map (fun word -> $"{word}") (Gen.constant (Bogus.Faker().Lorem.Word()))
+                                    1, Gen.elements [""; " "]]
+                else Gen.constant System.String.Empty
+            let! desc = commitTextOrEmpty
+            let breakingChange =
+                if hasType
+                then Calaf.Domain.CommitMessage.BreakingChange
+                else System.String.Empty
+            let! randomWhitespacesOrNot =
+                Gen.frequency [ 8, Gen.constant " "
+                                1, genWhiteSpacesString
+                                1, Gen.constant System.String.Empty ]
+            let text =
+                $"{conventionalCommitType}{leftBracketOrEmpty scope}{scope}{rightBracketOrEmpty scope}{breakingChange}{Calaf.Domain.CommitMessage.EndOfPattern}{randomWhitespacesOrNot}{desc}"
+            return text
+        }
+        
+    module CommitMessage =            
         let private conventionalCommitDetails
             (conventionalCommitType : string)
             (isBreakingChange : bool) =
@@ -1517,7 +1553,8 @@ module Git =
                     then Calaf.Domain.CommitMessage.BreakingChange
                     else System.String.Empty
                 let! randomWhitespacesOrNot =
-                    Gen.frequency [ 1, genWhiteSpacesString
+                    Gen.frequency [ 8, Gen.constant " "
+                                    1, genWhiteSpacesString
                                     1, Gen.constant System.String.Empty ]
                 let text =
                     $"{conventionalCommitType}{leftBracketOrEmpty scope}{scope}{rightBracketOrEmpty scope}{breakingChange}{Calaf.Domain.CommitMessage.EndOfPattern}{randomWhitespacesOrNot}{desc}"
@@ -1525,141 +1562,206 @@ module Git =
                     if System.String.IsNullOrWhiteSpace scope
                     then None
                     else Some scope              
-                return (text, scope, desc, isBreakingChange)
+                return (scope, desc, isBreakingChange, text)
             }
             
-        let private emptyCommitMessage =
-            Gen.constant (System.String.Empty, CommitMessage.Empty)
+        let featNonBreakingChange =
+            gen {
+                let breakingChange = false
+                let! featType = genFeatString
+                let! scope, desc, breakingChange, text =
+                    conventionalCommitDetails featType breakingChange
+                return (CommitMessage.Feature {
+                    Scope = scope
+                    Description = desc
+                    BreakingChange = breakingChange
+                }, (text : CommitText))
+            }
             
-        let private otherCommitMessage =
-            gen {                
-                let! text = commitText
-                return text, CommitMessage.Other text
-            }       
+        let featBreakingChange =
+            gen {
+                let breakingChange = true
+                let! featType = genFeatString
+                let! scope, desc, breakingChange, text =
+                    conventionalCommitDetails featType breakingChange
+                return (CommitMessage.Feature {
+                    Scope = scope
+                    Description = desc
+                    BreakingChange = breakingChange
+                }, (text : CommitText))
+            } 
             
-        let private fixNonBreakingChangeCommitMessage =
+        let fixNonBreakingChange =
             gen {
                 let breakingChange = false
                 let! fixType = genFixString
-                let! text, scope, desc, breakingChange =
+                let! scope, desc, breakingChange, text =
                     conventionalCommitDetails fixType breakingChange                
-                return (text, CommitMessage.Fix {
+                return (CommitMessage.Fix {
                     Scope = scope
                     Description = desc
                     BreakingChange = breakingChange
-                })
+                }, (text : CommitText))
             }
             
-        let private fixBreakingChangeCommitMessage =
+        let fixBreakingChange =
             gen {
                 let breakingChange = true
                 let! fixType = genFixString
-                let! text, scope, desc, breakingChange =
+                let! scope, desc, breakingChange, text =
                     conventionalCommitDetails fixType breakingChange
-                return (text, CommitMessage.Fix {
+                return (CommitMessage.Fix {
                     Scope = scope
                     Description = desc
                     BreakingChange = breakingChange
-                })
+                }, (text : CommitText))
             }
             
-        let private featNonBreakingChangeCommitMessage =
+        let other =
+            gen {                
+                let! text = accidentalOtherCommitText
+                return (CommitMessage.Other text, (text : CommitText))
+            }
+            
+        let empty =
+            gen {                
+                let! text = Gen.frequency [ 2, Gen.constant System.String.Empty
+                                            1, Gen.constant (System.String null) ]
+                return (CommitMessage.Empty, (text : CommitText))
+            }
+            
+        let FeatNonBreakingChangeString =
             gen {
-                let breakingChange = false
-                let! featType = genFeatString
-                let! text, scope, desc, breakingChange =
-                    conventionalCommitDetails featType breakingChange
-                return (text, CommitMessage.Feature {
-                    Scope = scope
-                    Description = desc
-                    BreakingChange = breakingChange
-                })
+                let! _, commitText = featNonBreakingChange
+                return commitText
             }
             
-        let private featBreakingChangeCommitMessage =
+        let FeatBreakingChangeString =
             gen {
-                let breakingChange = true
-                let! featType = genFeatString
-                let! text, scope, desc, breakingChange =
-                    conventionalCommitDetails featType breakingChange
-                return (text, CommitMessage.Feature {
-                    Scope = scope
-                    Description = desc
-                    BreakingChange = breakingChange
-                })
+                let! _, commitText = featBreakingChange
+                return commitText
             }
             
-        let private genCommit text commitMessage =
+        let FixNonBreakingChangeString =
+            gen {
+                let! _, commitText = fixNonBreakingChange
+                return commitText
+            }
+            
+        let FixBreakingChangeString =
+            gen {
+                let! _, commitText = fixBreakingChange
+                return commitText
+            }
+            
+        let OtherString =
+            gen {
+                let! _, commitText = other
+                return commitText
+            }
+            
+        let EmptyString =
+            gen {
+                let! _, commitText = empty
+                return commitText
+            }
+            
+        let FeatNonBreakingChange =
+            gen {
+                let! commitMessage, _ = featNonBreakingChange
+                return commitMessage
+            }
+            
+        let FeatBreakingChange =
+            gen {
+                let! commitMessage, _ = featBreakingChange
+                return commitMessage
+            }
+            
+        let FixNonBreakingChange =
+            gen {
+                let! commitMessage, _ = fixNonBreakingChange
+                return commitMessage
+            }
+            
+        let FixBreakingChange =
+            gen {
+                let! commitMessage, _ = fixBreakingChange
+                return commitMessage
+            }
+            
+        let Other =
+            gen {
+                let! commitMessage, _ = other
+                return commitMessage
+            }
+            
+        let Empty =
+            gen {
+                let! commitMessage, _ = empty
+                return commitMessage
+            }
+        
+    module Commit =            
+        let private genCommit (commitMessage, commitText) =
             gen {
                 let! commitHash = genCommitHash
                 let! timeStamp = genValidDateTimeOffset
                 return {
                     Message = commitMessage
-                    Text    = text
+                    Text    = commitText
                     Hash    = commitHash
                     When    = timeStamp
                 }
             }
             
-        let emptyCommit : Gen<Commit> =
+        let FeatBreakingChange : Gen<Commit> =
             gen {
-                let! text, commitMessage =
-                    emptyCommitMessage
-                return! genCommit
-                    text
-                    commitMessage
+                let! commitMessage, commitText =
+                    CommitMessage.featBreakingChange
+                return! (genCommit (commitMessage, commitText))
             }
             
-        let otherCommit : Gen<Commit> =
+        let FeatNonBreakingChange : Gen<Commit> =
             gen {
-                let! text, commitMessage =
-                    otherCommitMessage
-                return! genCommit
-                    text
-                    commitMessage
+                let! commitMessage, commitText =
+                    CommitMessage.featNonBreakingChange
+                return! (genCommit (commitMessage, commitText))
             }
             
-        let fixNonBreakingChangeCommit : Gen<Commit> =
+        let FixBreakingChange : Gen<Commit> =
             gen {
-                let! text, commitMessage =
-                    fixNonBreakingChangeCommitMessage
-                return! (genCommit text commitMessage)
+                let! commitMessage, commitText =
+                    CommitMessage.fixBreakingChange
+                return! (genCommit (commitMessage, commitText))
             }
             
-        let fixBreakingChangeCommit : Gen<Commit> =
+        let FixNonBreakingChange : Gen<Commit> =
             gen {
-                let! text, commitMessage =
-                    fixBreakingChangeCommitMessage
-                return! (genCommit text commitMessage)
-            }
-            
-        let featNonBreakingChangeCommit : Gen<Commit> =
-            gen {
-                let! text, commitMessage =
-                    featNonBreakingChangeCommitMessage
-                return! (genCommit text commitMessage)
-            }
-            
-        let featBreakingChangeCommit : Gen<Commit> =
-            gen {
-                let! text, commitMessage =
-                    featBreakingChangeCommitMessage
-                return! (genCommit text commitMessage)
+                let! commitMessage, commitText =
+                    CommitMessage.fixNonBreakingChange
+                return! (genCommit (commitMessage, commitText))
             }
         
         let Feat : Gen<Commit> =
-            Gen.frequency [ 1, featBreakingChangeCommit
-                            1, featNonBreakingChangeCommit ]
+            Gen.frequency [ 1, FeatBreakingChange
+                            1, FeatNonBreakingChange ]
             
         let Fix : Gen<Commit> =
-            Gen.frequency [ 1, fixBreakingChangeCommit
-                            1, fixNonBreakingChangeCommit ]
+            Gen.frequency [ 1, FixBreakingChange
+                            1, FixNonBreakingChange ]
             
         let Other : Gen<Commit> =
-            Gen.frequency [ 1, otherCommit ]
+            gen {
+                let! commitMessage, commitText = CommitMessage.other
+                return! (genCommit (commitMessage, commitText))
+            }
             
         let Empty : Gen<Commit> =
-            Gen.frequency [ 1, emptyCommit ]
+            gen {
+                let! commitMessage, commitText = CommitMessage.empty
+                return! (genCommit (commitMessage, commitText))
+            }
             
         let Accidental : Gen<Commit> =
             Gen.frequency [ 1, Feat
@@ -1700,6 +1802,19 @@ module Git =
                     1, Gen.arrayOfLength smallCount  Other
                     2, Gen.arrayOfLength middleCount Other
                     1, Gen.arrayOfLength bigCount    Other
+                ]
+                return choice |> Array.toList
+            }
+            
+        let EmptyList =
+            gen {
+                let! smallCount = Gen.choose(1, 50)
+                let! middleCount = Gen.choose(51, 100)            
+                let! bigCount = Gen.choose(101, 500)            
+                let! choice = Gen.frequency [
+                    1, Gen.arrayOfLength smallCount  Empty
+                    2, Gen.arrayOfLength middleCount Empty
+                    1, Gen.arrayOfLength bigCount    Empty
                 ]
                 return choice |> Array.toList
             }
@@ -1804,11 +1919,12 @@ module Git =
     let commitOrNone =
         Gen.frequency [
             1, Gen.constant None
-            2, Commit.otherCommit |> Gen.map Some
-            2, Commit.fixNonBreakingChangeCommit |> Gen.map Some
-            2, Commit.fixBreakingChangeCommit |> Gen.map Some
-            2, Commit.featNonBreakingChangeCommit |> Gen.map Some
-            2, Commit.featBreakingChangeCommit |> Gen.map Some
+            2, Commit.Empty |> Gen.map Some
+            2, Commit.Other |> Gen.map Some
+            2, Commit.FixNonBreakingChange  |> Gen.map Some
+            2, Commit.FixBreakingChange     |> Gen.map Some
+            2, Commit.FeatNonBreakingChange |> Gen.map Some
+            2, Commit.FeatBreakingChange    |> Gen.map Some
         ]
         
     let calendarVersionTag : Gen<Tag> =            
