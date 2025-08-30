@@ -5,24 +5,25 @@ open Calaf.Domain.DomainTypes
 let tryCreate (commits: Commit list) =
     if commits.IsEmpty then
         None
-    else
+    else        
+        let categorize (features, fixes, breakingChanges) commit =
+            match commit.Message with
+            | Feature featureMessage when featureMessage.BreakingChange = true ->
+                commit.Message :: features, fixes, commit.Message :: breakingChanges                    
+            | Feature _ ->
+                commit.Message :: features, fixes, breakingChanges                    
+            | Fix fixMessage when fixMessage.BreakingChange = true ->
+                features, commit.Message :: fixes, commit.Message :: breakingChanges                
+            | Fix _ ->
+                features, commit.Message :: fixes, breakingChanges                
+            | _ -> features, fixes, breakingChanges
+        
         let features, fixes, breakingChanges =
             commits
-            |> List.fold (fun (features, fixes, breakingChanges) commit ->
-                match commit.Message with
-                | Feature (breakingChange, scope, message) when breakingChange = true ->
-                    (Feature (breakingChange, scope, message)) :: features, fixes, (Feature (breakingChange, scope, message)) :: breakingChanges                    
-                | Feature (breakingChange, scope, message) ->
-                    (Feature (breakingChange, scope, message)) :: features, fixes, breakingChanges                    
-                | Fix (breakingChange, scope, message) when breakingChange = true ->
-                    features, (Fix (breakingChange, scope, message)) :: fixes, (Fix (breakingChange, scope, message)) :: breakingChanges                
-                | Fix (breakingChange, scope, message) ->
-                    features, (Fix (breakingChange, scope, message)) :: fixes, breakingChanges                
-                | _ -> features, fixes, breakingChanges
-            ) ([], [], [])
+            |> List.fold categorize ([], [], [])
 
         Some {
-            Features = features
-            Fixes = fixes
-            BreakingChanges = breakingChanges
+            Features = List.rev features
+            Fixes = List.rev fixes
+            BreakingChanges = List.rev breakingChanges
         }

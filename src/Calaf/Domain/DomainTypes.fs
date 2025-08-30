@@ -58,16 +58,25 @@ type Version =
     | SemVer of SemanticVersion
     | Unsupported
 // Repository
+type BranchName = string
 type SignatureName = string
 type SignatureEmail = string
-type CommitText = string
-type CommitMessage =
-    | Feature of breakingChange: bool * scope: string option * message: string option
-    | Fix     of breakingChange: bool * scope: string option * message: string option
-    | Other   of message: string option
-type CommitHash = string
 type TagName = string
-type BranchName = string
+type CommitHash = string
+type CommitText = string
+type CommitScope = string option
+type CommitDescription = string
+type BreakingChange = bool
+type ConventionalCommitMessage = {
+    Scope: CommitScope
+    Description: CommitDescription
+    BreakingChange: bool
+}
+type CommitMessage =
+    | Feature of conventionalMessage: ConventionalCommitMessage
+    | Fix     of conventionalMessage: ConventionalCommitMessage
+    | Other   of message: CommitText
+    | Empty
 type Signature = {
     Name: SignatureName
     Email: SignatureEmail

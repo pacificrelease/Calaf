@@ -1357,21 +1357,141 @@ module Git =
     
     let branchName =            
         Gen.frequency [ 1, SematicVersion.semanticVersionTagStr
-                        1, Gen.elements [ "master"; "main"; "develop"; "feature"; "bugfix"; "release" ]]            
+                        1, Gen.elements [ "master"; "main"; "develop"; "feature"; "bugfix"; "release"; "hotfix"; "experiment" ] ]   
 
     let branchNameOrNone =
         Gen.frequency [ 1, Gen.constant None
-                        3, branchName |> Gen.map Some ]
-        
+                        3, branchName |> Gen.map Some ]        
+    
+    let commitDesc =
+        Gen.frequency [ 3, Gen.constant (Bogus.Faker().Lorem.Sentence())
+                        1, Gen.constant System.String.Empty
+                        1, genWhiteSpacesString ]
         
     let commitText =
-        Gen.frequency [ 3, Gen.constant (Bogus.Faker().Lorem.Sentence())
-                        1, Gen.elements [""; " "]]
+        Gen.frequency [ 1, Gen.constant (Bogus.Faker().Lorem.Sentence())
+                        1, Gen.constant (Bogus.Faker().Lorem.Sentences())
+                        1, Gen.constant (Bogus.Faker().Lorem.Paragraph()) ]
+        
+    let commitTextOrEmpty =
+        Gen.frequency [ 3, commitText
+                        1, Gen.constant System.String.Empty ]
 
     let commitHash =
-        gen {
-            return Bogus.Faker().Random.Hash()
-        }
+        Gen.constant (Bogus.Faker().Random.Hash())        
+
+    let private genFeatString =
+        Gen.elements [ "feat"; "FEAT"; "Feat"; "FeAt"
+                       "fEAt"; "fEAT"; "feAT"; "feaT"
+                       "FEat"; "FEAt"; "FEaT"; "fEaT"
+                       "FEAt"; "FEAT"; "fEAt"; "FEAt" ]
+        
+    let private genFixString =
+        Gen.elements ["fix"; "FIX"
+                      "Fix"; "FiX"
+                      "fIX"; "fIx"
+                      "fiX"; "fiX"
+                      "FIx" ]
+        
+    let private genBuildString =
+        Gen.elements [ "build"; "BUILD"
+                       "Build"; "BuIld"
+                       "BuiLd"; "BuiLD"
+                       "BUIld"; "BUILd"
+                       "BUILD"; "bUild"
+                       "bUiLd"; "bUiLD"
+                       "bUIld"; "bUILd"
+                       "bUILD"; "buIld"
+                       "buILd"; "buILD";
+                       "builD"; "BuIlD"
+                       "BUIlD"; "bUIlD"
+                       "BuILD"; "BUILd"
+                       "bUILd"; "buILD";
+                       "BuiLd"; "BUILd"
+                       "bUILD"; "bUiLd"
+                       "BuIlD"; "bUIlD" ]
+
+    let private genChoreString =
+         Gen.elements [ "chore"; "CHORE"
+                        "Chore"; "ChOrE"
+                        "cHoRe"; "cHoRE"
+                        "cHOrE"; "cHORE"; 
+                        "choRE"; "chorE"
+                        "chORE"; "chORe"
+                        "CHore"; "CHOre"
+                        "CHOrE"; "CHORE" ]
+
+    let private genCiString =
+        Gen.elements [ "ci"; "CI"
+                       "Ci"; "cI" ]
+
+    let private genDocsString =
+        Gen.elements [ "docs"; "docS"; "doCs"; "doCSDOCS";
+                       "dOcs"; "dOcS"; "dOCs"; "dOCS";
+                       "Docs"; "DocS"; "DoCs"; "DoCS";
+                       "DOcs"; "DOcS"; "DOCs"; "DOCS" ]
+
+    let private genPerfString =
+        Gen.elements [
+            "perf"; "perF"; "peRf"; "peRF";
+            "pErf"; "pErF"; "pERf"; "pERF";
+            "Perf"; "PerF"; "PeRf"; "PeRF";
+            "PErf"; "PErF"; "PERf"; "PERF"
+        ]
+
+    let private genRefactorString =
+        Gen.elements [
+            "refactor"; "refactoR"; "refacTor"; "refacTOR";
+            "refaCtor"; "refaCTor"; "refaCTOr"; "refaCTOR";
+            "refActor"; "refActoR"; "refAcTor"; "refAcTOR";
+            "refACtor"; "refACTor"; "refACTOr"; "refACTOR";
+            "rEfactor"; "rEfactoR"; "rEfacTor"; "rEfacTOR";
+            "rEfaCtor"; "rEfaCTor"; "rEfaCTOr"; "rEfaCTOR";
+            "rEfActor"; "rEfActoR"; "rEfAcTor"; "rEfAcTOR";
+            "rEfACtor"; "rEfACTor"; "rEfACTOr"; "rEfACTOR";
+            "Refactor"; "RefactoR"; "RefacTor"; "RefacTOR";
+            "RefaCtor"; "RefaCTor"; "RefaCTOr"; "RefaCTOR";
+            "RefActor"; "RefActoR"; "RefAcTor"; "RefAcTOR";
+            "RefACtor"; "RefACTor"; "RefACTOr"; "RefACTOR";
+            "REfactor"; "REfactoR"; "REfacTor"; "REfacTOR";
+            "REfaCtor"; "REfaCTor"; "REfaCTOr"; "REfaCTOR";
+            "REfActor"; "REfActoR"; "REfAcTor"; "REfAcTOR";
+            "REfACtor"; "REfACTor"; "REfACTOr"; "REFACTOR"
+        ]
+
+    let private genRevertString =
+        Gen.elements [
+            "revert"; "reverT"; "reveRt"; "reveRT";
+            "revErt"; "revErT"; "revERt"; "revERT";
+            "reVert"; "reVerT"; "reVeRt"; "reVeRT";
+            "reVErt"; "reVErT"; "reVERt"; "reVERT";
+            "Revert"; "ReverT"; "ReveRt"; "ReveRT";
+            "RevErt"; "RevErT"; "RevERt"; "RevERT";
+            "ReVert"; "ReVerT"; "ReVeRt"; "ReVeRT";
+            "ReVErt"; "ReVErT"; "ReVERt"; "ReVERT";
+            "REvert"; "REverT"; "REveRt"; "REveRT";
+            "REvErt"; "REvErT"; "REvERt"; "REvERT";
+            "REVert"; "REVerT"; "REVeRt"; "REVeRT";
+            "REVErt"; "REVErT"; "REVERt"; "REVERT"
+        ]
+
+    let private genStyleString =
+        Gen.elements [
+            "style"; "stylE"; "styLe"; "styLE";
+            "stYle"; "stYlE"; "stYLe"; "stYLE";
+            "Style"; "StylE"; "StyLe"; "StyLE";
+            "StYle"; "StYlE"; "StYLe"; "StYLE";
+            "STyle"; "STylE"; "STyLe"; "STyLE";
+            "STYle"; "STYlE"; "STYLe"; "STYLE"
+        ]
+
+    let private genTestString =
+        Gen.elements [
+            "test"; "tesT"; "teSt"; "teST";
+            "tEst"; "tEsT"; "tESt"; "tEST";
+            "Test"; "TesT"; "TeSt"; "TeST";
+            "TEst"; "TEsT"; "TESt"; "TEST"
+        ]
         
     module Commit =
         let private leftBracketOrEmpty scope =
@@ -1384,118 +1504,147 @@ module Git =
             then System.String.Empty
             else ")"
             
-        let private commitEntry breakingChange =
+        let private conventionalCommitDetails
+            (conventionalCommitType : string)
+            (isBreakingChange : bool) =
             gen {
-                let! desc = commitText
                 let! scope =
                     Gen.frequency [ 3, Gen.map (fun word -> $"{word}") (Gen.constant (Bogus.Faker().Lorem.Word()))
                                     1, Gen.elements [""; " "]]
+                let! desc = commitTextOrEmpty
                 let breakingChange =
-                    if breakingChange
-                    then Calaf.Domain.Commit.BreakingChange
-                    else System.String.Empty                    
+                    if isBreakingChange
+                    then Calaf.Domain.CommitMessage.BreakingChange
+                    else System.String.Empty
+                let! randomWhitespacesOrNot =
+                    Gen.frequency [ 1, genWhiteSpacesString
+                                    1, Gen.constant System.String.Empty ]
                 let text =
-                    $"{Calaf.Domain.Commit.FixPrefix}{leftBracketOrEmpty scope}{scope}{rightBracketOrEmpty scope}{breakingChange}{Calaf.Domain.Commit.EndOfPattern} {desc}"
-                let desc =
-                    if System.String.IsNullOrWhiteSpace desc
-                    then None
-                    else Some desc
+                    $"{conventionalCommitType}{leftBracketOrEmpty scope}{scope}{rightBracketOrEmpty scope}{breakingChange}{Calaf.Domain.CommitMessage.EndOfPattern}{randomWhitespacesOrNot}{desc}"
                 let scope =
                     if System.String.IsNullOrWhiteSpace scope
                     then None
-                    else Some scope
-                return (text, desc, scope)
+                    else Some scope              
+                return (text, scope, desc, isBreakingChange)
             }
+            
+        let private emptyCommitMessage =
+            Gen.constant (System.String.Empty, CommitMessage.Empty)
             
         let private otherCommitMessage =
             gen {                
-                let! text = commitText                    
-                if System.String.IsNullOrWhiteSpace text
-                then return (text, CommitMessage.Other None)
-                else return (text, CommitMessage.Other (Some text))
-            }
+                let! text = commitText
+                return text, CommitMessage.Other text
+            }       
             
         let private fixNonBreakingChangeCommitMessage =
             gen {
-                let nonBreakingChange = false
-                let! text, desc, scope = commitEntry nonBreakingChange                
-                return (text, CommitMessage.Fix (nonBreakingChange, scope, desc))
+                let breakingChange = false
+                let! fixType = genFixString
+                let! text, scope, desc, breakingChange =
+                    conventionalCommitDetails fixType breakingChange                
+                return (text, CommitMessage.Fix {
+                    Scope = scope
+                    Description = desc
+                    BreakingChange = breakingChange
+                })
             }
             
         let private fixBreakingChangeCommitMessage =
             gen {
                 let breakingChange = true
-                let! text, desc, scope = commitEntry breakingChange                
-                return (text, CommitMessage.Fix (breakingChange, scope, desc))
+                let! fixType = genFixString
+                let! text, scope, desc, breakingChange =
+                    conventionalCommitDetails fixType breakingChange
+                return (text, CommitMessage.Fix {
+                    Scope = scope
+                    Description = desc
+                    BreakingChange = breakingChange
+                })
             }
             
         let private featNonBreakingChangeCommitMessage =
             gen {
-                let nonBreakingChange = false
-                let! text, desc, scope = commitEntry nonBreakingChange                
-                return (text, CommitMessage.Feature (nonBreakingChange, scope, desc))
+                let breakingChange = false
+                let! featType = genFeatString
+                let! text, scope, desc, breakingChange =
+                    conventionalCommitDetails featType breakingChange
+                return (text, CommitMessage.Feature {
+                    Scope = scope
+                    Description = desc
+                    BreakingChange = breakingChange
+                })
             }
             
         let private featBreakingChangeCommitMessage =
             gen {
                 let breakingChange = true
-                let! text, desc, scope = commitEntry breakingChange                
-                return (text, CommitMessage.Feature (breakingChange, scope, desc))
+                let! featType = genFeatString
+                let! text, scope, desc, breakingChange =
+                    conventionalCommitDetails featType breakingChange
+                return (text, CommitMessage.Feature {
+                    Scope = scope
+                    Description = desc
+                    BreakingChange = breakingChange
+                })
             }
             
-        let otherCommit: Gen<Commit> =
+        let private genCommit text commitMessage =
             gen {
-                let! text, message = otherCommitMessage
-                let! commitHash = commitHash
+                let! commitHash = genCommitHash
                 let! timeStamp = genValidDateTimeOffset
-                return { Message = message
-                         Text    = text
-                         Hash    = commitHash
-                         When    = timeStamp }
+                return {
+                    Message = commitMessage
+                    Text    = text
+                    Hash    = commitHash
+                    When    = timeStamp
+                }
             }
             
-        let fixNonBreakingChangeCommit: Gen<Commit> =
+        let emptyCommit : Gen<Commit> =
             gen {
-                let! text, message = fixNonBreakingChangeCommitMessage
-                let! commitHash = commitHash
-                let! timeStamp = genValidDateTimeOffset
-                return { Message = message
-                         Text    = text
-                         Hash    = commitHash
-                         When    = timeStamp }
+                let! text, commitMessage =
+                    emptyCommitMessage
+                return! genCommit
+                    text
+                    commitMessage
             }
             
-        let fixBreakingChangeCommit: Gen<Commit> =
+        let otherCommit : Gen<Commit> =
             gen {
-                let! text, message = fixBreakingChangeCommitMessage
-                let! commitHash = commitHash
-                let! timeStamp = genValidDateTimeOffset
-                return { Message = message
-                         Text    = text
-                         Hash    = commitHash
-                         When    = timeStamp }
+                let! text, commitMessage =
+                    otherCommitMessage
+                return! genCommit
+                    text
+                    commitMessage
             }
             
-        let featNonBreakingChangeCommit: Gen<Commit> =
+        let fixNonBreakingChangeCommit : Gen<Commit> =
             gen {
-                let! text, message = featNonBreakingChangeCommitMessage
-                let! commitHash = commitHash
-                let! timeStamp = genValidDateTimeOffset
-                return { Message = message
-                         Text    = text
-                         Hash    = commitHash
-                         When    = timeStamp }
+                let! text, commitMessage =
+                    fixNonBreakingChangeCommitMessage
+                return! (genCommit text commitMessage)
             }
             
-        let featBreakingChangeCommit: Gen<Commit> =
+        let fixBreakingChangeCommit : Gen<Commit> =
             gen {
-                let! text, message = featBreakingChangeCommitMessage
-                let! commitHash = commitHash
-                let! timeStamp = genValidDateTimeOffset
-                return { Message = message
-                         Text    = text
-                         Hash    = commitHash
-                         When    = timeStamp }
+                let! text, commitMessage =
+                    fixBreakingChangeCommitMessage
+                return! (genCommit text commitMessage)
+            }
+            
+        let featNonBreakingChangeCommit : Gen<Commit> =
+            gen {
+                let! text, commitMessage =
+                    featNonBreakingChangeCommitMessage
+                return! (genCommit text commitMessage)
+            }
+            
+        let featBreakingChangeCommit : Gen<Commit> =
+            gen {
+                let! text, commitMessage =
+                    featBreakingChangeCommitMessage
+                return! (genCommit text commitMessage)
             }
         
         let Feat : Gen<Commit> =
@@ -1508,6 +1657,9 @@ module Git =
             
         let Other : Gen<Commit> =
             Gen.frequency [ 1, otherCommit ]
+            
+        let Empty : Gen<Commit> =
+            Gen.frequency [ 1, emptyCommit ]
             
         let Accidental : Gen<Commit> =
             Gen.frequency [ 1, Feat
@@ -1567,9 +1719,9 @@ module Git =
         
     let gitCommitInfo : Gen<GitCommitInfo> =
         gen {
-            let! commitText = commitText
-            let! commitHash = commitHash
-            let! timeStamp = genValidDateTimeOffset
+            let! commitText = commitTextOrEmpty
+            let! commitHash = genCommitHash
+            let! timeStamp  = genValidDateTimeOffset
             return { Text = commitText; Hash = commitHash; When = timeStamp }
         }
         

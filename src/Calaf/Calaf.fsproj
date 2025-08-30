@@ -54,6 +54,7 @@
     <Compile Include="Domain\Version\Month.fs" />
     <Compile Include="Domain\Version\Year.fs" />    
     <Compile Include="Domain\Version\Version.fs" />
+    <Compile Include="Domain\Git\CommitMessage.fs" />
     <Compile Include="Domain\Git\Commit.fs" />    
     <Compile Include="Domain\Git\Tag.fs" />
     <Compile Include="Domain\Git\Head.fs" />
