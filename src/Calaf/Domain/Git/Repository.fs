@@ -25,7 +25,7 @@ module Events =
         |> RepositoryEvent.StateCaptured
         |> DomainEvent.Repository
         
-    let toRepositoryBumped repo version signature =
+    let toRepositoryReleased repo version signature =
         let state = toState repo        
         { Version = version; Signature = signature; State = state}
         |> RepositoryEvent.ReleaseProvided
@@ -93,7 +93,7 @@ let tryGetCalendarVersion repo =
     | Dirty (_, { Version = Some { Version = (CalVer version) } }) -> Some version
     | _ -> None
     
-let tryProfile (repo: Repository) (pendingFilesPaths: string list) =    
+let trySnapshot (repo: Repository) (pendingFilesPaths: string list) =    
     match repo with        
     | Ready (dir, { Signature = signature; Version = Some { Version = (CalVer currentVersion) } })        
     | Dirty (dir, { Signature = signature; Version = Some { Version = (CalVer currentVersion) } }) ->
@@ -101,7 +101,7 @@ let tryProfile (repo: Repository) (pendingFilesPaths: string list) =
         let tagName = Version.toTagName currentVersion
         let commitText = Version.toCommitText currentVersion
         Some { Directory = dir
-               Files = pendingFilesPaths
+               PendingFilesPaths = pendingFilesPaths
                Signature = signature
                TagName = tagName
                CommitText = commitText }
@@ -119,7 +119,7 @@ let tryRelease (repo: Repository) (nextVersion: CalendarVersion) =
             Error RepositoryAlreadyCurrent
         else            
             let repo = ctor (dir, { metadata with Version = createRepositoryCalendarVersion nextVersion |> Some })
-            let event = Events.toRepositoryBumped repo nextVersion metadata.Signature
+            let event = Events.toRepositoryReleased repo nextVersion metadata.Signature
             Ok (repo, [event])
     
     match repo with        

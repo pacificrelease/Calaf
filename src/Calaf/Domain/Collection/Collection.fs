@@ -54,11 +54,11 @@ let getCalendarVersion collection =
     match collection with
     | Standard (version, _) -> version
     
-let tryProfile collection =
+let trySnapshot collection =
     match collection with
     | Standard (_, projects) ->
         projects
-        |> Seq.map tryProfile
+        |> Seq.map trySnapshot
         |> Seq.choose id
         |> Seq.toList
         

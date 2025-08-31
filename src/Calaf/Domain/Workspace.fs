@@ -74,14 +74,14 @@ let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
         return workspace, events     
     }
     
-let profile (workspace: Workspace) =
-    let projectsProfiles  = Collection.tryProfile workspace.Collection
-    let repositoryProfile =
+let snapshot (workspace: Workspace) =
+    let projectsSnapshot  = Collection.trySnapshot workspace.Collection
+    let repositorySnapshot =
         workspace.Repository
         |> Option.bind (fun p ->
-            Repository.tryProfile p (projectsProfiles |> List.map _.AbsolutePath))
-    { Projects = projectsProfiles
-      Repository = repositoryProfile }
+            Repository.trySnapshot p (projectsSnapshot |> List.map _.AbsolutePath))
+    { Projects = projectsSnapshot
+      Repository = repositorySnapshot }
 
 let tryRelease (workspace: Workspace) (nextVersion: CalendarVersion) =
     result {

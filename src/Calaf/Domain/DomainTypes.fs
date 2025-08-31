@@ -150,22 +150,22 @@ type VersionedProject = {
     Version: Version
 }
 
-type ProjectActionProfile = {
+type ProjectActionSnapshot = {
     AbsolutePath: string
     Content: System.Xml.Linq.XElement
 }
 
-type RepositoryActionProfile = {
+type RepositoryActionSnapshot = {
     Directory: string
-    Files: string list
+    PendingFilesPaths: string list
     Signature: Signature
     TagName: TagName
     CommitText: CommitText
 }   
 
-type WorkspaceActionProfile = {        
-    Projects: ProjectActionProfile list
-    Repository: RepositoryActionProfile option
+type WorkspaceActionSnapshot = {        
+    Projects: ProjectActionSnapshot list
+    Repository: RepositoryActionSnapshot option
 }
 
 type Tag =

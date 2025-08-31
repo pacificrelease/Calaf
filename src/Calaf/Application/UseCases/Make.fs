@@ -50,13 +50,13 @@ module internal Make =
                 version
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain
-            let profile = Workspace.profile workspace'
-            do! profile.Projects
+            let snapshot = Workspace.snapshot workspace'
+            do! snapshot.Projects
                 |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
                 |> Result.map ignore                
-            do! profile.Repository
+            do! snapshot.Repository
                 |> Option.map (fun p ->
-                    context.Git.tryApply (p.Directory, p.Files) p.CommitText p.TagName
+                    context.Git.tryApply (p.Directory, p.PendingFilesPaths) p.CommitText p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
@@ -79,13 +79,13 @@ module internal Make =
                 version
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain
-            let profile = Workspace.profile workspace'
-            do! profile.Projects
+            let snapshot = Workspace.snapshot workspace'
+            do! snapshot.Projects
                 |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
                 |> Result.map ignore                
-            do! profile.Repository
+            do! snapshot.Repository
                 |> Option.map (fun p ->
-                    context.Git.tryApply (p.Directory, p.Files) p.CommitText p.TagName
+                    context.Git.tryApply (p.Directory, p.PendingFilesPaths) p.CommitText p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
@@ -110,13 +110,13 @@ module internal Make =
                 version
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain
-            let profile = Workspace.profile workspace'
-            do! profile.Projects
+            let snapshot = Workspace.snapshot workspace'
+            do! snapshot.Projects
                 |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
                 |> Result.map ignore                
-            do! profile.Repository
+            do! snapshot.Repository
                 |> Option.map (fun p ->
-                    context.Git.tryApply (p.Directory, p.Files) p.CommitText p.TagName
+                    context.Git.tryApply (p.Directory, p.PendingFilesPaths) p.CommitText p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
@@ -141,13 +141,13 @@ module internal Make =
                 version
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain
-            let profile = Workspace.profile workspace'
-            do! profile.Projects
+            let snapshot = Workspace.snapshot workspace'
+            do! snapshot.Projects
                 |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
                 |> Result.map ignore                
-            do! profile.Repository
+            do! snapshot.Repository
                 |> Option.map (fun p ->
-                    context.Git.tryApply (p.Directory, p.Files) p.CommitText p.TagName
+                    context.Git.tryApply (p.Directory, p.PendingFilesPaths) p.CommitText p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
@@ -171,13 +171,13 @@ module internal Make =
                 version
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain
-            let profile = Workspace.profile workspace'
-            do! profile.Projects
+            let snapshot = Workspace.snapshot workspace'
+            do! snapshot.Projects
                 |> List.traverseResultM (fun p -> dependencies.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
                 |> Result.map ignore                
-            do! profile.Repository
+            do! snapshot.Repository
                 |> Option.map (fun p ->
-                    dependencies.Git.tryApply (p.Directory, p.Files) p.CommitText p.TagName
+                    dependencies.Git.tryApply (p.Directory, p.PendingFilesPaths) p.CommitText p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
@@ -202,13 +202,13 @@ module internal Make =
                 version
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain                
-            let profile = Workspace.profile workspace'
-            do! profile.Projects
+            let snapshot = Workspace.snapshot workspace'
+            do! snapshot.Projects
                 |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
                 |> Result.map ignore                
-            do! profile.Repository
+            do! snapshot.Repository
                 |> Option.map (fun p ->
-                    context.Git.tryApply (p.Directory, p.Files) p.CommitText p.TagName
+                    context.Git.tryApply (p.Directory, p.PendingFilesPaths) p.CommitText p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
@@ -231,13 +231,13 @@ module internal Make =
                 version
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain                
-            let profile = Workspace.profile workspace'
-            do! profile.Projects
+            let snapshot = Workspace.snapshot workspace'
+            do! snapshot.Projects
                 |> List.traverseResultM (fun p -> dependencies.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
                 |> Result.map ignore                
-            do! profile.Repository
+            do! snapshot.Repository
                 |> Option.map (fun p ->
-                    dependencies.Git.tryApply (p.Directory, p.Files) p.CommitText p.TagName
+                    dependencies.Git.tryApply (p.Directory, p.PendingFilesPaths) p.CommitText p.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                

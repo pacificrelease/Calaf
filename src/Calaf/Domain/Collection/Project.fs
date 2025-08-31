@@ -69,7 +69,7 @@ let chooseCalendarVersions (projects: Project seq) : CalendarVersion seq =
     projects
     |> Seq.choose getCalendarVersion
     
-let tryProfile (project: Project) =
+let trySnapshot (project: Project) =
     match project with    
     | Versioned { Version = CalVer _;  Content = Xml xmlContent; Metadata = m } ->
         Some { AbsolutePath = m.AbsolutePath; Content = xmlContent }
