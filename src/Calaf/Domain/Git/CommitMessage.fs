@@ -13,13 +13,13 @@ let internal BreakingChange = "!"
 [<Literal>]
 let internal BreakingChangeFooter = "BREAKING CHANGE"
 let private featureNonBreakingChangeCommitPattern =        
-    @$"^(?i){FeaturePrefix}\s*(?:\(([^)]*)\))?\s*{EndOfPattern}\s*(.*)"
+    @$"^(?i){FeaturePrefix}\s*(?:\(([^)]*)\))?\s*{EndOfPattern}\s*([\s\S]*)"
 let private featureBreakingChangeCommitPattern =        
-    @$"^(?i){FeaturePrefix}\s*(?:\(([^)]*)\))?\s*{BreakingChange}{EndOfPattern}\s*(.*)"
+    @$"^(?i){FeaturePrefix}\s*(?:\(([^)]*)\))?\s*{BreakingChange}{EndOfPattern}\s*([\s\S]*)"
 let private fixNonBreakingChangeCommitPattern =
-    @$"^(?i){FixPrefix}\s*(?:\(([^)]*)\))?\s*{EndOfPattern}\s*(.*)"
+    @$"^(?i){FixPrefix}\s*(?:\(([^)]*)\))?\s*{EndOfPattern}\s*([\s\S]*)"
 let private fixBreakingChangeCommitPattern =        
-    @$"^(?i){FixPrefix}\s*(?:\(([^)]*)\))?\s*{BreakingChange}{EndOfPattern}\s*(.*)"
+    @$"^(?i){FixPrefix}\s*(?:\(([^)]*)\))?\s*{BreakingChange}{EndOfPattern}\s*([\s\S]*)"
 let private featureNonBreakingChangeCommitPatternRegexString =
     $@"^{featureNonBreakingChangeCommitPattern}"
 let private featureBreakingChangeCommitPatternRegexString =

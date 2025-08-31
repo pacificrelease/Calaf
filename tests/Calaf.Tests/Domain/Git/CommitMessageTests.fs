@@ -14,7 +14,8 @@ module CreatePropertiesTests =
         let isOk =
             match commitMessage with
             | Feature feat ->
-                feat.BreakingChange = false
+                feat.BreakingChange = false &&
+                commitText.Contains feat.Description
             | _ -> false
         test <@ isOk @>
         
@@ -24,7 +25,8 @@ module CreatePropertiesTests =
         let isOk =
             match commitMessage with
             | Feature feat ->
-                feat.BreakingChange = true
+                feat.BreakingChange = true &&
+                commitText.Contains feat.Description
             | _ -> false
         test <@ isOk @>
         
@@ -34,7 +36,8 @@ module CreatePropertiesTests =
         let isOk =
             match commitMessage with
             | Fix fix ->
-                fix.BreakingChange = false
+                fix.BreakingChange = false &&
+                commitText.Contains fix.Description
             | _ -> false
         test <@ isOk @>
         
@@ -44,7 +47,8 @@ module CreatePropertiesTests =
         let isOk =
             match commitMessage with
             | Fix fix ->
-                fix.BreakingChange = true
+                fix.BreakingChange = true &&
+                commitText.Contains fix.Description
             | _ -> false
         test <@ isOk @>
         
@@ -66,4 +70,3 @@ module CreatePropertiesTests =
             | Empty -> true                
             | _ -> false
         test <@ isOk @>
-    
