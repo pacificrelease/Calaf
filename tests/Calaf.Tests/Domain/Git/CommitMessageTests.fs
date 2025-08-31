@@ -14,6 +14,7 @@ module CreatePropertiesTests =
         let isOk =
             match commitMessage with
             | Feature feat ->
+                System.String.Equals(feat._type, FeaturePrefix, System.StringComparison.OrdinalIgnoreCase) &&
                 feat.BreakingChange = false &&
                 commitText.Contains feat.Description
             | _ -> false
@@ -25,6 +26,7 @@ module CreatePropertiesTests =
         let isOk =
             match commitMessage with
             | Feature feat ->
+                System.String.Equals(feat._type, FeaturePrefix, System.StringComparison.OrdinalIgnoreCase) &&
                 feat.BreakingChange = true &&
                 commitText.Contains feat.Description
             | _ -> false
@@ -36,6 +38,7 @@ module CreatePropertiesTests =
         let isOk =
             match commitMessage with
             | Fix fix ->
+                System.String.Equals(fix._type, FixPrefix, System.StringComparison.OrdinalIgnoreCase) &&
                 fix.BreakingChange = false &&
                 commitText.Contains fix.Description
             | _ -> false
@@ -47,6 +50,7 @@ module CreatePropertiesTests =
         let isOk =
             match commitMessage with
             | Fix fix ->
+                System.String.Equals(fix._type, FixPrefix, System.StringComparison.OrdinalIgnoreCase) &&
                 fix.BreakingChange = true &&
                 commitText.Contains fix.Description
             | _ -> false

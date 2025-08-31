@@ -68,6 +68,10 @@ type CommitScope = string option
 type CommitDescription = string
 type BreakingChange = bool
 type ConventionalCommitMessage = {
+    _type: string
+    _scope: string
+    _breakingChange: string    
+    _splitter: string
     Scope: CommitScope
     Description: CommitDescription
     BreakingChange: bool

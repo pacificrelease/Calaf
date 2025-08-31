@@ -1356,12 +1356,12 @@ module Git =
     open Common
     
     let private leftBracketOrEmpty scope =
-        if System.String.IsNullOrWhiteSpace scope
+        if System.String.IsNullOrEmpty scope
         then System.String.Empty
         else "("
             
     let private rightBracketOrEmpty scope =
-        if System.String.IsNullOrWhiteSpace scope
+        if System.String.IsNullOrEmpty scope
         then System.String.Empty
         else ")"
 
@@ -1547,74 +1547,92 @@ module Git =
                 let! scope =
                     Gen.frequency [ 3, Gen.map (fun word -> $"{word}") (Gen.constant (Bogus.Faker().Lorem.Word()))
                                     1, Gen.elements [""; " "]]
-                let! desc = commitTextOrEmpty
-                let breakingChange =
-                    if isBreakingChange
-                    then Calaf.Domain.CommitMessage.BreakingChange
-                    else System.String.Empty
-                let! randomWhitespacesOrNot =
+                let! desc = commitTextOrEmpty                
+                let! scopeWhitespacesOrNot =
+                    Gen.frequency [ 2, Gen.constant " "
+                                    1, genWhiteSpacesString
+                                    3, Gen.constant System.String.Empty ]
+                let! descWhitespacesOrNot =
                     Gen.frequency [ 8, Gen.constant " "
                                     1, genWhiteSpacesString
                                     1, Gen.constant System.String.Empty ]
-                let text =
-                    $"{conventionalCommitType}{leftBracketOrEmpty scope}{scope}{rightBracketOrEmpty scope}{breakingChange}{Calaf.Domain.CommitMessage.EndOfPattern}{randomWhitespacesOrNot}{desc}"
+                let! breakingChangeWhitespacesOrNot =
+                    Gen.frequency [ 1, Gen.constant " "
+                                    1, genWhiteSpacesString
+                                    4, Gen.constant System.String.Empty ]
+                let! splitterWhitespacesOrNot =
+                    Gen.frequency [ 1, Gen.constant " "
+                                    1, genWhiteSpacesString
+                                    4, Gen.constant System.String.Empty ]
                 let scope =
                     if System.String.IsNullOrWhiteSpace scope
-                    then None
-                    else Some scope              
-                return (scope, desc, isBreakingChange, text)
+                    then scope
+                    else $"{scopeWhitespacesOrNot}{scope}{scopeWhitespacesOrNot}"
+                let breakingChange =
+                    if isBreakingChange
+                    then $"{breakingChangeWhitespacesOrNot}{Calaf.Domain.CommitMessage.BreakingChange}"
+                    else System.String.Empty
+                let splitter =
+                    $"{splitterWhitespacesOrNot}{Calaf.Domain.CommitMessage.EndOfPattern}"
+                let text =
+                    $"{conventionalCommitType}{leftBracketOrEmpty scope}{scope}{rightBracketOrEmpty scope}{breakingChange}{Calaf.Domain.CommitMessage.EndOfPattern}{descWhitespacesOrNot}{desc}"                   
+                return (scope, desc, breakingChange, splitter, text)
+            }
+            
+        let private genConventionalCommitAndText
+            (conventionalCommitType : string)
+            (isBreakingChange : bool) =
+            gen {
+                let! scope, desc, breakingChange, splitter, text =
+                    conventionalCommitDetails conventionalCommitType isBreakingChange                       
+                return ({
+                    _type = conventionalCommitType
+                    _scope = scope
+                    _breakingChange = breakingChange                    
+                    _splitter = splitter
+                    Scope =
+                        if System.String.IsNullOrWhiteSpace scope
+                        then None
+                        else Some scope        
+                    Description = desc
+                    BreakingChange = isBreakingChange
+                }, (text : CommitText))
             }
             
         let featNonBreakingChange =
             gen {
                 let breakingChange = false
                 let! featType = genFeatString
-                let! scope, desc, breakingChange, text =
-                    conventionalCommitDetails featType breakingChange
-                return (CommitMessage.Feature {
-                    Scope = scope
-                    Description = desc
-                    BreakingChange = breakingChange
-                }, (text : CommitText))
+                let! cc, ct =
+                    genConventionalCommitAndText featType breakingChange
+                return (CommitMessage.Feature cc, ct)
             }
             
         let featBreakingChange =
             gen {
                 let breakingChange = true
                 let! featType = genFeatString
-                let! scope, desc, breakingChange, text =
-                    conventionalCommitDetails featType breakingChange
-                return (CommitMessage.Feature {
-                    Scope = scope
-                    Description = desc
-                    BreakingChange = breakingChange
-                }, (text : CommitText))
+                let! cc, ct =
+                    genConventionalCommitAndText featType breakingChange
+                return (CommitMessage.Feature cc, ct)
             } 
             
         let fixNonBreakingChange =
             gen {
                 let breakingChange = false
                 let! fixType = genFixString
-                let! scope, desc, breakingChange, text =
-                    conventionalCommitDetails fixType breakingChange                
-                return (CommitMessage.Fix {
-                    Scope = scope
-                    Description = desc
-                    BreakingChange = breakingChange
-                }, (text : CommitText))
+                let! cc, ct =
+                    genConventionalCommitAndText fixType breakingChange
+                return (CommitMessage.Fix cc, ct)
             }
             
         let fixBreakingChange =
             gen {
                 let breakingChange = true
                 let! fixType = genFixString
-                let! scope, desc, breakingChange, text =
-                    conventionalCommitDetails fixType breakingChange
-                return (CommitMessage.Fix {
-                    Scope = scope
-                    Description = desc
-                    BreakingChange = breakingChange
-                }, (text : CommitText))
+                let! cc, ct =
+                    genConventionalCommitAndText fixType breakingChange
+                return (CommitMessage.Fix cc, ct)
             }
             
         let other =

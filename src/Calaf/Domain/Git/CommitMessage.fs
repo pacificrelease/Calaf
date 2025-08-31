@@ -12,14 +12,24 @@ let internal EndOfPattern = ":"
 let internal BreakingChange = "!"
 [<Literal>]
 let internal BreakingChangeFooter = "BREAKING CHANGE"
-let private featureNonBreakingChangeCommitPattern =        
-    @$"^(?i){FeaturePrefix}\s*(?:\(([^)]*)\))?\s*{EndOfPattern}\s*([\s\S]*)"
-let private featureBreakingChangeCommitPattern =        
-    @$"^(?i){FeaturePrefix}\s*(?:\(([^)]*)\))?\s*{BreakingChange}{EndOfPattern}\s*([\s\S]*)"
+[<Literal>]
+let private typeGroupName = "type"
+[<Literal>]
+let private scopeGroupName = "scope"
+[<Literal>]
+let private breakingChangeGroupName = "breakingChange"
+[<Literal>]
+let private eopGroupName = "eop"
+[<Literal>]
+let private descGroupName = "desc"
+let private featureNonBreakingChangeCommitPattern =
+    @$"^(?i)(?<{typeGroupName}>\s*{FeaturePrefix}(?:\s+(?=\())?)(?:\((?<{scopeGroupName}>[^)]*?)\))?(?<{eopGroupName}>\s*{EndOfPattern})(?<{descGroupName}>[\s\S]*)"
+let private featureBreakingChangeCommitPattern =
+    @$"^(?i)(?<{typeGroupName}>\s*{FeaturePrefix}(?:\s+(?=\())?)(?:\((?<{scopeGroupName}>[^)]*?)\))?(?<{breakingChangeGroupName}>\s*{BreakingChange})(?<{eopGroupName}>\s*{EndOfPattern})(?<{descGroupName}>[\s\S]*)"
 let private fixNonBreakingChangeCommitPattern =
-    @$"^(?i){FixPrefix}\s*(?:\(([^)]*)\))?\s*{EndOfPattern}\s*([\s\S]*)"
+    @$"^(?i)(?<{typeGroupName}>\s*{FixPrefix}(?:\s+(?=\())?)(?:\((?<{scopeGroupName}>[^)]*?)\))?(?<{eopGroupName}>\s*{EndOfPattern})(?<{descGroupName}>[\s\S]*)"
 let private fixBreakingChangeCommitPattern =        
-    @$"^(?i){FixPrefix}\s*(?:\(([^)]*)\))?\s*{BreakingChange}{EndOfPattern}\s*([\s\S]*)"
+    @$"^(?i)(?<{typeGroupName}>\s*{FixPrefix}(?:\s+(?=\())?)(?:\((?<{scopeGroupName}>[^)]*?)\))?(?<{breakingChangeGroupName}>\s*{BreakingChange})(?<{eopGroupName}>\s*{EndOfPattern})(?<{descGroupName}>[\s\S]*)"
 let private featureNonBreakingChangeCommitPatternRegexString =
     $@"^{featureNonBreakingChangeCommitPattern}"
 let private featureBreakingChangeCommitPatternRegexString =
@@ -36,74 +46,77 @@ let private matchFeatureBreakingChangeCommitPatternRegexString (input: string) =
 let private matchFixNonBreakingChangeCommitPatternRegexString (input: string) =
     System.Text.RegularExpressions.Regex.Match(input, fixNonBreakingChangeCommitPatternRegexString)
 let private matchFixBreakingChangeCommitPatternRegexString (input: string) =
-    System.Text.RegularExpressions.Regex.Match(input, fixBreakingChangeCommitPatternRegexString)    
+    System.Text.RegularExpressions.Regex.Match(input, fixBreakingChangeCommitPatternRegexString)
 
 let private toValueOrNone (s: string) =
     if not (System.String.IsNullOrWhiteSpace s)
     then Some s
     else None
     
-let private createConventionalCommitDetails
-    (scope: string)
-    (description: string)
-    (breakingChange: bool) =
-    let scopeOption = scope |> toValueOrNone
-    Some (scopeOption, description, breakingChange)
-
+let private createConventionalCommitMessage
+    (regexMatch: System.Text.RegularExpressions.Match, isBreakingChange: bool)=
+    let scope = regexMatch.Groups[scopeGroupName].Value
+    Some {
+        _type = regexMatch.Groups[typeGroupName].Value
+        _scope = scope
+        _breakingChange =
+            if isBreakingChange
+            then regexMatch.Groups[breakingChangeGroupName].Value
+            else System.String.Empty
+        _splitter = regexMatch.Groups[eopGroupName].Value            
+        Scope = scope |> toValueOrNone
+        BreakingChange = isBreakingChange
+        Description = regexMatch.Groups[descGroupName].Value
+    }
+    
 let private (|FeatureNonBreakingChange|_|) (input: string) =
     let m = matchFeatureNonBreakingChangeCommitPatternRegexString input
-    if m.Success then
-        createConventionalCommitDetails
-            m.Groups[1].Value
-            m.Groups[2].Value
-            false
+    if m.Success then createConventionalCommitMessage (m, false)         
     else None
     
 let private (|FeatureBreakingChange|_|) (input: string) =
     let m = matchFeatureBreakingChangeCommitPatternRegexString input
-    if m.Success then
-        createConventionalCommitDetails
-            m.Groups[1].Value
-            m.Groups[2].Value
-            true
+    if m.Success then createConventionalCommitMessage (m, true)         
     else None
     
 let private (|FixNonBreakingChange|_|) (input: string) =
     let m = matchFixNonBreakingChangeCommitPatternRegexString input
-    if m.Success then
-        createConventionalCommitDetails
-            m.Groups[1].Value
-            m.Groups[2].Value
-            false
+    if m.Success then createConventionalCommitMessage (m, false)         
     else None
     
 let private (|FixBreakingChange|_|) (input: string) =
     let m = matchFixBreakingChangeCommitPatternRegexString input
-    if m.Success then
-        createConventionalCommitDetails
-            m.Groups[1].Value
-            m.Groups[2].Value
-            true
+    if m.Success then createConventionalCommitMessage (m, true)         
     else None
     
 let private (|NoMessage|_|) (input: string) =
-    if System.String.IsNullOrWhiteSpace input then
-        Some ()
+    if System.String.IsNullOrWhiteSpace input then Some ()
     else None
     
+let toCommitText (commitMessage: CommitMessage) =
+    let toScopePart scope =
+        match scope with
+        | Some s -> $"({s})"
+        | None -> System.String.Empty
+    let toBreakingChangePart breakingChange =
+        if breakingChange then BreakingChange else System.String.Empty    
+    match commitMessage with
+    | Feature cm ->
+        let scopePart = toScopePart cm.Scope
+        let breakingChangePart = toBreakingChangePart cm.BreakingChange
+        $"{FeaturePrefix}{scopePart}{breakingChangePart}{EndOfPattern} {cm.Description}"
+    | Fix cm ->
+        let scopePart = toScopePart cm.Scope
+        let breakingChangePart = toBreakingChangePart cm.BreakingChange
+        $"{FixPrefix}{scopePart}{breakingChangePart}{EndOfPattern}{cm.Description}"
+    | Other msg -> msg
+    | Empty -> System.String.Empty
+    
 let create message =
-    let createConventionalCommitMessage scope desc breakingChange =
-        { Scope = scope; Description = desc; BreakingChange = breakingChange }        
     match message with
-    | FeatureNonBreakingChange (scope, desc, breakingChange)  ->
-        createConventionalCommitMessage scope desc breakingChange |> CommitMessage.Feature
-    | FeatureBreakingChange (scope, desc, breakingChange) ->
-        createConventionalCommitMessage scope desc breakingChange |> CommitMessage.Feature
-    | FixNonBreakingChange (scope, desc, breakingChange) ->
-        createConventionalCommitMessage scope desc breakingChange |> CommitMessage.Fix
-    | FixBreakingChange (scope, desc, breakingChange) ->
-        createConventionalCommitMessage scope desc breakingChange |> CommitMessage.Fix 
-    | NoMessage ->
-        CommitMessage.Empty
-    | _ ->
-        CommitMessage.Other message
+    | FeatureNonBreakingChange ccm  -> ccm |> CommitMessage.Feature
+    | FeatureBreakingChange ccm -> ccm |> CommitMessage.Feature
+    | FixNonBreakingChange ccm -> ccm |> CommitMessage.Fix
+    | FixBreakingChange ccm -> ccm |> CommitMessage.Fix 
+    | NoMessage -> CommitMessage.Empty
+    | _ -> CommitMessage.Other message
