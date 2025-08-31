@@ -567,6 +567,10 @@ module Arbitrary =
                 static member EmptyString() =
                     Arb.fromGen Generator.Git.CommitMessage.EmptyString
                     
+            type internal AccidentalString =
+                static member AccidentalString() =
+                    Arb.fromGen Generator.Git.CommitMessage.AccidentalString
+                    
             type internal FeatNonBreakingChange =
                 static member FeatNonBreakingChange() =
                     Arb.fromGen Generator.Git.CommitMessage.FeatNonBreakingChange

@@ -1358,12 +1358,12 @@ module Git =
     let private leftBracketOrEmpty scope =
         if System.String.IsNullOrEmpty scope
         then System.String.Empty
-        else "("
+        else Calaf.Domain.CommitMessage.LeftParenthesis
             
     let private rightBracketOrEmpty scope =
         if System.String.IsNullOrEmpty scope
         then System.String.Empty
-        else ")"
+        else Calaf.Domain.CommitMessage.RightParenthesis
 
     let private genFeatString =
         Gen.elements [ "feat"; "FEAT"; "Feat"; "FeAt"
@@ -1683,6 +1683,14 @@ module Git =
                 let! _, commitText = empty
                 return commitText
             }
+            
+        let AccidentalString =
+            Gen.frequency [ 1, FeatNonBreakingChangeString
+                            1, FeatBreakingChangeString
+                            1, FixNonBreakingChangeString
+                            1, FixBreakingChangeString
+                            1, OtherString
+                            1, EmptyString ]
             
         let FeatNonBreakingChange =
             gen {

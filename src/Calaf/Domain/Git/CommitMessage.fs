@@ -7,6 +7,10 @@ let internal FeaturePrefix = "feat"
 [<Literal>]
 let internal FixPrefix = "fix"
 [<Literal>]
+let internal LeftParenthesis = "("
+[<Literal>]
+let internal RightParenthesis = ")"
+[<Literal>]
 let internal EndOfPattern = ":"
 [<Literal>]
 let internal BreakingChange = "!"
@@ -93,22 +97,17 @@ let private (|NoMessage|_|) (input: string) =
     if System.String.IsNullOrWhiteSpace input then Some ()
     else None
     
-let toCommitText (commitMessage: CommitMessage) =
-    let toScopePart scope =
-        match scope with
-        | Some s -> $"({s})"
-        | None -> System.String.Empty
-    let toBreakingChangePart breakingChange =
-        if breakingChange then BreakingChange else System.String.Empty    
+let toString (commitMessage: CommitMessage) : string =
+    let toScopeString scope =
+        if System.String.IsNullOrEmpty scope
+        then scope
+        else $"{LeftParenthesis}{scope}{RightParenthesis}"
+        
     match commitMessage with
-    | Feature cm ->
-        let scopePart = toScopePart cm.Scope
-        let breakingChangePart = toBreakingChangePart cm.BreakingChange
-        $"{FeaturePrefix}{scopePart}{breakingChangePart}{EndOfPattern} {cm.Description}"
+    | Feature cm ->        
+        $"{cm._type}{toScopeString cm._scope}{cm._breakingChange}{cm._splitter}{cm.Description}"
     | Fix cm ->
-        let scopePart = toScopePart cm.Scope
-        let breakingChangePart = toBreakingChangePart cm.BreakingChange
-        $"{FixPrefix}{scopePart}{breakingChangePart}{EndOfPattern}{cm.Description}"
+        $"{cm._type}{toScopeString cm._scope}{cm._breakingChange}{cm._splitter}{cm.Description}"
     | Other msg -> msg
     | Empty -> System.String.Empty
     

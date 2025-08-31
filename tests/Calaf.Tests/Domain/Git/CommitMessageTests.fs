@@ -74,3 +74,10 @@ module CreatePropertiesTests =
             | Empty -> true                
             | _ -> false
         test <@ isOk @>
+        
+module ToStringPropertiesTests =
+    [<Property( Arbitrary = [| typeof<Arbitrary.Git.CommitMessage.AccidentalString> |])>]
+    let ``Commit text string always equals to it CommitMessage toString representation`` (commitText: CommitText) =
+        let commitMessage = create commitText
+        let commitText' = toString commitMessage        
+        test <@ commitText = commitText' @>
