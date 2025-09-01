@@ -32,6 +32,19 @@ module internal Make =
         let error (console: IConsole) e =            
             console.error $"{e}"
             
+    let private tryGetChangelog workspace (git : IGit) =          
+        match workspace.Repository with
+            | Some (Dirty (_, { Version = Some { TagName = tagName; Version = CalVer _ } }))                    
+            | Some (Ready (_, { Version = Some { TagName = tagName; Version = CalVer _ } })) ->                
+                git.tryListCommits workspace.Directory (Some tagName)
+                |> Result.map (fun gci -> gci |> List.map Commit.create |> Changelog.tryCreate)
+            | Some (Dirty (_, { Version = None }))
+            | Some (Ready (_, { Version = None })) ->                
+                git.tryListCommits workspace.Directory None                    
+                |> Result.map (fun gci -> gci |> List.map Commit.create |> Changelog.tryCreate)
+            | _ ->
+                Ok None
+            
     // TODO: Remove this type after refactoring
     let private tryAlpha path (context: MakeContext) settings =
         result {
@@ -39,10 +52,11 @@ module internal Make =
             let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
             let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
             let (TagQuantity tagCount) = settings.TagsToLoad
-            let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes dateTimeOffset                
+            let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes dateTimeOffset
             let! workspace, _ =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain
+                
             let! version =
                 Version.tryAlpha workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain            
