@@ -8,6 +8,10 @@ type RepositoryStateCaptured = {
     State: RepositoryState
 }
 
+type RepositoryLogCaptured = {
+    Log: VersionLog 
+}
+
 type RepositoryReleaseProvided = {
     Version: CalendarVersion
     Signature: Signature
@@ -15,8 +19,9 @@ type RepositoryReleaseProvided = {
 }
 
 type RepositoryEvent =
-    | StateCaptured   of RepositoryStateCaptured
-    | ReleaseProvided of RepositoryReleaseProvided
+    | StateCaptured         of RepositoryStateCaptured
+    | RepositoryLogCaptured of RepositoryLogCaptured
+    | ReleaseProvided       of RepositoryReleaseProvided
 
     
 // Collection events

@@ -115,7 +115,7 @@ type VersionedTag = {
     Commit: Commit option
 }    
 
-type Changelog = {
+type VersionLog = {
     Features : CommitMessage list
     Fixes : CommitMessage list
     BreakingChanges : CommitMessage list

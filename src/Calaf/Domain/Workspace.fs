@@ -92,8 +92,8 @@ let tryRelease (workspace: Workspace) (nextVersion: CalendarVersion) =
         then
             return! WorkspaceAlreadyCurrent |> Error
         else
-            let! collection', collectionEvents = Collection.tryRelease workspace.Collection nextVersion
-            
+            let! collection', collectionEvents =
+                Collection.tryRelease workspace.Collection nextVersion            
             let! repo' =
                 match workspace.Repository with
                 | Some repo ->                    

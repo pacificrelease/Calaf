@@ -1,7 +1,14 @@
-module internal Calaf.Domain.Changelog
+module internal Calaf.Domain.VersionLog
 
 open Calaf.Domain.DomainTypes
+open Calaf.Domain.DomainEvents
 
+module Events =
+    let toRepositoryLogCaptured versionLog =        
+        { Log = versionLog }
+        |> RepositoryEvent.RepositoryLogCaptured
+        |> DomainEvent.Repository
+        
 let tryCreate (commits: Commit list) =
     if commits.IsEmpty then
         None
@@ -22,8 +29,10 @@ let tryCreate (commits: Commit list) =
             commits
             |> List.fold categorize ([], [], [])
 
-        Some {
+        let versionLog = {
             Features = List.rev features
             Fixes = List.rev fixes
             BreakingChanges = List.rev breakingChanges
         }
+        let event = Events.toRepositoryLogCaptured versionLog
+        Some (versionLog, [event])

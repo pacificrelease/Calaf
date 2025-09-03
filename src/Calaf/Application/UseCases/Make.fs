@@ -32,18 +32,27 @@ module internal Make =
         let error (console: IConsole) e =            
             console.error $"{e}"
             
-    let private tryGetChangelog workspace (git : IGit) =          
-        match workspace.Repository with
-            | Some (Dirty (_, { Version = Some { TagName = tagName; Version = CalVer _ } }))                    
-            | Some (Ready (_, { Version = Some { TagName = tagName; Version = CalVer _ } })) ->                
-                git.tryListCommits workspace.Directory (Some tagName)
-                |> Result.map (fun gci -> gci |> List.map Commit.create |> Changelog.tryCreate)
-            | Some (Dirty (_, { Version = None }))
-            | Some (Ready (_, { Version = None })) ->                
-                git.tryListCommits workspace.Directory None                    
-                |> Result.map (fun gci -> gci |> List.map Commit.create |> Changelog.tryCreate)
-            | _ ->
-                Ok None
+    let private tryVersionLog workspace (git : IGit) =        
+        result {
+            let! commits =
+                match workspace.Repository with
+                | Some (Dirty (_, { Version = Some { TagName = tagName; Version = CalVer _ } }))                    
+                | Some (Ready (_, { Version = Some { TagName = tagName; Version = CalVer _ } })) ->                   
+                    git.tryListCommits workspace.Directory (Some tagName)
+                    |> Result.map (fun gci -> gci |> List.map Commit.create)
+                    |> Result.map Some
+                | Some (Dirty (_, { Version = None }))
+                | Some (Ready (_, { Version = None })) -> 
+                    git.tryListCommits workspace.Directory None                    
+                    |> Result.map (fun gci -> gci |> List.map Commit.create)
+                    |> Result.map Some
+                | _ -> Ok None
+            match commits with
+            | Some commits ->
+                return VersionLog.tryCreate commits
+            | None -> return None
+        }
+        
             
     // TODO: Remove this type after refactoring
     let private tryAlpha path (context: MakeContext) settings =
@@ -56,8 +65,8 @@ module internal Make =
             let! workspace, _ =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain
-            let! changelog =
-                tryGetChangelog workspace context.Git
+            let! log =
+                tryVersionLog workspace context.Git
             let! version =
                 Version.tryAlpha workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain            
@@ -87,8 +96,8 @@ module internal Make =
             let (TagQuantity tagCount) = settings.TagsToLoad
             let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace,  _ = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
-            let! changelog =
-                tryGetChangelog workspace context.Git
+            let! log =
+                tryVersionLog workspace context.Git
             let! version =
                 Version.tryBeta workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain            
@@ -120,8 +129,8 @@ module internal Make =
             let! workspace, _ =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain
-            let! changelog =
-                tryGetChangelog workspace context.Git
+            let! log =
+                tryVersionLog workspace context.Git
             let! version =
                 Version.tryReleaseCandidate workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain            
@@ -153,8 +162,8 @@ module internal Make =
             let! workspace,  _ =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain
-            let! changelog =
-                tryGetChangelog workspace context.Git
+            let! log =
+                tryVersionLog workspace context.Git
             let! version =
                 Version.tryNightly workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain
@@ -185,8 +194,8 @@ module internal Make =
             let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, captureEvents =
                 Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
-            let! changelog =
-                tryGetChangelog workspace dependencies.Git
+            let! log =
+                tryVersionLog workspace dependencies.Git
             let! version =
                 Version.tryNightly workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain
@@ -218,8 +227,8 @@ module internal Make =
             let! workspace,  _ =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain
-            let! changelog =
-                tryGetChangelog workspace context.Git
+            let! log =
+                tryVersionLog workspace context.Git
             let! version =
                 Version.tryStable workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain
@@ -249,8 +258,8 @@ module internal Make =
             let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
             let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, captureEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
-            let! changelog =
-                tryGetChangelog workspace dependencies.Git
+            let! log =
+                tryVersionLog workspace dependencies.Git
             let! version =
                 Version.tryStable workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain
