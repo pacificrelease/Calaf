@@ -1,12 +1,12 @@
-module internal Calaf.Domain.VersionLog
+module internal Calaf.Domain.Changeset
 
 open Calaf.Domain.DomainTypes
 open Calaf.Domain.DomainEvents
 
 module Events =
-    let toRepositoryLogCaptured versionLog =        
-        { Log = versionLog }
-        |> RepositoryEvent.RepositoryLogCaptured
+    let toRepositoryChangesetCaptured changeset =        
+        { Changeset = changeset }
+        |> RepositoryEvent.RepositoryChangesetCaptured
         |> DomainEvent.Repository
         
 let tryCreate (commits: Commit list) =
@@ -26,13 +26,12 @@ let tryCreate (commits: Commit list) =
             | _ -> features, fixes, breakingChanges
         
         let features, fixes, breakingChanges =
-            commits
-            |> List.fold categorize ([], [], [])
+            commits |> List.fold categorize ([], [], [])
 
-        let versionLog = {
+        let changeset = {
             Features = List.rev features
             Fixes = List.rev fixes
             BreakingChanges = List.rev breakingChanges
         }
-        let event = Events.toRepositoryLogCaptured versionLog
-        Some (versionLog, [event])
+        let event = Events.toRepositoryChangesetCaptured changeset
+        Some (changeset, [event])

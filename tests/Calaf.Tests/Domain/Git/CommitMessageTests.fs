@@ -71,7 +71,7 @@ module CreatePropertiesTests =
         let commitMessage = create commitText
         let isOk =
             match commitMessage with
-            | Empty -> true                
+            | Empty -> true
             | _ -> false
         test <@ isOk @>
         

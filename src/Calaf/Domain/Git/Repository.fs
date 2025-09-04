@@ -111,7 +111,6 @@ let tryRelease (repo: Repository) (nextVersion: CalendarVersion) =
     let release (ctor, dir, metadata: RepositoryMetadata) =
         let sameVersion =
             metadata.Version
-            //|> Option.map ((=) (CalVer nextVersion))
             |> Option.map (fun x -> x.Version = (CalVer nextVersion))
             |> Option.exists id
         if sameVersion

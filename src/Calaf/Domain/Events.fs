@@ -8,8 +8,8 @@ type RepositoryStateCaptured = {
     State: RepositoryState
 }
 
-type RepositoryLogCaptured = {
-    Log: VersionLog 
+type RepositoryChangesetCaptured = {
+    Changeset: Changeset
 }
 
 type RepositoryReleaseProvided = {
@@ -19,9 +19,9 @@ type RepositoryReleaseProvided = {
 }
 
 type RepositoryEvent =
-    | StateCaptured         of RepositoryStateCaptured
-    | RepositoryLogCaptured of RepositoryLogCaptured
-    | ReleaseProvided       of RepositoryReleaseProvided
+    | StateCaptured               of RepositoryStateCaptured
+    | RepositoryChangesetCaptured of RepositoryChangesetCaptured
+    | ReleaseProvided             of RepositoryReleaseProvided
 
     
 // Collection events

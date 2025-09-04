@@ -32,7 +32,7 @@ module internal Make =
         let error (console: IConsole) e =            
             console.error $"{e}"
             
-    let private tryVersionLog workspace (git : IGit) =        
+    let private tryChangeset workspace (git : IGit) =        
         result {
             let! commits =
                 match workspace.Repository with
@@ -49,7 +49,7 @@ module internal Make =
                 | _ -> Ok None
             match commits with
             | Some commits ->
-                return VersionLog.tryCreate commits
+                return Changeset.tryCreate commits
             | None -> return None
         }
         
@@ -65,8 +65,8 @@ module internal Make =
             let! workspace, _ =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain
-            let! log =
-                tryVersionLog workspace context.Git
+            let! changeset =
+                tryChangeset workspace context.Git
             let! version =
                 Version.tryAlpha workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain            
@@ -96,8 +96,8 @@ module internal Make =
             let (TagQuantity tagCount) = settings.TagsToLoad
             let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace,  _ = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
-            let! log =
-                tryVersionLog workspace context.Git
+            let! changeset =
+                tryChangeset workspace context.Git
             let! version =
                 Version.tryBeta workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain            
@@ -129,8 +129,8 @@ module internal Make =
             let! workspace, _ =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain
-            let! log =
-                tryVersionLog workspace context.Git
+            let! changeset =
+                tryChangeset workspace context.Git
             let! version =
                 Version.tryReleaseCandidate workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain            
@@ -162,8 +162,8 @@ module internal Make =
             let! workspace,  _ =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain
-            let! log =
-                tryVersionLog workspace context.Git
+            let! changeset =
+                tryChangeset workspace context.Git
             let! version =
                 Version.tryNightly workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain
@@ -194,8 +194,8 @@ module internal Make =
             let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, captureEvents =
                 Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
-            let! log =
-                tryVersionLog workspace dependencies.Git
+            let! changeset =
+                tryChangeset workspace dependencies.Git
             let! version =
                 Version.tryNightly workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain
@@ -227,8 +227,8 @@ module internal Make =
             let! workspace,  _ =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain
-            let! log =
-                tryVersionLog workspace context.Git
+            let! changeset =
+                tryChangeset workspace context.Git
             let! version =
                 Version.tryStable workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain
@@ -258,8 +258,8 @@ module internal Make =
             let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
             let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, captureEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
-            let! log =
-                tryVersionLog workspace dependencies.Git
+            let! changeset =
+                tryChangeset workspace dependencies.Git
             let! version =
                 Version.tryStable workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain
