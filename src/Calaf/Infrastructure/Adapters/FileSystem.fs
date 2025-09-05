@@ -249,3 +249,5 @@ type FileSystem() =
             
         member _.tryWriteMarkdown (absolutePath, salt, lines) =
             FileSystem.Markdown.append2 absolutePath salt lines
+            |> Result.mapError CalafError.Infrastructure
+            |> Result.map ignore
