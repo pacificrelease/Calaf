@@ -74,8 +74,10 @@ module Run2Tests =
     module Mocks =
         type MockFileSystem(directoryResult: Result<DirectoryInfo, CalafError>, 
                            readXmlResults: Map<string, Result<XElement, CalafError>>,
-                           writeXmlResults: Map<string, Result<unit, CalafError>>) =
-            let mutable writtenFiles = []
+                           writeXmlResults: Map<string, Result<unit, CalafError>>,
+                           writeMarkdownResult: Map<string, Result<unit, CalafError>>) =
+            let mutable writtenFiles = []            
+            let mutable writtenMarkdown = []
             
             interface IFileSystem with
                 member _.tryReadDirectory directory pattern =
@@ -91,6 +93,12 @@ module Run2Tests =
                 member _.tryWriteXml (absolutePath, content) =
                     writtenFiles <- (absolutePath, content) :: writtenFiles
                     writeXmlResults 
+                    |> Map.tryFind absolutePath 
+                    |> Option.defaultValue (Ok ())
+                    
+                member _.tryWriteMarkdown (absolutePath, salt, content) =
+                    writtenMarkdown <- (absolutePath, salt, content) :: writtenMarkdown
+                    writeMarkdownResult 
                     |> Map.tryFind absolutePath 
                     |> Option.defaultValue (Ok ())
                     
@@ -123,16 +131,18 @@ module Run2Tests =
 
     [<Fact>]
     let ``run2 with Stable type should execute stable workflow successfully`` () =
-        // Arrange
+        // Arrange        
         let testTime = System.DateTimeOffset(2025, 7, 8, 10, 30, 0, System.TimeSpan.Zero)
         let testDirectory = TestData.createTestDirectory()
         let testRepo = TestData.createTestGitRepository()
         let testSettings = TestData.createTestSettings()
+        let testSalt = System.Guid.NewGuid().ToString()
         
         let mockFileSystem = Mocks.MockFileSystem(
             Ok testDirectory,
             Map.empty,
-            Map.ofList [("/test/workspace/TestProject.csproj", Ok ())]
+            Map.ofList [("/test/workspace/TestProject.csproj", Ok ())],
+            Map.ofList [(System.String.Empty, Ok ())]
         )
         
         let mockGit = Mocks.MockGit(
@@ -177,7 +187,8 @@ module Run2Tests =
         let mockFileSystem = Mocks.MockFileSystem(
             Ok testDirectory,
             Map.empty,
-            Map.ofList [("/test/workspace/TestProject.csproj", Ok ())]
+            Map.ofList [("/test/workspace/TestProject.csproj", Ok ())],
+            Map.ofList [(System.String.Empty, Ok ())]
         )
         
         let mockGit = Mocks.MockGit(
@@ -218,6 +229,7 @@ module Run2Tests =
         let mockFileSystem = Mocks.MockFileSystem(
             Error fileSystemError,
             Map.empty,
+            Map.empty,
             Map.empty
         )
         
@@ -252,6 +264,7 @@ module Run2Tests =
         let gitError = CalafError.Infrastructure (InfrastructureError.Git GitError.RepoNotInitialized)
         let mockFileSystem = Mocks.MockFileSystem(
             Ok testDirectory,
+            Map.empty,
             Map.empty,
             Map.empty
         )
@@ -291,7 +304,8 @@ module Run2Tests =
         let mockFileSystem = Mocks.MockFileSystem(
             Ok testDirectory,
             Map.empty,
-            Map.ofList [("/test/workspace/TestProject.csproj", Ok ())]
+            Map.ofList [("/test/workspace/TestProject.csproj", Ok ())],
+            Map.ofList [(System.String.Empty, Ok ())]
         )
         
         let mockGit = Mocks.MockGit(
@@ -340,7 +354,8 @@ module Run2Tests =
             let mockFileSystem = Mocks.MockFileSystem(
                 Ok testDirectory,
                 Map.empty,
-                Map.ofList [("/test/workspace/TestProject.csproj", Ok ())]
+                Map.ofList [("/test/workspace/TestProject.csproj", Ok ())],
+                Map.ofList [(System.String.Empty, Ok ())]
             )
             
             let mockGit = Mocks.MockGit(
