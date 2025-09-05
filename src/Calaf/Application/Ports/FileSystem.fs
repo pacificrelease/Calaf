@@ -14,3 +14,6 @@ type IFileSystem =
         
     abstract tryWriteXml:
         absolutePath: string * content: System.Xml.Linq.XElement -> Result<unit, CalafError>
+        
+    abstract tryWriteMarkdown:
+        absolutePath: string * salt: string * lines: string list -> Result<unit, CalafError>
