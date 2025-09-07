@@ -1579,7 +1579,7 @@ module Git =
                 return (scope, desc, breakingChange, splitter, text)
             }
             
-        let private genConventionalCommitAndText
+        let conventionalCommitAndText
             (conventionalCommitType : string)
             (isBreakingChange : bool) =
             gen {
@@ -1604,7 +1604,7 @@ module Git =
                 let breakingChange = false
                 let! featType = genFeatString
                 let! cc, ct =
-                    genConventionalCommitAndText featType breakingChange
+                    conventionalCommitAndText featType breakingChange
                 return (CommitMessage.Feature cc, ct)
             }
             
@@ -1613,7 +1613,7 @@ module Git =
                 let breakingChange = true
                 let! featType = genFeatString
                 let! cc, ct =
-                    genConventionalCommitAndText featType breakingChange
+                    conventionalCommitAndText featType breakingChange
                 return (CommitMessage.Feature cc, ct)
             } 
             
@@ -1622,7 +1622,7 @@ module Git =
                 let breakingChange = false
                 let! fixType = genFixString
                 let! cc, ct =
-                    genConventionalCommitAndText fixType breakingChange
+                    conventionalCommitAndText fixType breakingChange
                 return (CommitMessage.Fix cc, ct)
             }
             
@@ -1631,7 +1631,7 @@ module Git =
                 let breakingChange = true
                 let! fixType = genFixString
                 let! cc, ct =
-                    genConventionalCommitAndText fixType breakingChange
+                    conventionalCommitAndText fixType breakingChange
                 return (CommitMessage.Fix cc, ct)
             }
             
@@ -1857,6 +1857,43 @@ module Git =
                 ]
                 return choice |> Array.toList
             }
+            
+    module Changeset =
+        let private genFeatureConventionalCommitMessage =
+            gen {
+                let! breakingChange = genBool
+                let! featType = genFeatString
+                let! cc, _ =
+                    CommitMessage.conventionalCommitAndText featType breakingChange
+                return cc
+            }
+            
+        let Features =
+            gen {
+                let! smallCount = Gen.choose(1, 50)
+                let! middleCount = Gen.choose(51, 100)            
+                let! bigCount = Gen.choose(101, 500)            
+                let! choice = Gen.frequency [
+                    1, Gen.arrayOfLength smallCount  genFeatureConventionalCommitMessage
+                    2, Gen.arrayOfLength middleCount genFeatureConventionalCommitMessage
+                    1, Gen.arrayOfLength bigCount    genFeatureConventionalCommitMessage
+                ]
+                return choice |> Array.toList                
+            }
+            
+        let FeaturesChangeset =
+            gen {
+                let! features = Features
+                return {
+                    Features = features
+                    Fixes = []
+                    Other = []
+                    BreakingChanges =
+                        features
+                        |> List.filter _.BreakingChange
+                }
+            }
+        
         
     let gitCommitInfo : Gen<GitCommitInfo> =
         gen {

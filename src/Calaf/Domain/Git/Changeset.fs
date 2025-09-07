@@ -22,10 +22,14 @@ let private Whitespace = " "
 [<Literal>]
 let private Dash = "-"
 
+let private addEmptyLine
+    (stringBuilder : System.Text.StringBuilder) =
+    stringBuilder.AppendLine System.String.Empty
+    
 let private addVersionHeader
     (stringBuilder : System.Text.StringBuilder)
     (calendarVersion : CalendarVersion)=
-    let versionHeader = $"{Header2} {Version.toString calendarVersion}"
+    let versionHeader  = $"{Header2} {Version.toString calendarVersion}"    
     stringBuilder.AppendLine versionHeader
     
 let private addHeaderLine
@@ -34,10 +38,6 @@ let private addHeaderLine
     =
     let breakingChangesHeader = $"{Header3}{Whitespace}{headerText}"
     stringBuilder.AppendLine breakingChangesHeader
-    
-let private addEmptyLine
-    (stringBuilder : System.Text.StringBuilder) =
-    stringBuilder.AppendLine System.String.Empty
     
 let private addConventionalCommitMessageLine
     (stringBuilder : System.Text.StringBuilder)
@@ -68,6 +68,7 @@ let private addConventionalCommits
     | _ ->
         let stringBuilder =
             stringBuilder
+            |> addEmptyLine
             |> addHeader
             |> addEmptyLine
         commits
@@ -84,6 +85,7 @@ let private addCommits
     | _ ->
         let stringBuilder =
             stringBuilder
+            |> addEmptyLine
             |> addHeader
             |> addEmptyLine
         commits
@@ -94,19 +96,24 @@ let toString
     (calendarVersion: CalendarVersion)=
     let sb = System.Text.StringBuilder()
     let sb =
-        addVersionHeader sb calendarVersion
+        addVersionHeader sb calendarVersion        
+    
     let sb =
         let addHeaderLine = addHeaderLine "Features"
-        addConventionalCommits sb changeset.Features addHeaderLine addConventionalCommitMessageLine
+        addConventionalCommits sb changeset.Features addHeaderLine addConventionalCommitMessageLine        
+    
     let sb =
         let addHeaderLine = addHeaderLine "Fixed"
-        addConventionalCommits sb changeset.Fixes addHeaderLine addConventionalCommitMessageLine
+        addConventionalCommits sb changeset.Fixes addHeaderLine addConventionalCommitMessageLine        
+    
     let sb =
         let addHeaderLine = addHeaderLine "Changes"
-        addCommits sb changeset.Other addHeaderLine addCommitTextLine
+        addCommits sb changeset.Other addHeaderLine addCommitTextLine    
+    
     let sb =
         let addHeaderLine = addHeaderLine "Breaking Changes"
-        addConventionalCommits sb changeset.BreakingChanges addHeaderLine addConventionalCommitMessageLine    
+        addConventionalCommits sb changeset.BreakingChanges addHeaderLine addConventionalCommitMessageLine
+        
     sb.ToString()    
         
 let tryCreate (commits: Commit list) =

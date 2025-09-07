@@ -1,5 +1,6 @@
 ﻿namespace Calaf.Tests.ChangelogTests
 
+open Xunit
 open FsCheck.Xunit
 open Swensen.Unquote
 
@@ -17,6 +18,7 @@ module TryCreatePropertiesTests =
             test <@
                 not chs.Features.IsEmpty &&
                 chs.Fixes.IsEmpty &&
+                chs.Other.IsEmpty &&
                 events.Length = 1
             @>
         | _ -> test <@ false @>
@@ -30,6 +32,7 @@ module TryCreatePropertiesTests =
             test <@
                 not chs.Fixes.IsEmpty &&
                 chs.Features.IsEmpty &&
+                chs.Other.IsEmpty &&
                 events.Length = 1
             @>
         | _ -> test <@ false @>
@@ -40,7 +43,24 @@ module TryCreatePropertiesTests =
         let changelog = Changeset.tryCreate commits        
         match changelog with
         | Some (chs, events) ->
+            not chs.Other.IsEmpty &&
             chs.Features.IsEmpty &&
             chs.Fixes.IsEmpty &&
+            chs.BreakingChanges.IsEmpty &&
             events.Length = 1
         | _ -> false
+        
+    [<Fact>]
+    let ``Empty commits list always creates empty changeset`` =
+        let changelog = Changeset.tryCreate []        
+        match changelog with
+        | None ->
+            true
+        | _ -> false
+        
+module ToStringPropertiesTests =
+    [<Property(Arbitrary = [| typeof<Arbitrary.Git.Changeset.FeaturesChangeset>; typeof<Arbitrary.CalendarVersion.Accidental> |])>]
+    let ``Test``
+        (changeset: Changeset) (calendarVersion: CalendarVersion)=
+        let changeset = Changeset.toString changeset calendarVersion 
+        test <@ System.String.IsNullOrWhiteSpace changeset |> not @>

@@ -615,3 +615,12 @@ module Arbitrary =
             type internal AccidentalsList =
                 static member AccidentalsList() =
                     Arb.fromGen Generator.Git.Commit.AccidentalsList
+                    
+        module Changeset =
+            type internal Features =
+                static member Features() =
+                    Arb.fromGen Generator.Git.Changeset.Features
+                    
+            type internal FeaturesChangeset =
+                static member FeaturesChangeset() =
+                    Arb.fromGen Generator.Git.Changeset.FeaturesChangeset
