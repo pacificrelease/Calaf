@@ -116,9 +116,10 @@ type VersionedTag = {
 }    
 
 type Changeset = {
-    Features : CommitMessage list
-    Fixes : CommitMessage list
-    BreakingChanges : CommitMessage list
+    Features : ConventionalCommitMessage list
+    Fixes : ConventionalCommitMessage list
+    BreakingChanges : ConventionalCommitMessage list
+    Other: CommitText list
 }    
 
 // File System
