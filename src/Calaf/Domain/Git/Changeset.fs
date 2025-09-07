@@ -94,28 +94,27 @@ let private addCommits
 let toString
     (changeset: Changeset)
     (calendarVersion: CalendarVersion)=
-    let sb = System.Text.StringBuilder()
-    let sb =
-        addVersionHeader sb calendarVersion        
+    let addSection headerText commits addLine =
+        let addHeaderLine = addHeaderLine headerText
+        match commits with
+        | [] -> id
+        | _ -> fun sb -> addConventionalCommits sb commits addHeaderLine addLine
     
-    let sb =
-        let addHeaderLine = addHeaderLine "Features"
-        addConventionalCommits sb changeset.Features addHeaderLine addConventionalCommitMessageLine        
+    let addOtherSection headerText commits addLine =
+        let addHeaderLine = addHeaderLine headerText
+        match commits with
+        | [] -> id
+        | _ -> fun sb -> addCommits sb commits addHeaderLine addLine
     
-    let sb =
-        let addHeaderLine = addHeaderLine "Fixed"
-        addConventionalCommits sb changeset.Fixes addHeaderLine addConventionalCommitMessageLine        
-    
-    let sb =
-        let addHeaderLine = addHeaderLine "Changes"
-        addCommits sb changeset.Other addHeaderLine addCommitTextLine    
-    
-    let sb =
-        let addHeaderLine = addHeaderLine "Breaking Changes"
-        addConventionalCommits sb changeset.BreakingChanges addHeaderLine addConventionalCommitMessageLine
-        
-    sb.ToString()    
-        
+    System.Text.StringBuilder()
+    |> addVersionHeader <| calendarVersion
+    |> addSection "Features" changeset.Features addConventionalCommitMessageLine
+    |> addSection "Fixed" changeset.Fixes addConventionalCommitMessageLine
+    |> addOtherSection "Changes" changeset.Other addCommitTextLine
+    |> addSection "Breaking Changes" changeset.BreakingChanges addConventionalCommitMessageLine
+    |> addEmptyLine
+    |> _.ToString()
+
 let tryCreate (commits: Commit list) =
     if commits.IsEmpty then
         None
