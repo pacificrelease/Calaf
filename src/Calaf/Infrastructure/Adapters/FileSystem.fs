@@ -52,75 +52,45 @@ module internal FileSystem =
                 |> FileSystem
                 |> Error                
                                 
-        let append
+        let write
             (absolutePath: string)
-            (content: string) : Result<unit, InfrastructureError> =
+            (content: string) : Result<unit, InfrastructureError> =            
             try
-                absolutePath
-                |> System.IO.Path.GetDirectoryName
-                |> System.IO.Directory.CreateDirectory
-                |> ignore
-                
-                System.IO.File.AppendAllText(absolutePath, content, utf8NoBom) |> Ok
-            with
-            | :? System.UnauthorizedAccessException as exn ->
-                (absolutePath, exn :> System.Exception)
-                |> FileAccessDenied
-                |> FileSystem
-                |> Error
-            | exn ->
-                (absolutePath, exn)
-                |> MarkdownSaveFailed
-                |> FileSystem
-                |> Error
-                
-        let append2
-            (absolutePath: string)
-            (salt: string)
-            (lines: string list) : Result<unit, InfrastructureError> =
-            try
-                let absolutePath = System.IO.Path.GetFullPath(absolutePath)
-                
-                let contentLF =
-                    match lines with
-                    | [] -> System.String.Empty
-                    | _  -> System.String.Join("\n", lines)
-                    
-                let file =
-                    if System.IO.File.Exists absolutePath
-                    then System.IO.File.ReadAllText(absolutePath)
-                    else System.String.Empty
-                    
-                let eol =
-                    if file.Contains("\r\n")
-                    then "\r\n"
-                    else "\n"                
-                let fileLF = normalizeLF file
-                
-                let combinedLF =                
-                    if System.String.IsNullOrEmpty fileLF
-                    then contentLF
-                    else contentLF + fileLF
-                    
-                let newContent =
-                    if eol = "\n"
-                    then combinedLF
-                    else combinedLF.Replace("\n", "\r\n")
-                    
+                let absolutePath = System.IO.Path.GetFullPath absolutePath
                 let directory = System.IO.Path.GetDirectoryName absolutePath
-                if not (System.String.IsNullOrEmpty directory)
-                then System.IO.Directory.CreateDirectory directory |> ignore
+                if not (System.String.IsNullOrWhiteSpace directory) then
+                    System.IO.Directory.CreateDirectory directory |> ignore
+
+                let fileExists = System.IO.File.Exists absolutePath
+                let tempFileName = System.IO.Path.GetTempFileName()
                 
-                let tempFileName = $".{salt}.tmp"
-                let tmpAbsolutePath = System.IO.Path.Combine(directory, tempFileName)
-                
-                System.IO.File.WriteAllText(tmpAbsolutePath, newContent, utf8NoBom)
-                
-                if System.IO.File.Exists absolutePath
-                then
-                    System.IO.File.Replace(tmpAbsolutePath, absolutePath, null, true) |> Ok
+                do
+                    use outFs = new System.IO.FileStream(
+                        tempFileName,
+                        System.IO.FileMode.Create,
+                        System.IO.FileAccess.Write,
+                        System.IO.FileShare.None)
+                    
+                    let newBytes = utf8NoBom.GetBytes content
+                    outFs.Write(newBytes, 0, newBytes.Length)
+                    
+                    if fileExists then
+                        use inFs = new System.IO.FileStream(
+                            absolutePath,
+                            System.IO.FileMode.Open,
+                            System.IO.FileAccess.Read,
+                            System.IO.FileShare.Read)
+                        inFs.CopyTo(outFs)
+                    
+                    let newBytes = utf8NoBom.GetBytes content
+                    outFs.Write(newBytes, 0, newBytes.Length)
+                    outFs.Flush()
+
+                if fileExists then
+                    System.IO.File.Replace(tempFileName, absolutePath, null)
                 else
-                    System.IO.File.Move(tmpAbsolutePath, absolutePath, true) |> Ok
+                    System.IO.File.Move(tempFileName, absolutePath)                    
+                Ok()
             with
             | :? System.UnauthorizedAccessException as exn ->
                 (absolutePath, exn :> System.Exception)
@@ -128,7 +98,6 @@ module internal FileSystem =
                 |> FileSystem
                 |> Error
             | exn ->
-                System.IO.File.Delete absolutePath
                 (absolutePath, exn)
                 |> MarkdownSaveFailed
                 |> FileSystem
@@ -247,7 +216,7 @@ type FileSystem() =
             |> Result.mapError CalafError.Infrastructure
             |> Result.map ignore
             
-        member _.tryWriteMarkdown (absolutePath, salt, lines) =
-            FileSystem.Markdown.append2 absolutePath salt lines
+        member _.tryWriteMarkdown (absolutePath, content) =
+            FileSystem.Markdown.write absolutePath content
             |> Result.mapError CalafError.Infrastructure
             |> Result.map ignore

@@ -96,8 +96,8 @@ module Run2Tests =
                     |> Map.tryFind absolutePath 
                     |> Option.defaultValue (Ok ())
                     
-                member _.tryWriteMarkdown (absolutePath, salt, content) =
-                    writtenMarkdown <- (absolutePath, salt, content) :: writtenMarkdown
+                member _.tryWriteMarkdown (absolutePath, content) =
+                    writtenMarkdown <- (absolutePath, content) :: writtenMarkdown
                     writeMarkdownResult 
                     |> Map.tryFind absolutePath 
                     |> Option.defaultValue (Ok ())
