@@ -51,11 +51,13 @@ module internal Make =
             | Some commits ->
                 return Changeset.tryCreate commits
             | None -> return None
-        }
+        }        
         
-            
-    // TODO: Remove this type after refactoring
-    let private tryAlpha path (context: MakeContext) settings =
+    let private tryMake
+        (path: string)
+        (context: MakeContext)
+        (settings: MakeSettings)
+        (make: CalendarVersion -> DateTimeOffset -> Result<CalendarVersion,DomainError>)=
         result {
             let dateTimeOffset = context.Clock.utcNow()
             let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
@@ -68,7 +70,7 @@ module internal Make =
             let! changeset =
                 tryChangeset workspace context.Git
             let! version =
-                Version.tryAlpha workspace.Version dateTimeOffset
+                make workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain            
             let! workspace', _ =
                 version
@@ -85,104 +87,7 @@ module internal Make =
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
             return workspace'
-        }
-        
-    // TODO: Remove this type after refactoring
-    let private tryBeta path (context: MakeContext) settings =
-        result {
-            let dateTimeOffset = context.Clock.utcNow()
-            let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
-            let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
-            let (TagQuantity tagCount) = settings.TagsToLoad
-            let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes dateTimeOffset                
-            let! workspace,  _ = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
-            let! changeset =
-                tryChangeset workspace context.Git
-            let! version =
-                Version.tryBeta workspace.Version dateTimeOffset
-                |> Result.mapError CalafError.Domain            
-            let! workspace', _ =
-                version
-                |> Workspace.tryRelease workspace
-                |> Result.mapError CalafError.Domain
-            let snapshot = Workspace.snapshot workspace'
-            do! snapshot.Projects
-                |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
-                |> Result.map ignore                
-            do! snapshot.Repository
-                |> Option.map (fun p ->
-                    context.Git.tryApply (p.Directory, p.PendingFilesPaths) p.CommitText p.TagName
-                    |> Result.map ignore
-                    |> Result.mapError id)
-                |> Option.defaultValue (Ok ())                                
-            return workspace'
-        }
-        
-    // TODO: Remove this type after refactoring
-    let private tryReleaseCandidate path (context: MakeContext) settings =
-        result {
-            let dateTimeOffset = context.Clock.utcNow()
-            let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
-            let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
-            let (TagQuantity tagCount) = settings.TagsToLoad
-            let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes dateTimeOffset                
-            let! workspace, _ =
-                Workspace.tryCapture (dir, repo)
-                |> Result.mapError CalafError.Domain
-            let! changeset =
-                tryChangeset workspace context.Git
-            let! version =
-                Version.tryReleaseCandidate workspace.Version dateTimeOffset
-                |> Result.mapError CalafError.Domain            
-            let! workspace', _ =
-                version
-                |> Workspace.tryRelease workspace
-                |> Result.mapError CalafError.Domain
-            let snapshot = Workspace.snapshot workspace'
-            do! snapshot.Projects
-                |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
-                |> Result.map ignore                
-            do! snapshot.Repository
-                |> Option.map (fun p ->
-                    context.Git.tryApply (p.Directory, p.PendingFilesPaths) p.CommitText p.TagName
-                    |> Result.map ignore
-                    |> Result.mapError id)
-                |> Option.defaultValue (Ok ())                                
-            return workspace'
-        }
-    
-    // TODO: Remove this type after refactoring
-    let private tryNightly path (context: MakeContext) settings =
-        result {
-            let dateTimeOffset = context.Clock.utcNow()
-            let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
-            let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
-            let (TagQuantity tagCount) = settings.TagsToLoad
-            let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes dateTimeOffset
-            let! workspace,  _ =
-                Workspace.tryCapture (dir, repo)
-                |> Result.mapError CalafError.Domain
-            let! changeset =
-                tryChangeset workspace context.Git
-            let! version =
-                Version.tryNightly workspace.Version dateTimeOffset
-                |> Result.mapError CalafError.Domain
-            let! workspace', _ =
-                version
-                |> Workspace.tryRelease workspace
-                |> Result.mapError CalafError.Domain
-            let snapshot = Workspace.snapshot workspace'
-            do! snapshot.Projects
-                |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
-                |> Result.map ignore                
-            do! snapshot.Repository
-                |> Option.map (fun p ->
-                    context.Git.tryApply (p.Directory, p.PendingFilesPaths) p.CommitText p.TagName
-                    |> Result.map ignore
-                    |> Result.mapError id)
-                |> Option.defaultValue (Ok ())                                
-            return workspace'
-        }
+        }    
         
     let private tryNightly2
         (dependencies: {| Directory: string; Settings: MakeSettings; FileSystem: IFileSystem; Git: IGit; Clock: IClock |}) =
@@ -216,40 +121,7 @@ module internal Make =
             return (workspace', captureEvents @ releaseEvents)
         }
         
-    // TODO: Remove this type after refactoring
-    let private tryStable path (context: MakeContext) settings =
-        result {
-            let dateTimeOffset = context.Clock.utcNow()
-            let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
-            let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
-            let (TagQuantity tagCount) = settings.TagsToLoad
-            let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes dateTimeOffset            
-            let! workspace,  _ =
-                Workspace.tryCapture (dir, repo)
-                |> Result.mapError CalafError.Domain
-            let! changeset =
-                tryChangeset workspace context.Git
-            let! version =
-                Version.tryStable workspace.Version dateTimeOffset
-                |> Result.mapError CalafError.Domain
-            let! workspace', _ =
-                version
-                |> Workspace.tryRelease workspace
-                |> Result.mapError CalafError.Domain                
-            let snapshot = Workspace.snapshot workspace'
-            do! snapshot.Projects
-                |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
-                |> Result.map ignore                
-            do! snapshot.Repository
-                |> Option.map (fun p ->
-                    context.Git.tryApply (p.Directory, p.PendingFilesPaths) p.CommitText p.TagName
-                    |> Result.map ignore
-                    |> Result.mapError id)
-                |> Option.defaultValue (Ok ())                                
-            return workspace'
-        }
-        
-    let private stable2
+    let private tryStable2
         (dependencies: {| Directory: string; Settings: MakeSettings; FileSystem: IFileSystem; Git: IGit; Clock: IClock |}) =
         result {
             let dateTimeOffset = dependencies.Clock.utcNow()
@@ -309,7 +181,7 @@ module internal Make =
             Clock = context.Clock
         |}
         match context.Type with
-        | MakeType.Stable  -> stable2 dependencies
+        | MakeType.Stable  -> tryStable2 dependencies
         | MakeType.Alpha   -> failwith "not implemented yet"
         | MakeType.Beta    -> failwith "not implemented yet"
         | MakeType.RC      -> failwith "not implemented yet"
@@ -324,15 +196,15 @@ module internal Make =
                 | Command.Make strategy ->
                     match strategy with
                     | MakeType.Nightly ->
-                        return! tryNightly path context settings
+                        return! tryMake path context settings Version.tryNightly
                     | MakeType.Alpha ->
-                        return! tryAlpha path context settings
+                        return! tryMake path context settings Version.tryAlpha
                     | MakeType.Beta ->
-                        return! tryBeta path context settings
+                        return! tryMake path context settings Version.tryBeta
                     | MakeType.RC ->
-                        return! tryReleaseCandidate path context settings
+                        return! tryMake path context settings Version.tryReleaseCandidate
                     | MakeType.Stable ->
-                        return! tryStable path context settings
+                        return! tryMake path context settings Version.tryStable
             }
         let path = directory path
         let result = apply path arguments context settings
