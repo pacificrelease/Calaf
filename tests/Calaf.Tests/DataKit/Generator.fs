@@ -68,18 +68,12 @@ module Common =
         }
         
     let genValidDateTimeOffset =
-        gen {
-            let min   = System.DateTimeOffset(System.DateTime(int Calaf.Domain.Year.LowerYearBoundary, 1, 1, 0, 0, 0, System.DateTimeKind.Utc))
-            let max   = System.DateTimeOffset(System.DateTime(int Calaf.Domain.Year.UpperYearBoundary, 12, 31, 23, 59, 59, 999, System.DateTimeKind.Utc))
-            let daysMax = int (max - min).TotalDays
-            let! days     = Gen.choose (0, daysMax)
-            let! seconds  = Gen.choose (0, 86_399)
-            let! millis   = Gen.choose (0, 999)
-            let utcInstant = min.AddDays(float days).AddSeconds(float seconds).AddMilliseconds(float millis)
-            let! offsetMinutes = Gen.elements [ for m in -14*60 .. 30 .. 14*60 -> m ]
-            let offset = System.TimeSpan.FromMinutes(float offsetMinutes)
-            return utcInstant.ToOffset(offset)
-        }
+        Gen.frequency [
+            1, Gen.constant <| Bogus.Faker().Date.PastOffset()
+            1, Gen.constant <| Bogus.Faker().Date.RecentOffset()
+            1, Gen.constant <| Bogus.Faker().Date.SoonOffset()
+            1, Gen.constant <| Bogus.Faker().Date.FutureOffset()
+        ]
         
     let genCommitHash =     
         Gen.constant <| Bogus.Faker().Random.Hash()
