@@ -9,6 +9,8 @@ module Api =
     let private supportedFilesPattern = "*.?sproj"
     [<Literal>]
     let private tagsToLoad = 5uy
+    [<Literal>]
+    let private changelogFileName = "CHANGELOG.md"
     
     let execute
         (command : Command, path: string, fileSystem: IFileSystem, git: IGit, clock: IClock) =
@@ -16,7 +18,10 @@ module Api =
             match command with
             | Command.Make makeType ->
                 let! makeSettings = 
-                    MakeSettings.tryCreate supportedFilesPattern tagsToLoad
+                    MakeSettings.tryCreate
+                        supportedFilesPattern
+                        tagsToLoad
+                        changelogFileName
                 let ctx = {
                     Directory = path
                     Type = makeType

@@ -68,7 +68,7 @@ module internal Make =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain
             let! changeset =
-                tryChangeset workspace context.Git
+                tryChangeset workspace context.Git            
             let! version =
                 make workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain            
@@ -76,6 +76,7 @@ module internal Make =
                 version
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain
+                
             let snapshot = Workspace.snapshot workspace'
             do! snapshot.Projects
                 |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))

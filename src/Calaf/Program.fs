@@ -1,5 +1,3 @@
-// For more information see https://aka.ms/fsharp-console-apps
-// Composition Root
 open System
 open Calaf.Application
 open Calaf.Infrastructure
@@ -8,10 +6,12 @@ open Calaf.Infrastructure
 let private supportedFilesPattern = "*.?sproj"
 [<Literal>]
 let private loadTenTags = 10uy
+[<Literal>]
+let private changelogFileName = "CHANGELOG.md"
 
 [<EntryPoint>]
 let main args =
     let path     = String.Empty
     let context  = MakeContext.create
-    let settings = MakeSettings.tryCreate supportedFilesPattern loadTenTags
+    let settings = MakeSettings.tryCreate supportedFilesPattern loadTenTags changelogFileName
     Make.run path args context settings

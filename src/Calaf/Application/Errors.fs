@@ -10,7 +10,7 @@ type InputError =
 type ValidationError =
     | EmptyDotNetXmlFilePattern
     | ZeroTagQuantity
-
+    | EmptyChangelogFileName
     
 type GitError =
     | GitProcessErrorExit of desc: string 
