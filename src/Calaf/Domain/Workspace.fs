@@ -74,14 +74,15 @@ let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
         return workspace, events     
     }
     
-let snapshot (workspace: Workspace) =
+let snapshot (workspace: Workspace) (changeset: Changeset option) =
     let projectsSnapshot  = Collection.trySnapshot workspace.Collection
     let repositorySnapshot =
         workspace.Repository
         |> Option.bind (fun p ->
             Repository.trySnapshot p (projectsSnapshot |> List.map _.AbsolutePath))
     { Projects = projectsSnapshot
-      Repository = repositorySnapshot }
+      Repository = repositorySnapshot
+      Changeset = changeset }
 
 let tryRelease (workspace: Workspace) (nextVersion: CalendarVersion) =
     result {

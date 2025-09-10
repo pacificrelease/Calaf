@@ -167,6 +167,7 @@ type RepositoryActionSnapshot = {
 type WorkspaceActionSnapshot = {        
     Projects: ProjectActionSnapshot list
     Repository: RepositoryActionSnapshot option
+    Changeset: Changeset option
 }
 
 type Tag =

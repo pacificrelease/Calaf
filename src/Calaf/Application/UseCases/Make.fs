@@ -67,8 +67,11 @@ module internal Make =
             let! workspace, _ =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain
-            let! changeset =
-                tryChangeset workspace context.Git            
+                
+            let! changeset, _ =
+                tryChangeset workspace context.Git
+                |> Result.map (Option.map (fun (cs, events) -> Some cs, Some events) >> Option.defaultValue (None, None))
+                
             let! version =
                 make workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain            
@@ -77,7 +80,8 @@ module internal Make =
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain
                 
-            let snapshot = Workspace.snapshot workspace'
+            let snapshot =
+                Workspace.snapshot workspace' changeset
             do! snapshot.Projects
                 |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
                 |> Result.map ignore                
@@ -100,8 +104,9 @@ module internal Make =
             let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, captureEvents =
                 Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
-            let! changeset =
+            let! changeset, _ =
                 tryChangeset workspace dependencies.Git
+                |> Result.map (Option.map (fun (cs, events) -> Some cs, Some events) >> Option.defaultValue (None, None))                
             let! version =
                 Version.tryNightly workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain
@@ -109,7 +114,7 @@ module internal Make =
                 version
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain
-            let snapshot = Workspace.snapshot workspace'
+            let snapshot = Workspace.snapshot workspace' changeset
             do! snapshot.Projects
                 |> List.traverseResultM (fun p -> dependencies.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
                 |> Result.map ignore                
@@ -131,8 +136,9 @@ module internal Make =
             let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
             let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, captureEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
-            let! changeset =
+            let! changeset, _ =
                 tryChangeset workspace dependencies.Git
+                |> Result.map (Option.map (fun (cs, events) -> Some cs, Some events) >> Option.defaultValue (None, None))
             let! version =
                 Version.tryStable workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain
@@ -140,10 +146,10 @@ module internal Make =
                 version
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain                
-            let snapshot = Workspace.snapshot workspace'
+            let snapshot = Workspace.snapshot workspace' changeset
             do! snapshot.Projects
                 |> List.traverseResultM (fun p -> dependencies.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
-                |> Result.map ignore                
+                |> Result.map ignore            
             do! snapshot.Repository
                 |> Option.map (fun p ->
                     dependencies.Git.tryApply (p.Directory, p.PendingFilesPaths) p.CommitText p.TagName
