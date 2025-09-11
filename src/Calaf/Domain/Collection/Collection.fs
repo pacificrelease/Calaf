@@ -12,27 +12,20 @@ module Events =
         match collection with        
         | Standard (version, projects) ->
             { CalendarVersion = version
-              CalendarVersionProjectsCount = chooseCalendarVersioned projects |> Seq.length |> uint16
+              CalendarVersionProjectsCount = projects |> Seq.length |> uint16
               TotalProjectsCount = projects |> Seq.length |> uint16 }
             |> CollectionEvent.StateCaptured
             |> DomainEvent.Collection
             
-    let toCollectionReleased collection previousVersion bumpedProjects =
+    let toCollectionReleased collection previousVersion releasedProjects =
         match collection with        
         | Standard (version, projects) ->
             { PreviousCalendarVersion = previousVersion
               NewCalendarVersion = version
-              ProjectsBumpedCount = bumpedProjects |> Seq.length |> uint16
-              TotalProjectsCount = projects |> Seq.length |> uint16 }
+              ProjectsBumpedCount = uint16 <| Seq.length releasedProjects
+              TotalProjectsCount = uint16 <| Seq.length projects }
             |> CollectionEvent.ReleaseCreated
             |> DomainEvent.Collection
-            
-let private chooseCalendarVersionedProjects collection _ =
-    match collection with
-    | Standard (_, projects) ->
-        projects
-        |> chooseCalendarVersioned
-        |> Seq.toList
         
 let tryCapture (projects: Project list) =
     result {
@@ -40,11 +33,15 @@ let tryCapture (projects: Project list) =
         | projects when Seq.isEmpty projects ->
             return! ProjectCollectionEmpty |> Error            
         | projects ->
+            let projects =
+                projects
+                |> chooseCalendarVersionVersionedProjects
+                |> Seq.toList
             let! version =
                 projects
                 |> chooseCalendarVersions
                 |> Version.tryMax
-                |> Option.toResult CalendarVersionMissing                
+                |> Option.toResult CalendarVersionProjectsEmpty                
             let collection = (version, projects) |> Collection.Standard
             let event = collection |> Events.toCollectionCaptured
             return (collection, [ event ])        
@@ -65,23 +62,9 @@ let trySnapshot collection =
 let tryRelease (collection: Collection) (nextVersion: CalendarVersion) =
     result {
         match collection with
-        | Standard (version, projects) ->
-            let nightly project =
-                match project with
-                | Versioned { Version = CalVer _ } as Versioned p ->
-                    tryRelease p nextVersion
-                    |> Result.map (fun p -> let p = Versioned p in (Some p, p))
-                | otherProject ->
-                    Ok (None, otherProject)
-            
-            let! result = projects |> List.traverseResultM nightly
-            let nightlyProjects, collectionProjects =
-                result
-                |> List.unzip
-                |> fun (releasedCollectionProjects, allCollectionProjects) ->
-                    (List.choose id releasedCollectionProjects, allCollectionProjects)
-                
-            let collection' = Standard (nextVersion, collectionProjects)
-            let event  = Events.toCollectionReleased collection' version nightlyProjects            
+        | Standard (version, projects) ->            
+            let! projects' = projects |> List.traverseResultM (fun p -> tryRelease p nextVersion)                
+            let collection' = Standard (nextVersion, projects')
+            let event  = Events.toCollectionReleased collection' version projects'            
             return (collection' , [ event ])
     }

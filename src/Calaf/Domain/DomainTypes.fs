@@ -186,7 +186,7 @@ type Project =
     | Unversioned of UnversionedProject    
 
 type Collection =
-    | Standard of version: CalendarVersion * projects: Project list
+    | Standard of version: CalendarVersion * projects: VersionedProject list
 
 type Workspace = {
     Directory: string

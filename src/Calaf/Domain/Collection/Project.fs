@@ -33,11 +33,16 @@ module XmlSchema =
 let private isCalendarVersion (project: Project) : bool =
     match project with
     | Versioned { Version = CalVer _ } -> true
-    | _ -> false
+    | _ -> false    
     
-let private getCalendarVersion (project: Project) : CalendarVersion option =
+let private getCalendarVersion (versionedProject: VersionedProject) : CalendarVersion option =
+    match versionedProject.Version with
+    | CalVer version -> Some version
+    | _ -> None
+    
+let private getCalendarVersionVersionedProject (project: Project) : VersionedProject option =
     match project with
-    | Versioned { Version = CalVer version } -> Some version
+    | Versioned v when v.Version.IsCalVer -> Some v
     | _ -> None
 
 let tryCapture (projectInfo: ProjectXmlFileInfo) : Project option =        
@@ -61,17 +66,17 @@ let tryCapture (projectInfo: ProjectXmlFileInfo) : Project option =
             | None -> Unversioned { Metadata = metadata; Language = language }
     }
     
-let chooseCalendarVersioned (projects: Project seq) : Project seq =
+let chooseCalendarVersionVersionedProjects (projects: Project seq) : VersionedProject seq =
     projects
-    |> Seq.filter isCalendarVersion
+    |> Seq.choose getCalendarVersionVersionedProject
     
-let chooseCalendarVersions (projects: Project seq) : CalendarVersion seq =
-    projects
+let chooseCalendarVersions (versionedProjects: VersionedProject seq) : CalendarVersion seq =
+    versionedProjects
     |> Seq.choose getCalendarVersion
     
-let trySnapshot (project: Project) =
-    match project with    
-    | Versioned { Version = CalVer _;  Content = Xml xmlContent; Metadata = m } ->
+let trySnapshot (versionedProject: VersionedProject) =
+    match versionedProject with    
+    | { Version = CalVer _;  Content = Xml xmlContent; Metadata = m } ->
         Some { AbsolutePath = m.AbsolutePath; Content = xmlContent }
     | _ -> None
     

@@ -24,7 +24,8 @@ type DomainError =
     // Collection
     // create error
     | ProjectCollectionEmpty
-    // bump errors
+    | CalendarVersionProjectsEmpty
+    // bump errors    
     | CalendarVersionMissing
     
     // Git

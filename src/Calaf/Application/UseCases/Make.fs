@@ -70,7 +70,8 @@ module internal Make =
                 
             let! changeset, _ =
                 tryChangeset workspace context.Git
-                |> Result.map (Option.map (fun (cs, events) -> Some cs, Some events) >> Option.defaultValue (None, None))
+                |> Result.map (Option.map (fun (cs, events) ->
+                    Some cs, Some events) >> Option.defaultValue (None, None))
                 
             let! version =
                 make workspace.Version dateTimeOffset

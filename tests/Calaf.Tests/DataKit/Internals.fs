@@ -15,6 +15,20 @@ module internal Internals =
         if number = BuildNumber.MaxValue then
             number - Calaf.Domain.Build.NumberIncrementStep
         else number
+        
+    let internal uniqueCalendarVersion
+        (candidate: CalendarVersion)
+        (other: CalendarVersion) =
+        if candidate <> other then
+            candidate
+        else
+            let newMicro =
+                match candidate.Micro with
+                | Some m when m < Micro.MaxValue ->
+                    m + Calaf.Domain.Micro.MicroIncrementStep
+                | _ -> Micro.MinValue
+                |> Some
+            { candidate with Micro = newMicro }
     
     let internal uniqueDay (dayOfMonth: DayOfMonth, dateTimeOffset: System.DateTimeOffset) =
         if dayOfMonth = byte dateTimeOffset.Day then
@@ -32,7 +46,8 @@ module internal Internals =
             dateTimeOffset.Date.AddYears(incrStep)
             |> System.DateTimeOffset
         
-        let skipYear, skipMonth = (v.Year <> uint16 dateTimeOffset.Year, v.Month <> byte dateTimeOffset.Month)
+        let skipYear, skipMonth =
+            (v.Year <> uint16 dateTimeOffset.Year, v.Month <> byte dateTimeOffset.Month)
         
         match skipYear, skipMonth with
         | true, true ->
