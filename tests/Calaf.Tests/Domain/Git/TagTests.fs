@@ -52,15 +52,15 @@ module ChooseCalendarVersionsPropertiesTests =
     let ``Empty tags yields empty CalendarVersions seq`` () =
         chooseCalendarVersions Seq.empty |> Seq.isEmpty
     
-    [<Property(Arbitrary = [| typeof<Arbitrary.Git.calendarVersionsTagsArray> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.Git.Tag.calendarVersionsTagsArray> |])>]
     let ``CalendarVersions tags yields same quantity of the CalendarVersions seq`` (calendarVersionsTags: Tag[]) =
         let calendarVersions = chooseCalendarVersions calendarVersionsTags
         (calendarVersions |> Seq.length) = (calendarVersionsTags |> Seq.length)
         
-    [<Property(Arbitrary = [| typeof<Arbitrary.Git.unversionedTagsArray> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.Git.Tag.unversionedTagsArray> |])>]
     let ``Unversioned tags yields empty CalendarVersions seq`` (unversionedTagsArray: Tag[]) =
         chooseCalendarVersions unversionedTagsArray |> Seq.isEmpty                
     
-    [<Property(Arbitrary = [| typeof<Arbitrary.Git.semanticVersionsAndUnversionedTagsArray> |])>]
+    [<Property(Arbitrary = [| typeof<Arbitrary.Git.Tag.semanticVersionsAndUnversionedTagsArray> |])>]
     let ``SemVer or Unsupported tags yields empty CalendarVersions seq`` (semanticVersionsAndUnversionedTagsArray: Tag[] ) =        
         chooseCalendarVersions semanticVersionsAndUnversionedTagsArray |> Seq.isEmpty

@@ -1852,6 +1852,97 @@ module Git =
                 return choice |> Array.toList
             }
             
+    module Tag =
+        let commitOrNone =
+            Gen.frequency [
+                1, Gen.constant None
+                2, Commit.Empty |> Gen.map Some
+                2, Commit.Other |> Gen.map Some
+                2, Commit.FixNonBreakingChange  |> Gen.map Some
+                2, Commit.FixBreakingChange     |> Gen.map Some
+                2, Commit.FeatNonBreakingChange |> Gen.map Some
+                2, Commit.FeatBreakingChange    |> Gen.map Some
+            ]
+            
+        let unversionedTagName =
+            Gen.frequency [
+                    3, nonNumericString
+                    2, invalidThreePartString
+                    1, nullOrWhiteSpaceString
+                ]
+            
+        let calendarVersionTag : Gen<Tag> =            
+            gen {
+                // TODO: Rewrite generator!
+                let! calendarVersion = CalendarVersion.Accidental
+                let tagNameSb = System.Text.StringBuilder($"{calendarVersion.Year}.{calendarVersion.Month}")
+                let tagNameSb = if calendarVersion.Micro.IsSome then tagNameSb.Append calendarVersion.Micro.Value else tagNameSb 
+                let! maybeCommit = commitOrNone
+                return Tag.Versioned {
+                    Name = tagNameSb.ToString()
+                    Version = (calendarVersion |> CalVer)
+                    Commit = maybeCommit
+                }
+            }
+            
+        let sematicVersionTag : Gen<Tag> =            
+            gen {
+                let! semanticVersion, stringEquivalent = SematicVersion.semanticVersion2
+                let! maybeCommit = commitOrNone
+                return Tag.Versioned { Name = stringEquivalent; Version = (SemVer semanticVersion); Commit = maybeCommit }
+            }
+            
+        let unversionedTag : Gen<Tag> =            
+            gen {
+                let! tagName = unversionedTagName
+                return Tag.Unversioned tagName
+            }
+            
+        let calendarVersionsTagsArray =
+             gen {
+                let! smallCount = Gen.choose(1, 50)
+                let! middleCount = Gen.choose(51, 100)            
+                let! bigCount = Gen.choose(101, 250)            
+                let! choice = Gen.frequency [
+                    7, Gen.arrayOfLength smallCount  calendarVersionTag
+                    2, Gen.arrayOfLength middleCount calendarVersionTag
+                    1, Gen.arrayOfLength bigCount    calendarVersionTag
+                ]
+                return choice
+            }
+             
+        let semanticVersionsTagsArray =
+            gen {
+                let! smallCount  = Gen.choose(1, 50)
+                let! middleCount = Gen.choose(51, 100)            
+                let! bigCount    = Gen.choose(101, 250)            
+                let! choice = Gen.frequency [
+                    7, Gen.arrayOfLength smallCount  sematicVersionTag
+                    2, Gen.arrayOfLength middleCount sematicVersionTag
+                    1, Gen.arrayOfLength bigCount    sematicVersionTag
+                ]
+                return choice
+            }
+            
+        let unversionedTagsArray =
+            gen {
+                let! smallCount  = Gen.choose(1, 50)
+                let! middleCount = Gen.choose(51, 100)            
+                let! bigCount    = Gen.choose(101, 250)            
+                return! Gen.frequency [
+                    7, Gen.arrayOfLength smallCount  unversionedTag
+                    2, Gen.arrayOfLength middleCount unversionedTag
+                    1, Gen.arrayOfLength bigCount    unversionedTag
+                ]
+            }
+            
+        let semanticVersionsAndUnversionedTagsArray =
+            gen {
+                let! semanticVersionsTags = semanticVersionsTagsArray
+                let! unversionedTags = unversionedTagsArray
+                return Array.append semanticVersionsTags unversionedTags                
+            }
+            
     module Changeset =
         let private genFeatureConventionalCommitMessage =
             gen {
@@ -1886,6 +1977,22 @@ module Git =
                         features
                         |> List.filter _.BreakingChange
                 }
+            }
+            
+    module Repository =
+        // type RepositoryVersion = {
+        //     TagName: TagName
+        //     CommitMessage: CommitMessage option
+        //     Version: Version
+        // }
+        // type RepositoryMetadata = {
+        //     Head: Head
+        //     Signature: Signature
+        //     Version: RepositoryVersion option
+        // }
+        let RepositoryVersion =
+            gen {
+                
             }
         
         
@@ -1936,16 +2043,9 @@ module Git =
             return { Name = validSemVerString; Commit = maybeCommit }                       
         }
         
-    let unversionedTagName =
-        Gen.frequency [
-                3, nonNumericString
-                2, invalidThreePartString
-                1, nullOrWhiteSpaceString
-            ]
-        
     let malformedGitTagInfo =
         gen {
-            let! unversionedTagName = unversionedTagName
+            let! unversionedTagName = Tag.unversionedTagName
             let! maybeCommit = Gen.frequency [
                 1, Gen.constant None
                 3, gitCommitInfo |> Gen.map Some
@@ -1971,89 +2071,6 @@ module Git =
                 2, semVerGitTagInfo
             ]
             return choice
-        }
-        
-    let commitOrNone =
-        Gen.frequency [
-            1, Gen.constant None
-            2, Commit.Empty |> Gen.map Some
-            2, Commit.Other |> Gen.map Some
-            2, Commit.FixNonBreakingChange  |> Gen.map Some
-            2, Commit.FixBreakingChange     |> Gen.map Some
-            2, Commit.FeatNonBreakingChange |> Gen.map Some
-            2, Commit.FeatBreakingChange    |> Gen.map Some
-        ]
-        
-    let calendarVersionTag : Gen<Tag> =            
-        gen {
-            // TODO: Rewrite generator!
-            let! calendarVersion = CalendarVersion.Accidental
-            let tagNameSb = System.Text.StringBuilder($"{calendarVersion.Year}.{calendarVersion.Month}")
-            let tagNameSb = if calendarVersion.Micro.IsSome then tagNameSb.Append calendarVersion.Micro.Value else tagNameSb 
-            let! maybeCommit = commitOrNone
-            return Tag.Versioned {
-                Name = tagNameSb.ToString()
-                Version = (calendarVersion |> CalVer)
-                Commit = maybeCommit
-            }
-        }
-        
-    let sematicVersionTag : Gen<Tag> =            
-        gen {
-            let! semanticVersion, stringEquivalent = SematicVersion.semanticVersion2
-            let! maybeCommit = commitOrNone
-            return Tag.Versioned { Name = stringEquivalent; Version = (SemVer semanticVersion); Commit = maybeCommit }
-        }
-        
-    let unversionedTag : Gen<Tag> =            
-        gen {
-            let! tagName = unversionedTagName
-            return Tag.Unversioned tagName
-        }
-        
-    let calendarVersionsTagsArray =
-         gen {
-            let! smallCount = Gen.choose(1, 50)
-            let! middleCount = Gen.choose(51, 100)            
-            let! bigCount = Gen.choose(101, 250)            
-            let! choice = Gen.frequency [
-                7, Gen.arrayOfLength smallCount  calendarVersionTag
-                2, Gen.arrayOfLength middleCount calendarVersionTag
-                1, Gen.arrayOfLength bigCount    calendarVersionTag
-            ]
-            return choice
-        }
-         
-    let semanticVersionsTagsArray =
-        gen {
-            let! smallCount  = Gen.choose(1, 50)
-            let! middleCount = Gen.choose(51, 100)            
-            let! bigCount    = Gen.choose(101, 250)            
-            let! choice = Gen.frequency [
-                7, Gen.arrayOfLength smallCount  sematicVersionTag
-                2, Gen.arrayOfLength middleCount sematicVersionTag
-                1, Gen.arrayOfLength bigCount    sematicVersionTag
-            ]
-            return choice
-        }
-        
-    let unversionedTagsArray =
-        gen {
-            let! smallCount  = Gen.choose(1, 50)
-            let! middleCount = Gen.choose(51, 100)            
-            let! bigCount    = Gen.choose(101, 250)            
-            return! Gen.frequency [
-                7, Gen.arrayOfLength smallCount  unversionedTag
-                2, Gen.arrayOfLength middleCount unversionedTag
-                1, Gen.arrayOfLength bigCount    unversionedTag
-            ]
-        }
-        
-    let semanticVersionsAndUnversionedTagsArray =
-        gen {
-            let! semanticVersionsTags = semanticVersionsTagsArray
-            let! unversionedTags = unversionedTagsArray
-            return Array.append semanticVersionsTags unversionedTags                
         }
         
     let baseGitRepositoryInfo =

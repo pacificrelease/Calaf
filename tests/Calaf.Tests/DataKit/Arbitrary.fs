@@ -522,22 +522,6 @@ module Arbitrary =
             static member randomGitTagInfo() =
                 Arb.fromGen Generator.Git.randomGitTagInfo
                 
-        type calendarVersionsTagsArray =
-             static member calendarVersionsTagsArray() =
-                Arb.fromGen Generator.Git.calendarVersionsTagsArray
-                
-        type semanticVersionsTagsArray =
-            static member semanticVersionsTagsArray() =
-                Arb.fromGen Generator.Git.semanticVersionsTagsArray
-                
-        type unversionedTagsArray =
-            static member unversionedTagsArray() =
-                Arb.fromGen Generator.Git.unversionedTagsArray
-                
-        type semanticVersionsAndUnversionedTagsArray =
-            static member semanticVersionsAndUnversionedTagsArray() =
-                Arb.fromGen Generator.Git.semanticVersionsAndUnversionedTagsArray
-                
         type baseGitRepositoryInfo =
             static member baseGitRepositoryInfo() =
                 Arb.fromGen Generator.Git.baseGitRepositoryInfo
@@ -615,6 +599,23 @@ module Arbitrary =
             type internal AccidentalsList =
                 static member AccidentalsList() =
                     Arb.fromGen Generator.Git.Commit.AccidentalsList
+                    
+        module Tag =
+            type calendarVersionsTagsArray =
+                 static member calendarVersionsTagsArray() =
+                    Arb.fromGen Generator.Git.Tag.calendarVersionsTagsArray
+                    
+            type semanticVersionsTagsArray =
+                static member semanticVersionsTagsArray() =
+                    Arb.fromGen Generator.Git.Tag.semanticVersionsTagsArray
+                    
+            type unversionedTagsArray =
+                static member unversionedTagsArray() =
+                    Arb.fromGen Generator.Git.Tag.unversionedTagsArray
+                    
+            type semanticVersionsAndUnversionedTagsArray =
+                static member semanticVersionsAndUnversionedTagsArray() =
+                    Arb.fromGen Generator.Git.Tag.semanticVersionsAndUnversionedTagsArray
                     
         module Changeset =
             type internal Features =
