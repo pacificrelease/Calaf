@@ -28,16 +28,16 @@ Calaf is a command-line tool for managing Calendar Versioning ([CalVer](https://
 
 - Automatic Calendar Versioning based on the current UTC date
 - Support for `stable`, `alpha`, `beta`, `rc` and `nightly` release types
-- Git integration with automatic tagging (+version commit) for new versions
-- Works with C#/F# project formats (`*.csproj`/`*.fsproj`)
+- Git integration with automatic tagging and aversion commit for new versions
+- Works with C#/F# project files (`*.csproj`/`*.fsproj`)
 - Generates versions compatible with Semantic Versioning 2.0.0
-- Tool installation via dotnet CLI
+- Tool installation via the `dotnet` CLI
 
 
 ## Requirements
 
 - .NET 8.0 or later
-- Git (required for automatic commit and tagging functionality when creating new versions)
+- Git (required for automatic commiting and tagging when creating new versions)
 
 
 ## Versioning Scheme
