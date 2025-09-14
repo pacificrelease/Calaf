@@ -32,14 +32,12 @@ module Events =
         |> DomainEvent.Repository
         
 let private createRepositoryCalendarVersion calendarVersion =
-    {
-      TagName = Version.toTagName calendarVersion
+    { TagName = Version.toTagName calendarVersion
       Version = CalVer calendarVersion
       CommitMessage =
           Version.toCommitText calendarVersion
           |> CommitMessage.create
-          |> Some
-    }
+          |> Some}
 
 let tryCapture (repoInfo: GitRepositoryInfo) =
     let tryValidatePath path =
@@ -85,7 +83,7 @@ let tryCapture (repoInfo: GitRepositoryInfo) =
             let repo = Damaged path
             let event = Events.toRepositoryCaptured repo
             return (repo, [event])
-    }    
+    }
     
 let tryGetCalendarVersion repo =
     match repo with

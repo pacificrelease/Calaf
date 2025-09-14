@@ -120,35 +120,39 @@ type Changeset = {
     Fixes : ConventionalCommitMessage list
     BreakingChanges : ConventionalCommitMessage list
     Other: CommitText list
-}    
+}
 
 // File System
-[<Struct>]
-type Language =
-    | FSharp
-    | CSharp
-    
-type ProjectMetadata = {
+type FileMetadata = {
     Name : string
     Extension: string
     Directory : string
     AbsolutePath : string
 }
 
+[<Struct>]
+type Language =
+    | FSharp
+    | CSharp
+    
 type ProjectContent = 
     | Xml  of System.Xml.Linq.XElement
     | Json of System.Text.Json.JsonDocument
     
 type UnversionedProject = {
-    Metadata: ProjectMetadata
+    Metadata: FileMetadata
     Language: Language
 }
 
 type VersionedProject = {
-    Metadata: ProjectMetadata
+    Metadata: FileMetadata
     Language: Language
     Content: ProjectContent
     Version: Version
+}
+
+type Changelog = {
+    Metadata: FileMetadata
 }
 
 type ProjectActionSnapshot = {
@@ -189,8 +193,9 @@ type Collection =
     | Standard of version: CalendarVersion * projects: VersionedProject list
 
 type Workspace = {
-    Directory: string
+    Directory: string    
     Version: CalendarVersion
+    Changelog: Changelog option
     Repository: Repository option
     Collection: Collection
 }

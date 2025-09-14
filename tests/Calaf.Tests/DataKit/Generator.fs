@@ -2100,10 +2100,25 @@ module Contracts =
     
     open Calaf.Domain.Project.XmlSchema
     open Calaf.Application
-      
+        
     let private projectFileExtension = 
         Bogus.Faker().Random.ArrayElement(
             [| Calaf.Domain.Language.FSharpProjExtension; Calaf.Domain.Language.CSharpProjExtension |])
+        
+    let fileInfo
+        (directory: string)
+        (extension : string option) : FileInfo =
+        let ext =
+            match extension with
+            | Some e -> e
+            | None -> Bogus.Faker().System.FileExt()
+        let name = Bogus.Faker().System.FileName()
+        {
+            Name = name
+            Directory = directory
+            Extension = ext
+            AbsolutePath = directory + "/" + name + ext
+        }
 
     let projectXElement (version : string option) : XElement =
          match version with
@@ -2114,20 +2129,18 @@ module Contracts =
          | None ->
             XElement(XName.Get(ProjectXElementName),
                 XElement(XName.Get(PropertyGroupXElementName)))
+            
+    
          
     let projectXmlFileInfo (rootDir: string, version : string option) : ProjectXmlFileInfo =
         let dir =
             if Bogus.Faker().Random.Bool()
             then rootDir + Bogus.Faker().System.DirectoryPath()
             else rootDir
-        let name = Bogus.Faker().System.FileName()
-        let ext = projectFileExtension
-        let absolutePath = dir + "/" + name + ext
+        let ext = Some projectFileExtension
+        let info = fileInfo dir ext
         {
-            Name = name
-            Directory = dir
-            Extension = ext
-            AbsolutePath = absolutePath
+            Info = info
             Content = projectXElement version
         }
          
@@ -2136,8 +2149,9 @@ module Contracts =
         let projects =
             Bogus.Faker().Make<ProjectXmlFileInfo>(
                 int (Bogus.Faker().Random.Byte(1uy, System.Byte.MaxValue)),
-                fun (_: int) -> projectXmlFileInfo (dir, Some "2025.7")) |> Seq.toList            
-        { Directory = dir; Projects = projects }
+                fun (_: int) -> projectXmlFileInfo (dir, Some "2025.7")) |> Seq.toList
+        let changelog = fileInfo dir (Some ".md") |> Some
+        { Directory = dir; Changelog = changelog; Projects = projects }
         
     let makeSettings () : MakeSettings =
         let projectPattern = MakeSettings.tryCreateDotNetXmlFilePattern "*.csproj"

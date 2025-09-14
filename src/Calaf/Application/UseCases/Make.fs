@@ -32,7 +32,9 @@ module internal Make =
         let error (console: IConsole) e =            
             console.error $"{e}"
             
-    let private tryChangeset workspace (git : IGit) =        
+    let private tryChangeset
+        (workspace: Workspace)
+        (git : IGit) =        
         result {
             let! commits =
                 match workspace.Repository with
@@ -60,35 +62,34 @@ module internal Make =
         (make: CalendarVersion -> DateTimeOffset -> Result<CalendarVersion,DomainError>)=
         result {
             let dateTimeOffset = context.Clock.utcNow()
-            let (DotNetXmlFilePattern searchPatternStr) = settings.ProjectsSearchPattern
-            let! dir = context.FileSystem.tryReadDirectory path searchPatternStr                
+            let (DotNetXmlFilePattern searchPattern) = settings.ProjectsSearchPattern
+            let (ChangelogFileName changelogFileName) = settings.ChangelogFileName
+            let! dir = context.FileSystem.tryReadDirectory path searchPattern changelogFileName                 
             let (TagQuantity tagCount) = settings.TagsToLoad
-            let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes dateTimeOffset
+            let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes dateTimeOffset            
             let! workspace, _ =
                 Workspace.tryCapture (dir, repo)
+                |> Result.mapError CalafError.Domain                
+            let! version =
+                make workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain
-                
             let! changeset, _ =
                 tryChangeset workspace context.Git
                 |> Result.map (Option.map (fun (cs, events) ->
                     Some cs, Some events) >> Option.defaultValue (None, None))
-                
-            let! version =
-                make workspace.Version dateTimeOffset
-                |> Result.mapError CalafError.Domain            
             let! workspace', _ =
                 version
                 |> Workspace.tryRelease workspace
-                |> Result.mapError CalafError.Domain
-                
+                |> Result.mapError CalafError.Domain           
+            
             let snapshot =
-                Workspace.snapshot workspace' changeset
+                Workspace.snapshot workspace' changeset 
             do! snapshot.Projects
-                |> List.traverseResultM (fun p -> context.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
+                |> List.traverseResultM (fun s -> context.FileSystem.tryWriteXml (s.AbsolutePath, s.Content))
                 |> Result.map ignore                
             do! snapshot.Repository
-                |> Option.map (fun p ->
-                    context.Git.tryApply (p.Directory, p.PendingFilesPaths) p.CommitText p.TagName
+                |> Option.map (fun s ->
+                    context.Git.tryApply (s.Directory, s.PendingFilesPaths) s.CommitText s.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                                
@@ -100,7 +101,8 @@ module internal Make =
         result {
             let dateTimeOffset = dependencies.Clock.utcNow()
             let (DotNetXmlFilePattern searchPatternStr) = dependencies.Settings.ProjectsSearchPattern
-            let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatternStr                
+            let (ChangelogFileName changelogFileName) = dependencies.Settings.ChangelogFileName
+            let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatternStr changelogFileName                
             let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
             let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, captureEvents =
@@ -133,7 +135,8 @@ module internal Make =
         result {
             let dateTimeOffset = dependencies.Clock.utcNow()
             let (DotNetXmlFilePattern searchPatternStr) = dependencies.Settings.ProjectsSearchPattern
-            let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatternStr                
+            let (ChangelogFileName changelogFileName) = dependencies.Settings.ChangelogFileName
+            let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatternStr changelogFileName               
             let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
             let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, captureEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain

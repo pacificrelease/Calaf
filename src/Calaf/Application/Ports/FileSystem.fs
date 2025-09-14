@@ -4,7 +4,9 @@ open Calaf.Contracts
 
 type IFileSystem =
     abstract tryReadDirectory:
-        directory: string -> pattern: string -> Result<DirectoryInfo, CalafError>
+        directory: string ->
+        pattern: string ->
+        changelogFilename: string -> Result<DirectoryInfo, CalafError>
         
     abstract tryReadXml:
         absolutePath: string -> Result<System.Xml.Linq.XElement, CalafError>

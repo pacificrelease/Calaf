@@ -4,19 +4,24 @@ open Calaf.Contracts
 open Calaf.Application
 
 module internal FileSystemGateway =
-    let toProjectXmlFileInfo
-        (file: System.IO.FileInfo)
-        (xml: System.Xml.Linq.XElement) : ProjectXmlFileInfo =
+    let toFileInfo
+        (file: System.IO.FileInfo) =
         { Name = file.Name
           Directory = file.DirectoryName
           Extension = file.Extension
-          AbsolutePath = file.FullName
+          AbsolutePath = file.FullName }
+    let toProjectXmlFileInfo
+        (file: System.IO.FileInfo)
+        (xml: System.Xml.Linq.XElement) : ProjectXmlFileInfo =        
+        { Info = toFileInfo file
           Content = xml }
         
     let toWorkspaceDirectoryInfo
         (directoryInfo: System.IO.DirectoryInfo)
+        (changelog: System.IO.FileInfo option)
         (projects: (System.IO.FileInfo * System.Xml.Linq.XElement) seq) : DirectoryInfo =        
         { Directory = directoryInfo.FullName
+          Changelog = changelog |> Option.map toFileInfo
           Projects = projects
             |> Seq.map (fun (fileInfo, xml) -> toProjectXmlFileInfo fileInfo xml)
             |> Seq.toList }
@@ -143,13 +148,27 @@ module internal FileSystem =
                 |> FileSystem
                 |> Error
                 
-    module Directory =        
+    module Directory =
+        
         open FsToolkit.ErrorHandling
         open System.IO
         
         open Calaf.Extensions.InternalExtensions
+        
+        let private getFile
+            (directory: DirectoryInfo)
+            (filename: string) =
+            try
+                let absolute = Path.GetFullPath (filename, directory.FullName)
+                let fileInfo = FileInfo absolute
+                Ok (if fileInfo.Exists then Some fileInfo else None)
+            with exn ->
+                exn
+                |> FileGetFailed
+                |> FileSystem
+                |> Error                
 
-        let private find
+        let private listFiles
             (directory: DirectoryInfo)
             (pattern: string) =
             try
@@ -177,30 +196,32 @@ module internal FileSystem =
                 |> FileSystem
                 |> Error
                 
-        let private load
+        let private xmlFileInfo
             (fileInfo: FileInfo) =
             result {
                 let! xml = Xml.load fileInfo.FullName
                 return fileInfo, xml
             }
                 
-        let list
+        let workspace
             (path: string)
-            (pattern: string) =
+            (pattern: string)
+            (changelogFilename: string)=
             result {
-                let! dirInfo = info path
-                let! files = find dirInfo pattern
+                let! dirInfo = info path                
+                let! files = listFiles dirInfo pattern                
                 let projects, _ =
                     files
-                   |> List.map load
-                   |> Result.partition                                   
-                return FileSystemGateway.toWorkspaceDirectoryInfo dirInfo projects
+                   |> List.map xmlFileInfo
+                   |> Result.partition
+                let! changelog = getFile dirInfo changelogFilename
+                return FileSystemGateway.toWorkspaceDirectoryInfo dirInfo changelog projects
             }
             
 type FileSystem() =
     interface IFileSystem with
-        member _.tryReadDirectory directory pattern =
-            FileSystem.Directory.list directory pattern
+        member _.tryReadDirectory directory pattern changelogFilename =
+            FileSystem.Directory.workspace directory pattern changelogFilename
             |> Result.mapError CalafError.Infrastructure        
             
         member _.tryReadXml absolutePath =

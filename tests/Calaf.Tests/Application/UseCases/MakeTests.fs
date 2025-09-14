@@ -19,12 +19,20 @@ module Run2Tests =
         let createTestDirectory () =
             {
                 Directory = "/test/workspace"
+                Changelog = Some {
+                    Name = "CHANGELOG"
+                    Directory = "/test/workspace"
+                    Extension = ".md"
+                    AbsolutePath = "/test/workspace/CHANGELOG.md"
+                }
                 Projects = [
                     {
-                        Name = "TestProject"
-                        Directory = "/test/workspace"
-                        Extension = ".csproj"
-                        AbsolutePath = "/test/workspace/TestProject.csproj"
+                        Info = {
+                            Name = "TestProject"
+                            Directory = "/test/workspace"
+                            Extension = ".csproj"
+                            AbsolutePath = "/test/workspace/TestProject.csproj"
+                        }                  
                         Content = createTestProjectXml "2025.7"  // Use calendar version format
                     }
                 ]
@@ -82,7 +90,7 @@ module Run2Tests =
             let mutable writtenMarkdown = []
             
             interface IFileSystem with
-                member _.tryReadDirectory directory pattern =
+                member _.tryReadDirectory directory pattern changelogFilename  =
                     directoryResult
                     
                 member _.tryReadXml absolutePath =

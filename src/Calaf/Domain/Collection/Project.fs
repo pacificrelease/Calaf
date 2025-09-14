@@ -45,17 +45,17 @@ let private getCalendarVersionVersionedProject (project: Project) : VersionedPro
     | Versioned v when v.Version.IsCalVer -> Some v
     | _ -> None
 
-let tryCapture (projectInfo: ProjectXmlFileInfo) : Project option =        
+let tryCapture (projectInfo: ProjectXmlFileInfo) : Project option =
     let tryExtractVersion (xml: System.Xml.Linq.XElement) : Version option =
         xml
         |> XmlSchema.tryExtractVersionElement
         |> Option.bind (fun x -> x.Value |> Version.tryParseFromString)        
     option {
         let metadata =
-            { Name = projectInfo.Name
-              Directory = projectInfo.Directory
-              AbsolutePath = projectInfo.AbsolutePath
-              Extension = projectInfo.Extension }        
+            { Name = projectInfo.Info.Name
+              Directory = projectInfo.Info.Directory
+              AbsolutePath = projectInfo.Info.AbsolutePath
+              Extension = projectInfo.Info.Extension }
         let! language = Language.tryParse metadata.Extension
         let version = projectInfo.Content |> tryExtractVersion        
         return

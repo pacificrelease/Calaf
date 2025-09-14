@@ -23,6 +23,7 @@ type FileSystemError =
     | DirectoryAccessDenied of ex: exn
     | FileAccessDenied      of absolutePath: string * ex: exn
     | FilesScanFailed       of ex: exn
+    | FileGetFailed         of ex: exn
     | MarkdownLoadFailed    of absolutePath: string * ex: exn
     | MarkdownSaveFailed    of absolutePath: string * ex: exn
     | XmlLoadFailed         of absolutePath: string * ex: exn

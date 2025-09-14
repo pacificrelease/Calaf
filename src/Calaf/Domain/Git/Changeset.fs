@@ -115,7 +115,8 @@ let toString
     |> addEmptyLine
     |> _.ToString()
 
-let tryCreate (commits: Commit list) =
+let tryCreate
+    (commits: Commit list)=
     if commits.IsEmpty then
         None
     else        

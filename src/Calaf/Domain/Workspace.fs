@@ -40,14 +40,21 @@ let private combineEvents primaryEvents secondaryEventsOption =
     | None ->
         primaryEvents
 
-let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
+let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =    
     result {
         let! collection, collectionEvents =
             directory.Projects
             |> List.map Project.tryCapture
             |> List.choose id
             |> Collection.tryCapture
-            
+        let maybeChangelog =
+            directory.Changelog
+            |> Option.map (fun x ->
+                { Metadata =
+                    { Name = x.Name
+                      Extension = x.Extension
+                      Directory = x.Directory
+                      AbsolutePath = x.AbsolutePath } })    
         let! repoResult =
             repoInfo
             |> Option.traverseResult Repository.tryCapture        
@@ -56,14 +63,14 @@ let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
             | Some (_, repoEvents) ->
                 collectionEvents @ repoEvents
             | None -> collectionEvents
-        let maybeRepo = repoResult |> Option.map fst
+        let maybeRepo = repoResult |> Option.map fst        
         let! version =
             combineVersions collection maybeRepo
             |> Version.tryMax
-            |> Option.toResult CalendarVersionMissing 
-        
+            |> Option.toResult CalendarVersionMissing                
         let workspace = {
             Directory  = directory.Directory
+            Changelog  = maybeChangelog
             Version    = version
             Repository = maybeRepo
             Collection = collection
@@ -79,7 +86,7 @@ let snapshot (workspace: Workspace) (changeset: Changeset option) =
     let repositorySnapshot =
         workspace.Repository
         |> Option.bind (fun p ->
-            Repository.trySnapshot p (projectsSnapshot |> List.map _.AbsolutePath))
+            Repository.trySnapshot p (projectsSnapshot |> List.map _.AbsolutePath))    
     { Projects = projectsSnapshot
       Repository = repositorySnapshot
       Changeset = changeset }
