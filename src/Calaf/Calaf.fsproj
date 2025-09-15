@@ -2,6 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <OutputType>Exe</OutputType>
     <PackageId>Calaf</PackageId>
     <PackAsTool>true</PackAsTool>
