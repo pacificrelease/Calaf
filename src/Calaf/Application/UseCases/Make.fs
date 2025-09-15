@@ -32,28 +32,26 @@ module internal Make =
         let error (console: IConsole) e =            
             console.error $"{e}"
             
-    let private tryChangeset
+    let private tryReadCommits
         (workspace: Workspace)
-        (git : IGit) =        
-        result {
-            let! commits =
-                match workspace.Repository with
-                | Some (Dirty (_, { Version = Some { TagName = tagName; Version = CalVer _ } }))                    
-                | Some (Ready (_, { Version = Some { TagName = tagName; Version = CalVer _ } })) ->                   
-                    git.tryListCommits workspace.Directory (Some tagName)
-                    |> Result.map (fun gci -> gci |> List.map Commit.create)
-                    |> Result.map Some
-                | Some (Dirty (_, { Version = None }))
-                | Some (Ready (_, { Version = None })) -> 
-                    git.tryListCommits workspace.Directory None                    
-                    |> Result.map (fun gci -> gci |> List.map Commit.create)
-                    |> Result.map Some
-                | _ -> Ok None
-            match commits with
-            | Some commits ->
-                return Changeset.tryCreate commits
-            | None -> return None
-        }        
+        (git : IGit) = 
+            match workspace.Repository with
+            | Some (Dirty (_, { Version = Some { TagName = tagName; Version = CalVer _ } }))                    
+            | Some (Ready (_, { Version = Some { TagName = tagName; Version = CalVer _ } })) ->                   
+                git.tryListCommits workspace.Directory (Some tagName)
+                |> Result.map (fun gci -> gci |> List.map Commit.create)
+                |> Result.map Some
+            | Some (Dirty (_, { Version = None }))
+            | Some (Ready (_, { Version = None })) -> 
+                git.tryListCommits workspace.Directory None                    
+                |> Result.map (fun gci -> gci |> List.map Commit.create)
+                |> Result.map Some
+            | _ -> Ok None
+            
+    let private tryChangeset commits =
+        match commits with
+        | Some commits -> Changeset.tryCreate commits
+        | None -> None
         
     let private tryMake
         (path: string)
@@ -69,30 +67,31 @@ module internal Make =
             let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes dateTimeOffset            
             let! workspace, _ =
                 Workspace.tryCapture (dir, repo)
-                |> Result.mapError CalafError.Domain                
-            let! version =
-                make workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain
             let! changeset, _ =
-                tryChangeset workspace context.Git
+                tryReadCommits workspace context.Git
+                |> Result.map tryChangeset
                 |> Result.map (Option.map (fun (cs, events) ->
-                    Some cs, Some events) >> Option.defaultValue (None, None))
+                    Some cs, Some events) >> Option.defaultValue (None, None))            
+                
+            let! newVersion =
+                make workspace.Version dateTimeOffset
+                |> Result.mapError CalafError.Domain            
             let! workspace', _ =
-                version
+                newVersion
                 |> Workspace.tryRelease workspace
-                |> Result.mapError CalafError.Domain           
-            
+                |> Result.mapError CalafError.Domain
             let snapshot =
-                Workspace.snapshot workspace' changeset 
+                Workspace.snapshot workspace' changeset
             do! snapshot.Projects
                 |> List.traverseResultM (fun s -> context.FileSystem.tryWriteXml (s.AbsolutePath, s.Content))
-                |> Result.map ignore                
+                |> Result.map ignore            
             do! snapshot.Repository
                 |> Option.map (fun s ->
                     context.Git.tryApply (s.Directory, s.PendingFilesPaths) s.CommitText s.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
-                |> Option.defaultValue (Ok ())                                
+                |> Option.defaultValue (Ok ())
             return workspace'
         }    
         
@@ -108,8 +107,10 @@ module internal Make =
             let! workspace, captureEvents =
                 Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
             let! changeset, _ =
-                tryChangeset workspace dependencies.Git
-                |> Result.map (Option.map (fun (cs, events) -> Some cs, Some events) >> Option.defaultValue (None, None))                
+                tryReadCommits workspace dependencies.Git
+                |> Result.map tryChangeset
+                |> Result.map (Option.map (fun (cs, events) ->
+                    Some cs, Some events) >> Option.defaultValue (None, None))                
             let! version =
                 Version.tryNightly workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain
@@ -141,8 +142,10 @@ module internal Make =
             let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, captureEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
             let! changeset, _ =
-                tryChangeset workspace dependencies.Git
-                |> Result.map (Option.map (fun (cs, events) -> Some cs, Some events) >> Option.defaultValue (None, None))
+                tryReadCommits workspace dependencies.Git
+                |> Result.map tryChangeset
+                |> Result.map (Option.map (fun (cs, events) ->
+                    Some cs, Some events) >> Option.defaultValue (None, None))
             let! version =
                 Version.tryStable workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain

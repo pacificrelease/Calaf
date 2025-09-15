@@ -47,14 +47,13 @@ let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
             |> List.map Project.tryCapture
             |> List.choose id
             |> Collection.tryCapture
-        let maybeChangelog =
-            directory.Changelog
-            |> Option.map (fun x ->
-                { Metadata =
-                    { Name = x.Name
-                      Extension = x.Extension
-                      Directory = x.Directory
-                      AbsolutePath = x.AbsolutePath } })    
+        let changelog = {
+              Metadata = {
+                  Name = directory.Changelog.Name
+                  Extension = directory.Changelog.Extension
+                  Directory = directory.Changelog.Directory
+                  AbsolutePath = directory.Changelog.AbsolutePath }
+              FileExists = directory.Changelog.Exists }    
         let! repoResult =
             repoInfo
             |> Option.traverseResult Repository.tryCapture        
@@ -70,7 +69,6 @@ let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
             |> Option.toResult CalendarVersionMissing                
         let workspace = {
             Directory  = directory.Directory
-            Changelog  = maybeChangelog
             Version    = version
             Repository = maybeRepo
             Collection = collection
@@ -86,10 +84,10 @@ let snapshot (workspace: Workspace) (changeset: Changeset option) =
     let repositorySnapshot =
         workspace.Repository
         |> Option.bind (fun p ->
+            let changeset = changeset |> Option.map (fun chs ->Changeset.toString chs workspace.Version)
             Repository.trySnapshot p (projectsSnapshot |> List.map _.AbsolutePath))    
     { Projects = projectsSnapshot
-      Repository = repositorySnapshot
-      Changeset = changeset }
+      Repository = repositorySnapshot }
 
 let tryRelease (workspace: Workspace) (nextVersion: CalendarVersion) =
     result {

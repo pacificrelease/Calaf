@@ -19,11 +19,12 @@ module Run2Tests =
         let createTestDirectory () =
             {
                 Directory = "/test/workspace"
-                Changelog = Some {
+                Changelog = {
                     Name = "CHANGELOG"
                     Directory = "/test/workspace"
                     Extension = ".md"
                     AbsolutePath = "/test/workspace/CHANGELOG.md"
+                    Exists = true
                 }
                 Projects = [
                     {
@@ -32,6 +33,7 @@ module Run2Tests =
                             Directory = "/test/workspace"
                             Extension = ".csproj"
                             AbsolutePath = "/test/workspace/TestProject.csproj"
+                            Exists = true
                         }                  
                         Content = createTestProjectXml "2025.7"  // Use calendar version format
                     }

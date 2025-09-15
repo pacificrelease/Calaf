@@ -2107,6 +2107,7 @@ module Contracts =
         
     let fileInfo
         (directory: string)
+        (exists: bool)
         (extension : string option) : FileInfo =
         let ext =
             match extension with
@@ -2118,6 +2119,7 @@ module Contracts =
             Directory = directory
             Extension = ext
             AbsolutePath = directory + "/" + name + ext
+            Exists = exists
         }
 
     let projectXElement (version : string option) : XElement =
@@ -2138,19 +2140,17 @@ module Contracts =
             then rootDir + Bogus.Faker().System.DirectoryPath()
             else rootDir
         let ext = Some projectFileExtension
-        let info = fileInfo dir ext
-        {
-            Info = info
-            Content = projectXElement version
-        }
+        let exists = Bogus.Faker().Random.Bool()
+        let info = fileInfo dir exists ext
+        { Info = info; Content = projectXElement version }
          
     let directoryInfo () : DirectoryInfo =
         let dir = Bogus.Faker().System.DirectoryPath()
         let projects =
             Bogus.Faker().Make<ProjectXmlFileInfo>(
                 int (Bogus.Faker().Random.Byte(1uy, System.Byte.MaxValue)),
-                fun (_: int) -> projectXmlFileInfo (dir, Some "2025.7")) |> Seq.toList
-        let changelog = fileInfo dir (Some ".md") |> Some
+                fun (_: int) -> projectXmlFileInfo (dir, Some "2025.7")) |> Seq.toList        
+        let changelog = fileInfo dir (Bogus.Faker().Random.Bool()) (Some ".md")
         { Directory = dir; Changelog = changelog; Projects = projects }
         
     let makeSettings () : MakeSettings =

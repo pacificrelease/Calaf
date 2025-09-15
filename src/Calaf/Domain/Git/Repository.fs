@@ -91,7 +91,9 @@ let tryGetCalendarVersion repo =
     | Dirty (_, { Version = Some { Version = (CalVer version) } }) -> Some version
     | _ -> None
     
-let trySnapshot (repo: Repository) (pendingFilesPaths: string list) =    
+let trySnapshot
+    (repo: Repository)
+    (pendingFilesPaths: string list)    =    
     match repo with        
     | Ready (dir, { Signature = signature; Version = Some { Version = (CalVer currentVersion) } })        
     | Dirty (dir, { Signature = signature; Version = Some { Version = (CalVer currentVersion) } }) ->

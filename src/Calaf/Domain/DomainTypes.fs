@@ -74,7 +74,7 @@ type ConventionalCommitMessage = {
     _splitter: string
     Scope: CommitScope
     Description: CommitDescription
-    BreakingChange: bool
+    BreakingChange: BreakingChange
 }
 type CommitMessage =
     | Feature of conventionalMessage: ConventionalCommitMessage
@@ -153,6 +153,7 @@ type VersionedProject = {
 
 type Changelog = {
     Metadata: FileMetadata
+    FileExists: bool
 }
 
 type ProjectActionSnapshot = {
@@ -166,12 +167,11 @@ type RepositoryActionSnapshot = {
     Signature: Signature
     TagName: TagName
     CommitText: CommitText
-}   
+}
 
 type WorkspaceActionSnapshot = {        
     Projects: ProjectActionSnapshot list
     Repository: RepositoryActionSnapshot option
-    Changeset: Changeset option
 }
 
 type Tag =
@@ -195,7 +195,6 @@ type Collection =
 type Workspace = {
     Directory: string    
     Version: CalendarVersion
-    Changelog: Changelog option
     Repository: Repository option
     Collection: Collection
 }

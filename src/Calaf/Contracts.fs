@@ -45,6 +45,7 @@ type FileInfo = {
     Directory: string
     Extension: string
     AbsolutePath: string
+    Exists: bool
 }
 
 type ProjectXmlFileInfo = {
@@ -54,7 +55,7 @@ type ProjectXmlFileInfo = {
 
 type DirectoryInfo = {
     Directory: string
-    Changelog: FileInfo option
+    Changelog: FileInfo
     Projects: ProjectXmlFileInfo list
 }
 

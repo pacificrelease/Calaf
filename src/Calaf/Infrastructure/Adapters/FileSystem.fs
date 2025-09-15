@@ -9,7 +9,9 @@ module internal FileSystemGateway =
         { Name = file.Name
           Directory = file.DirectoryName
           Extension = file.Extension
-          AbsolutePath = file.FullName }
+          AbsolutePath = file.FullName
+          Exists = file.Exists }
+        
     let toProjectXmlFileInfo
         (file: System.IO.FileInfo)
         (xml: System.Xml.Linq.XElement) : ProjectXmlFileInfo =        
@@ -18,10 +20,10 @@ module internal FileSystemGateway =
         
     let toWorkspaceDirectoryInfo
         (directoryInfo: System.IO.DirectoryInfo)
-        (changelog: System.IO.FileInfo option)
+        (changelog: System.IO.FileInfo)
         (projects: (System.IO.FileInfo * System.Xml.Linq.XElement) seq) : DirectoryInfo =        
         { Directory = directoryInfo.FullName
-          Changelog = changelog |> Option.map toFileInfo
+          Changelog = toFileInfo changelog
           Projects = projects
             |> Seq.map (fun (fileInfo, xml) -> toProjectXmlFileInfo fileInfo xml)
             |> Seq.toList }
@@ -148,8 +150,7 @@ module internal FileSystem =
                 |> FileSystem
                 |> Error
                 
-    module Directory =
-        
+    module Directory =        
         open FsToolkit.ErrorHandling
         open System.IO
         
@@ -160,13 +161,19 @@ module internal FileSystem =
             (filename: string) =
             try
                 let absolute = Path.GetFullPath (filename, directory.FullName)
-                let fileInfo = FileInfo absolute
-                Ok (if fileInfo.Exists then Some fileInfo else None)
+                FileInfo absolute |> Ok
             with exn ->
                 exn
                 |> FileGetFailed
                 |> FileSystem
-                |> Error                
+                |> Error
+                
+        let private getXmlFile
+            (fileInfo: FileInfo) =
+            result {
+                let! xml = Xml.load fileInfo.FullName
+                return fileInfo, xml
+            }
 
         let private listFiles
             (directory: DirectoryInfo)
@@ -194,14 +201,7 @@ module internal FileSystem =
                 exn
                 |> DirectoryAccessDenied
                 |> FileSystem
-                |> Error
-                
-        let private xmlFileInfo
-            (fileInfo: FileInfo) =
-            result {
-                let! xml = Xml.load fileInfo.FullName
-                return fileInfo, xml
-            }
+                |> Error        
                 
         let workspace
             (path: string)
@@ -212,7 +212,7 @@ module internal FileSystem =
                 let! files = listFiles dirInfo pattern                
                 let projects, _ =
                     files
-                   |> List.map xmlFileInfo
+                   |> List.map getXmlFile
                    |> Result.partition
                 let! changelog = getFile dirInfo changelogFilename
                 return FileSystemGateway.toWorkspaceDirectoryInfo dirInfo changelog projects
