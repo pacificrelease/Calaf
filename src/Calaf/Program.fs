@@ -11,8 +11,7 @@ let private changelogFileName = "CHANGELOG.md"
 
 [<EntryPoint>]
 let main args =
-    //let path     = String.Empty
-    let path     = "/Users/d_mikhailov/Workspace/Calaf"
+    let path     = String.Empty
     let context  = MakeContext.create
     let settings = MakeSettings.tryCreate supportedFilesPattern loadTenTags changelogFileName
     Make.run path args context settings
