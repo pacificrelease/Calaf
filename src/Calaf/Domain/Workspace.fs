@@ -13,7 +13,7 @@ module Events =
           Version = workspace.Version
           RepositoryExist = workspace.Repository |> Option.isSome
           RepositoryVersion = workspace.Repository |> Option.bind Repository.tryGetCalendarVersion
-          CollectionVersion = Collection.getCalendarVersion workspace.Collection }
+          SolutionVersion = Solution.getCalendarVersion workspace.Solution }
         |> WorkspaceEvent.StateCaptured
         |> DomainEvent.Workspace
         
@@ -27,7 +27,7 @@ module Events =
     
 let private combineVersions collection repoOption =
     [
-        yield Collection.getCalendarVersion collection
+        yield Solution.getCalendarVersion collection
         match repoOption |> Option.bind Repository.tryGetCalendarVersion with
         | Some version -> yield version
         | None -> ()
@@ -42,36 +42,30 @@ let private combineEvents primaryEvents secondaryEventsOption =
 
 let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =    
     result {
-        let! collection, collectionEvents =
+        let! solution, solutionEvents =
             directory.Projects
             |> List.map Project.tryCapture
             |> List.choose id
-            |> Collection.tryCapture
-        let changelog = {
-              Metadata = {
-                  Name = directory.Changelog.Name
-                  Extension = directory.Changelog.Extension
-                  Directory = directory.Changelog.Directory
-                  AbsolutePath = directory.Changelog.AbsolutePath }
-              FileExists = directory.Changelog.Exists }    
+            |> Solution.tryCapture <| Changelog.tryCapture directory.Changelog
+        
         let! repoResult =
             repoInfo
             |> Option.traverseResult Repository.tryCapture        
         let events =
             match repoResult with
             | Some (_, repoEvents) ->
-                collectionEvents @ repoEvents
-            | None -> collectionEvents
+                solutionEvents @ repoEvents
+            | None -> solutionEvents
         let maybeRepo = repoResult |> Option.map fst        
         let! version =
-            combineVersions collection maybeRepo
+            combineVersions solution maybeRepo
             |> Version.tryMax
             |> Option.toResult CalendarVersionMissing                
         let workspace = {
             Directory  = directory.Directory
             Version    = version
             Repository = maybeRepo
-            Collection = collection
+            Solution   = solution
         }
         
         let event = Events.toWorkspaceCaptured workspace
@@ -80,12 +74,12 @@ let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
     }
     
 let snapshot (workspace: Workspace) (changeset: Changeset option) =
-    let projectsSnapshot  = Collection.trySnapshot workspace.Collection
+    let projectsSnapshot  = Solution.trySnapshot workspace.Solution
     let repositorySnapshot =
         workspace.Repository
-        |> Option.bind (fun p ->
-            let changeset = changeset |> Option.map (fun chs ->Changeset.toString chs workspace.Version)
-            Repository.trySnapshot p (projectsSnapshot |> List.map _.AbsolutePath))    
+        |> Option.bind (fun repo ->            
+            let changeset = changeset |> Option.map (fun chs ->Changeset.toString chs workspace.Version)            
+            Repository.trySnapshot repo (projectsSnapshot |> List.map _.AbsolutePath))    
     { Projects = projectsSnapshot
       Repository = repositorySnapshot }
 
@@ -98,8 +92,8 @@ let tryRelease (workspace: Workspace) (nextVersion: CalendarVersion) =
         then
             return! WorkspaceAlreadyCurrent |> Error
         else
-            let! collection', collectionEvents =
-                Collection.tryRelease workspace.Collection nextVersion            
+            let! solution', solutionEvents =
+                Solution.tryRelease workspace.Solution nextVersion            
             let! repo' =
                 match workspace.Repository with
                 | Some repo ->                    
@@ -109,12 +103,12 @@ let tryRelease (workspace: Workspace) (nextVersion: CalendarVersion) =
                     Ok None
             
             let events =
-               combineEvents collectionEvents (repo' |> Option.map snd)
+               combineEvents solutionEvents (repo' |> Option.map snd)
                 
             let workspace' =
                 { workspace with
                     Version = nextVersion
-                    Collection = collection'
+                    Solution = solution'
                     Repository = repo' |> Option.map fst }
             let event = Events.toWorkspaceReleased workspace' workspace.Version
             return workspace', events @ [event] 

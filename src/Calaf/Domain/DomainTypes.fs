@@ -156,6 +156,12 @@ type Changelog = {
     FileExists: bool
 }
 
+type StandardSolution = {
+    Version: CalendarVersion
+    Projects: VersionedProject list
+    Changelog: Changelog
+}
+
 type ProjectActionSnapshot = {
     AbsolutePath: string
     Content: System.Xml.Linq.XElement
@@ -189,12 +195,12 @@ type Project =
     | Versioned   of VersionedProject
     | Unversioned of UnversionedProject    
 
-type Collection =
-    | Standard of version: CalendarVersion * projects: VersionedProject list
+type Solution =
+    | Standard of StandardSolution
 
 type Workspace = {
     Directory: string    
     Version: CalendarVersion
     Repository: Repository option
-    Collection: Collection
+    Solution: Solution
 }
