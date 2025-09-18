@@ -78,9 +78,12 @@ let snapshot (workspace: Workspace) (changeset: Changeset option) =
     let repositorySnapshot =
         workspace.Repository
         |> Option.bind (fun repo ->            
-            let changeset = changeset |> Option.map (fun chs ->Changeset.toString chs workspace.Version)            
-            Repository.trySnapshot repo (projectsSnapshot |> List.map _.AbsolutePath))    
+            Repository.trySnapshot repo (projectsSnapshot |> List.map _.AbsolutePath))
+    let changelogSnapshot =
+        changeset
+        |> Option.map (Changelog.snapshot workspace)
     { Projects = projectsSnapshot
+      Changelog = changelogSnapshot
       Repository = repositorySnapshot }
 
 let tryRelease (workspace: Workspace) (nextVersion: CalendarVersion) =

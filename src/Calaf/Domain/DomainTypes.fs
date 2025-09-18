@@ -167,6 +167,12 @@ type ProjectActionSnapshot = {
     Content: System.Xml.Linq.XElement
 }
 
+type ChangelogActionSnapshot = {
+    AbsolutePath: string
+    ExistsInFileSystem: bool
+    ChangesetContent: string
+}
+
 type RepositoryActionSnapshot = {
     Directory: string
     PendingFilesPaths: string list
@@ -177,6 +183,7 @@ type RepositoryActionSnapshot = {
 
 type WorkspaceActionSnapshot = {        
     Projects: ProjectActionSnapshot list
+    Changelog: ChangelogActionSnapshot option
     Repository: RepositoryActionSnapshot option
 }
 
