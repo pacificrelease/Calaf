@@ -87,10 +87,8 @@ module internal FileSystem =
                             System.IO.FileMode.Open,
                             System.IO.FileAccess.Read,
                             System.IO.FileShare.Read)
-                        inFs.CopyTo(outFs)
+                        inFs.CopyTo(outFs)                    
                     
-                    let newBytes = utf8NoBom.GetBytes content
-                    outFs.Write(newBytes, 0, newBytes.Length)
                     outFs.Flush()
 
                 if fileExists then

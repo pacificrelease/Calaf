@@ -147,7 +147,6 @@ module internal GitWrapper =
         
     let private isUnborn
         (gitProcess: string -> Result<string,InfrastructureError>) =
-        //let head = gitProcess "rev-parse --verify HEAD"
         let head = gitProcess "rev-parse --quiet --verify HEAD^{commit}"
         
         match head with
@@ -159,11 +158,34 @@ module internal GitWrapper =
         (gitProcess: string -> Result<string,InfrastructureError>) =
         gitProcess "reset HEAD ."
         
+    let private changes
+        (gitProcess: string -> Result<string,InfrastructureError>) =
+        result {
+            let! root = gitProcess "rev-parse --show-toplevel"
+            let! status = gitProcess "status --porcelain"
+
+            let files =
+                status.Split([|'\n'; '\r'|], StringSplitOptions.RemoveEmptyEntries)
+                |> Array.map (fun line ->
+                    let filePath = line.Substring(3)
+                    System.IO.Path.Combine(root, filePath) |> System.IO.Path.GetFullPath)
+                |> Array.distinct
+                |> Array.toList
+
+            return files
+        }
+        
     let private stage
         (files: string list)
+        (changes: string list)
         (gitProcess: string -> Result<string,InfrastructureError>) =
-            let files = files |> String.concat " "
-            gitProcess $"add {files}"
+            let changes = Set.ofList changes
+            let files = files |> List.filter changes.Contains
+            if files.IsEmpty
+            then Error (Git RepoStageNoChanges)
+            else
+                let files = files |> String.concat " "
+                gitProcess $"add {files}"
             
     let private commit
         (commitText: string)
@@ -236,7 +258,8 @@ module internal GitWrapper =
             else
                 let git = runGit directory
                 let! _ = git |> unstage
-                let! _ = git |> stage files
+                let! c = git |> changes                
+                let! _ = git |> stage files c
                 let! _ = git |> commit commitText
                 let! _ = git |> tag tagName
                 return ()

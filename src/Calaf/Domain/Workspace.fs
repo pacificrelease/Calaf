@@ -75,13 +75,20 @@ let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
     
 let snapshot (workspace: Workspace) (changeset: Changeset option) =
     let projectsSnapshot  = Solution.trySnapshot workspace.Solution
-    let repositorySnapshot =
-        workspace.Repository
-        |> Option.bind (fun repo ->            
-            Repository.trySnapshot repo (projectsSnapshot |> List.map _.AbsolutePath))
     let changelogSnapshot =
         changeset
         |> Option.map (Changelog.snapshot workspace)
+    let repositorySnapshot =
+        workspace.Repository
+        |> Option.bind (fun repo ->
+            let pendingFilePaths =
+                projectsSnapshot
+                |> List.map _.AbsolutePath
+                |> fun paths ->
+                    changelogSnapshot
+                    |> Option.map _.AbsolutePath
+                    |> Option.fold (fun acc path -> path :: acc) paths            
+            Repository.trySnapshot repo pendingFilePaths)    
     { Projects = projectsSnapshot
       Changelog = changelogSnapshot
       Repository = repositorySnapshot }

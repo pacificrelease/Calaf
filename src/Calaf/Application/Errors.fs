@@ -16,7 +16,8 @@ type GitError =
     | GitProcessErrorExit of desc: string 
     | GitProcessRunFailed of ex: exn 
     | RepoNotInitialized
-    | RepoAccessFailed of ex: exn    
+    | RepoAccessFailed of ex: exn
+    | RepoStageNoChanges
     
 type FileSystemError =
     | DirectoryDoesNotExist

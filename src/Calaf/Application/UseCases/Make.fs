@@ -85,7 +85,13 @@ module internal Make =
                 Workspace.snapshot workspace' changeset
             do! snapshot.Projects
                 |> List.traverseResultM (fun s -> context.FileSystem.tryWriteXml (s.AbsolutePath, s.Content))
-                |> Result.map ignore            
+                |> Result.map ignore
+            do! snapshot.Changelog    
+                |> Option.map (fun s ->
+                    context.FileSystem.tryWriteMarkdown (s.AbsolutePath, s.ChangesetContent)
+                    |> Result.map ignore
+                    |> Result.mapError id)
+                |> Option.defaultValue (Ok ())                
             do! snapshot.Repository
                 |> Option.map (fun s ->
                     context.Git.tryApply (s.Directory, s.PendingFilesPaths) s.CommitText s.TagName
