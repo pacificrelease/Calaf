@@ -98,19 +98,12 @@ let toString
         let addHeaderLine = addHeaderLine headerText
         match commits with
         | [] -> id
-        | _ -> fun sb -> addConventionalCommits sb commits addHeaderLine addLine
-    
-    let addOtherSection headerText commits addLine =
-        let addHeaderLine = addHeaderLine headerText
-        match commits with
-        | [] -> id
-        | _ -> fun sb -> addCommits sb commits addHeaderLine addLine
+        | _ -> fun sb -> addConventionalCommits sb commits addHeaderLine addLine   
     
     System.Text.StringBuilder()
     |> addVersionHeader <| calendarVersion
     |> addSection "Features" changeset.Features addConventionalCommitMessageLine
     |> addSection "Fixed" changeset.Fixes addConventionalCommitMessageLine
-    |> addOtherSection "Changes" changeset.Other addCommitTextLine
     |> addSection "Breaking Changes" changeset.BreakingChanges addConventionalCommitMessageLine
     |> addEmptyLine
     |> _.ToString()
