@@ -93,7 +93,7 @@ let private addCommits
     
 let toString
     (changeset: Changeset)
-    (calendarVersion: CalendarVersion)=
+    (calendarVersion: CalendarVersion) =
     let addSection headerText commits addLine =
         let addHeaderLine = addHeaderLine headerText
         match commits with
@@ -109,7 +109,8 @@ let toString
     |> _.ToString()
 
 let tryCreate
-    (commits: Commit list)=
+    (commits: Commit list)
+    (timeStamp: System.DateTimeOffset)=
     if commits.IsEmpty then
         None
     else        
@@ -136,6 +137,7 @@ let tryCreate
             Fixes = List.rev fixes
             BreakingChanges = List.rev breakingChanges
             Other = others
+            TimeStamp = timeStamp
         }
         let event = Events.toRepositoryChangesetCaptured changeset
         Some (changeset, [event])

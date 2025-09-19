@@ -48,9 +48,11 @@ module internal Make =
                 |> Result.map Some
             | _ -> Ok None
             
-    let private tryChangeset commits =
+    let private tryChangeset        
+        commits
+        timeStamp =
         match commits with
-        | Some commits -> Changeset.tryCreate commits
+        | Some commits -> Changeset.tryCreate commits timeStamp
         | None -> None
         
     let private tryMake
@@ -70,7 +72,7 @@ module internal Make =
                 |> Result.mapError CalafError.Domain
             let! changeset, _ =
                 tryReadCommits workspace context.Git
-                |> Result.map tryChangeset
+                |> Result.map (fun commits -> tryChangeset commits dateTimeOffset)
                 |> Result.map (Option.map (fun (cs, events) ->
                     Some cs, Some events) >> Option.defaultValue (None, None))            
                 
@@ -114,7 +116,7 @@ module internal Make =
                 Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
             let! changeset, _ =
                 tryReadCommits workspace dependencies.Git
-                |> Result.map tryChangeset
+                |> Result.map (fun commits -> tryChangeset commits dateTimeOffset)
                 |> Result.map (Option.map (fun (cs, events) ->
                     Some cs, Some events) >> Option.defaultValue (None, None))                
             let! version =
@@ -149,7 +151,7 @@ module internal Make =
             let! workspace, captureEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
             let! changeset, _ =
                 tryReadCommits workspace dependencies.Git
-                |> Result.map tryChangeset
+                |> Result.map (fun commits -> tryChangeset commits dateTimeOffset)
                 |> Result.map (Option.map (fun (cs, events) ->
                     Some cs, Some events) >> Option.defaultValue (None, None))
             let! version =

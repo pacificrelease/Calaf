@@ -120,6 +120,7 @@ type Changeset = {
     Fixes : ConventionalCommitMessage list
     BreakingChanges : ConventionalCommitMessage list
     Other: CommitText list
+    TimeStamp: System.DateTimeOffset
 }
 
 // File System
