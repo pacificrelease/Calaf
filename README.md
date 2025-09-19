@@ -19,6 +19,7 @@ Calaf is a command-line tool for managing Calendar Versioning ([CalVer](https://
 - [Versioning Scheme](#versioning-scheme)
 - [Quick Start](#quick-start)
 - [Commands Reference](#commands-reference)
+- [Changelog Generation](#changelog-generation)
 - [Further Use](#further-use)
 - [License](#license)
 - [Special Thanks](#special-thanks)
@@ -146,11 +147,10 @@ calaf make <stable|alpha|beta|rc|nightly>
 
 **Description:** Generates and applies a new Calendar Version to all `.csproj` and `.fsproj` files in the current directory. Automatically creates Git commit and tag if repository is detected.
 
-**Automatic Changelog Generation:** When calaf make is run in a Git repository, it also automatically generates or updates a CHANGELOG.md file. The tool analyzes commits since the last version tag that follow the Conventional Commits specification.
-  * Commits prefixed with `feat:` are added under a `### Features` section.
-  * Commits prefixed with `fix:` are added under a `### Bug Fixes` section.
-
-The new changelog entry is prepended to the `CHANGELOG.md` file and included in the version commit.
+**Automatic Changelog Generation:** When `calaf make` is run in a Git repository, it also automatically generates or updates a `CHANGELOG.md` file. The tool analyzes commits since the last version tag that follow the [Conventional Commits](https://www.conventionalcommits.org) specification.
+* Commits like `feat(scope): description` are added under a `### Features` section, grouped by scope.
+* Commits like `fix(scope): description` are added under a `### Bug Fixes` section, grouped by scope.
+* Commits with a `!` after the type/scope (e.g., `feat(api)!:`) are added under a `### Breaking Changes` section.
 
 **Arguments:**
 
@@ -337,6 +337,35 @@ Project file change:
 
 <!-- After -->
 <Version>2025.9.1-rc.1.27.1</Version>
+```
+
+
+## Changelog Generation
+
+Calaf automatically maintains `CHANGELOG.md` during `calaf make`:
+- Commit range: from the last version Git tag to `HEAD`. If no tag exists, all commits are considered.
+- Source: commits conforming to [Conventional Commits](https://www.conventionalcommits.org) are categorized. The format `type(scope): description` is supported, where `(scope)` is optional.
+- Categories:
+    - `### Breaking Changes`: commits with `!` after the type/scope (e.g., `feat(api)!: drop support for old format`).
+    - `### Features`: commits with `feat:`.
+    - `### Bug Fixes`: commits with `fix:`.
+- File handling: creates `CHANGELOG.md` if missing; prepends the new release entry if present.
+- Git integration: `CHANGELOG.md` is staged together with project file updates and included in the version commit and tag.
+
+Example entry:
+
+```markdown
+## 2025.9.1 - 2025-09-27
+
+### Breaking Changes
+- **versioning:** change version format to YYYY.MM[.MICRO][-BUILD.FORMAT]
+
+### Features
+- **core:** add RC pre-release support
+- **versioning:** change version format to YYYY.MM[.MICRO][-BUILD.FORMAT]
+
+### Bug Fixes
+- **fs:** correct content duplication in markdown writer
 ```
 
 
