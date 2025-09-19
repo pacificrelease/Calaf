@@ -800,7 +800,8 @@ module TryAlphaTests =
     
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Stable.Micro> |])>]
     let ``Stable with Micro CalendarVersion releases alpha, set appropriate Year, Month, no Micro, adds Build type Alpha``
-        (v: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
+        (v: CalendarVersion)
+        (dateTimeOffset: System.DateTimeOffset) =
         let dateTimeOffset = Internals.uniqueDateTimeOffset (v, dateTimeOffset)
         let v' = tryAlpha v dateTimeOffset
         
@@ -817,7 +818,8 @@ module TryAlphaTests =
     
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.AlphaNightly.Accidental> |])>]
     let ``AlphaNightly CalendarVersion releases alpha, changes an alpha number but keeps the same Year, Month, Micro when the year and month are same``
-        (v: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =        
+        (v: CalendarVersion)
+        (dateTimeOffset: System.DateTimeOffset) =        
         let v' = tryAlpha v dateTimeOffset
         
         let expectedYear = dateTimeOffset.Year
@@ -865,7 +867,8 @@ module TryAlphaTests =
 module TryBetaTests =
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.Alpha.Accidental> |])>]
     let ``Alpha CalendarVersion releases to beta with the initial beta number``
-        (v: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
+        (v: CalendarVersion)
+        (dateTimeOffset: System.DateTimeOffset) =
         let release = tryBeta v dateTimeOffset        
         match release with
         | Ok { Build = Some (Beta b) } ->
@@ -874,7 +877,8 @@ module TryBetaTests =
         
     [<Property(Arbitrary = [| typeof<Arbitrary.CalendarVersion.ReleaseCandidate.Accidental> |])>]
     let ``ReleaseCandidate CalendarVersion prohibits to beta``
-        (v: CalendarVersion, dateTimeOffset: System.DateTimeOffset) =
+        (v: CalendarVersion)
+        (dateTimeOffset: System.DateTimeOffset) =
         let release = tryBeta v dateTimeOffset
         test <@
             match release with

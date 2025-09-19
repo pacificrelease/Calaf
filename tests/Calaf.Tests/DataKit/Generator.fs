@@ -1969,6 +1969,7 @@ module Git =
         let FeaturesChangeset =
             gen {
                 let! features = Features
+                let! timeStamp = genValidDateTimeOffset
                 return {
                     Features = features
                     Fixes = []
@@ -1976,6 +1977,7 @@ module Git =
                     BreakingChanges =
                         features
                         |> List.filter _.BreakingChange
+                    TimeStamp = timeStamp
                 }
             }
             
