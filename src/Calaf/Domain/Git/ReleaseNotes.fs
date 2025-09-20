@@ -109,8 +109,8 @@ let toString
     | WithChanges { Features = features; Fixes = fixes; BreakingChanges = breakingChanges; Version = calendarVersion; TimeStamp = timeStamp } ->
         System.Text.StringBuilder()
         |> addVersionHeader <| calendarVersion
-        |> addTimeStampLine <| timeStamp
         |> addEmptyLine
+        |> addTimeStampLine <| timeStamp
         |> addSection "Features" features addConventionalCommitMessageLine
         |> addSection "Fixed" fixes addConventionalCommitMessageLine
         |> addSection "Breaking Changes" breakingChanges addConventionalCommitMessageLine
@@ -119,6 +119,7 @@ let toString
     | WithoutChanges (calendarVersion, timeStamp) ->
         System.Text.StringBuilder()
         |> addVersionHeader <| calendarVersion
+        |> addEmptyLine
         |> addTimeStampLine <| timeStamp
         |> addEmptyLine
         |> _.ToString()
