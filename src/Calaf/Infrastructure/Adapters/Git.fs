@@ -161,72 +161,60 @@ module internal GitWrapper =
     let private changes
         (gitProcess: string -> Result<string,InfrastructureError>) =
         
-        let parsePorcelainV2Z (input: string) : string list =
-            if not (String.IsNullOrWhiteSpace(input))
-            then input.Split('\u0000', StringSplitOptions.RemoveEmptyEntries) |> Array.toList
-            else List.Empty
-
-        let extractPath (line: string) : string option * bool =
-            let rec findStartOfNthSpace needed index spacesCount =
-                if index >= line.Length then None
-                else
-                    if line[index] = ' ' then
-                        if spacesCount + 1 = needed then Some(index + 1)
-                        else findStartOfNthSpace needed (index + 1) (spacesCount + 1)
-                    else findStartOfNthSpace needed (index + 1) spacesCount
-
-            match line with
-            | null | "" -> None, false
+        let parseTokens (tokenString: string) =
+            if String.IsNullOrWhiteSpace tokenString then []
+            else tokenString.Split('\u0000', StringSplitOptions.RemoveEmptyEntries) |> Array.toList
+            
+        let extract (record: string) : string list * bool =
+            match record with
+            | null | "" -> [], false
             | _ ->
-                match line[0] with
-                | '1' ->
-                    match findStartOfNthSpace 9 0 0 with
-                    | Some i -> Some (line.Substring i), false
-                    | None -> None, false
+                match record[0] with
+                | '1' | 'u' ->
+                    let idx = record.LastIndexOf ' '
+                    if idx >= 0 then [ record.Substring(idx + 1) ], false
+                    else [], false
+
                 | '2' ->
-                    match findStartOfNthSpace 10 0 0 with
-                    | Some i -> Some (line.Substring i), true
-                    | None -> None, true
-                | 'u' ->
-                    match findStartOfNthSpace 10 0 0 with
-                    | Some i -> Some (line.Substring i), false
-                    | None -> None, false
+                    let idx = record.LastIndexOf ' '
+                    if idx >= 0 then [ record.Substring(idx + 1) ], true
+                    else [], true      // still consume next to stay in sync
+
                 | '?' ->
-                    if line.Length >= 3 && line[1] = ' ' then Some(line.Substring 2), false
-                    else None, false
-                | '#' | '!' -> None, false
-                | _ -> None, false
+                    if record.Length > 2 && record[1] = ' ' then
+                        [ record.Substring 2 ], false
+                    else [], false
+
+                | '#' | '!' -> [], false
+                | _         -> [], false
 
         result {
-            let! root = gitProcess "rev-parse --show-toplevel"
+            let! root      = gitProcess "rev-parse --show-toplevel"
             let! porcelain = gitProcess "status --porcelain=v2 -z"
 
-            let tokens = parsePorcelainV2Z porcelain
-
-            let rec collect acc ts =
-                match ts with
+            let rec loop acc tokens =
+                match tokens with
                 | [] -> List.rev acc
-                | recd :: rest ->
-                    let pathOpt, consumeNext = extractPath recd
-                    let rest' =
-                        if consumeNext
-                        then (match rest with | _ :: r -> r | [] -> [])
-                        else rest
-                    let acc' =
-                        match pathOpt with
-                        | Some p when p.Length > 0 -> p :: acc
-                        | _ -> acc
-                    collect acc' rest'
+                | r :: rest ->
+                    let paths, needNext = extract r
+                    match needNext, rest with
+                    | true, orig :: tail ->
+                        loop (orig :: paths @ acc) tail
+                    | true, [] ->
+                        loop (paths @ acc) [] 
+                    | _ ->
+                        loop (paths @ acc) rest
 
             let paths =
-                collect [] tokens
+                porcelain
+                |> parseTokens
+                |> loop []
                 |> List.distinct
-                |> List.map (fun rel ->
-                    System.IO.Path.Combine(root, rel)
-                    |> System.IO.Path.GetFullPath)
+                |> List.map (fun rel -> System.IO.Path.Combine(root, rel) |> System.IO.Path.GetFullPath)
 
             return paths
         }
+
         
     let private stage
         (files: string list)
