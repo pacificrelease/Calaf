@@ -10,29 +10,43 @@ open Calaf.Application
 module internal GitWrapper =    
     let private runGit
         (directory: string)
-        (arguments: string)=
-        try
-            let successExitCode = 0
-            let gitCommand = "git"
-            
-            let startInfo = ProcessStartInfo(gitCommand, arguments)
-            startInfo.RedirectStandardOutput <- true
-            startInfo.RedirectStandardError  <- true
-            startInfo.UseShellExecute        <- false
-            startInfo.WorkingDirectory       <- directory
-            let prs = Process.Start startInfo
-            let output = prs.StandardOutput.ReadToEnd()
-            let error = prs.StandardError.ReadToEnd()
-            prs.WaitForExit()
-            
-            if prs.ExitCode = successExitCode
-            then
-                output.Trim() |> Ok
-            else
-                error.Trim()
-                |> GitProcessErrorExit
+        (arguments: string)=        
+        let timeoutMs = 30_000
+        let gitCommand = "git"
+        
+        let start = ProcessStartInfo(gitCommand, $"-c core.pager=cat {arguments}")
+        start.RedirectStandardOutput <- true
+        start.RedirectStandardError  <- true
+        start.StandardOutputEncoding <- Text.Encoding.UTF8
+        start.StandardErrorEncoding  <- Text.Encoding.UTF8
+        start.UseShellExecute        <- false
+        start.WorkingDirectory       <- directory
+    
+        try    
+            use proc = Process.Start start
+            let stdoutTask = proc.StandardOutput.ReadToEndAsync()
+            let stderrTask = proc.StandardError.ReadToEndAsync()            
+            if not (proc.WaitForExit(timeoutMs)) then
+                try proc.Kill(true) with _ -> ()
+                proc.WaitForExit()
+                GitProcessTimeout
                 |> Git
                 |> Error
+            else            
+                let out = stdoutTask.Result.TrimEnd('\r','\n')
+                let err = stderrTask.Result.TrimEnd('\r','\n')
+                
+                if proc.ExitCode = 0
+                then Ok out
+                else
+                    let errMsg =
+                        if String.IsNullOrWhiteSpace err
+                        then $"git {arguments} -> exit code {proc.ExitCode}"
+                        else err
+                    errMsg
+                    |> GitProcessErrorExit
+                    |> Git
+                    |> Error
         with
         | exn ->
             exn

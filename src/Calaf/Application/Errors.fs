@@ -12,8 +12,9 @@ type ValidationError =
     | ZeroTagQuantity
     | EmptyChangelogFileName
     
-type GitError =
-    | GitProcessErrorExit of desc: string 
+type GitError =    
+    | GitProcessErrorExit of desc: string
+    | GitProcessTimeout
     | GitProcessRunFailed of ex: exn 
     | RepoNotInitialized
     | RepoAccessFailed of ex: exn
