@@ -35,8 +35,8 @@ let private addVersionHeader
 let private addTimeStampLine
     (stringBuilder : System.Text.StringBuilder)
     (timeStamp : System.DateTimeOffset)=
-    let timeStampLine = timeStamp.ToString("yyyy-MMMM-dd")
-    stringBuilder.AppendLine timeStampLine
+    let timeStampLine = timeStamp.ToString("dd.MM.yyyy")
+    stringBuilder.AppendLine $"{Bold}{timeStampLine}{Bold}"
     
 let private addHeaderLine
     (headerText: string) 
