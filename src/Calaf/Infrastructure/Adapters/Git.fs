@@ -160,32 +160,103 @@ module internal GitWrapper =
         
     let private changes
         (gitProcess: string -> Result<string,InfrastructureError>) =
+        
+        let parsePorcelainV2Z (input: string) : string list =
+            if not (String.IsNullOrWhiteSpace(input))
+            then input.Split('\u0000', StringSplitOptions.RemoveEmptyEntries) |> Array.toList
+            else List.Empty
+
+        let extractPath (line: string) : string option * bool =
+            let rec findStartOfNthSpace needed index spacesCount =
+                if index >= line.Length then None
+                else
+                    if line[index] = ' ' then
+                        if spacesCount + 1 = needed then Some(index + 1)
+                        else findStartOfNthSpace needed (index + 1) (spacesCount + 1)
+                    else findStartOfNthSpace needed (index + 1) spacesCount
+
+            match line with
+            | null | "" -> None, false
+            | _ ->
+                match line[0] with
+                | '1' ->
+                    match findStartOfNthSpace 9 0 0 with
+                    | Some i -> Some (line.Substring i), false
+                    | None -> None, false
+                | '2' ->
+                    match findStartOfNthSpace 10 0 0 with
+                    | Some i -> Some (line.Substring i), true
+                    | None -> None, true
+                | 'u' ->
+                    match findStartOfNthSpace 10 0 0 with
+                    | Some i -> Some (line.Substring i), false
+                    | None -> None, false
+                | '?' ->
+                    if line.Length >= 3 && line[1] = ' ' then Some(line.Substring 2), false
+                    else None, false
+                | '#' | '!' -> None, false
+                | _ -> None, false
+
         result {
             let! root = gitProcess "rev-parse --show-toplevel"
-            let! status = gitProcess "status --porcelain"
+            let! porcelain = gitProcess "status --porcelain=v2 -z"
 
-            let files =
-                status.Split([|'\n'; '\r'|], StringSplitOptions.RemoveEmptyEntries)
-                |> Array.map (fun line ->
-                    let filePath = line.Substring(3)
-                    System.IO.Path.Combine(root, filePath) |> System.IO.Path.GetFullPath)
-                |> Array.distinct
-                |> Array.toList
+            let tokens = parsePorcelainV2Z porcelain
 
-            return files
+            let rec collect acc ts =
+                match ts with
+                | [] -> List.rev acc
+                | recd :: rest ->
+                    let pathOpt, consumeNext = extractPath recd
+                    let rest' =
+                        if consumeNext
+                        then (match rest with | _ :: r -> r | [] -> [])
+                        else rest
+                    let acc' =
+                        match pathOpt with
+                        | Some p when p.Length > 0 -> p :: acc
+                        | _ -> acc
+                    collect acc' rest'
+
+            let paths =
+                collect [] tokens
+                |> List.distinct
+                |> List.map (fun rel ->
+                    System.IO.Path.Combine(root, rel)
+                    |> System.IO.Path.GetFullPath)
+
+            return paths
         }
         
     let private stage
         (files: string list)
         (changes: string list)
         (gitProcess: string -> Result<string,InfrastructureError>) =            
-            let changes = Set.ofList changes
-            let files = files |> List.filter changes.Contains
-            if files.IsEmpty
-            then Error (Git RepoStageNoChanges)
+        result {
+            let changesSet = Set.ofList changes
+            let selected = files |> List.filter changesSet.Contains
+
+            if selected.IsEmpty then
+                return! Error (Git RepoStageNoChanges)
             else
-                let files = files |> String.concat " "
-                gitProcess $"add {files}"
+                let! root = gitProcess "rev-parse --show-toplevel"
+
+                let quote (p: string) =
+                    let abs =
+                        if System.IO.Path.IsPathRooted p
+                        then System.IO.Path.GetFullPath p
+                        else System.IO.Path.Combine(root, p) |> System.IO.Path.GetFullPath
+                    let rel = System.IO.Path.GetRelativePath(root, abs)
+                    let relEsc = rel.Replace("\"", "\\\"")
+                    $"\"{relEsc}\""
+
+                let args =
+                    selected
+                    |> List.map quote
+                    |> String.concat " "
+
+                return! gitProcess $"add -- {args}"
+        }
             
     let private commit
         (commitText: string)
