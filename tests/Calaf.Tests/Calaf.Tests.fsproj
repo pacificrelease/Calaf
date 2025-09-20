@@ -8,7 +8,7 @@
     <GenerateProgramFile>false</GenerateProgramFile>
     <IsTestProject>true</IsTestProject>
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>    
-    <Version>2025.8</Version>
+    <Version>2025.9</Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DebugSymbols>false</DebugSymbols>
