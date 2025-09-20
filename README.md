@@ -1,6 +1,6 @@
 # Calaf
 
-![Calaf Logo](assets/calaf_logo.svg)
+![Calaf Logo](https://github.com/pacificrelease/Calaf/blob/main/assets/calaf_logo.svg)
 
 [![Build](https://github.com/pacificrelease/Calaf/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/pacificrelease/Calaf/actions/workflows/build.yml)
 [![NuGet](https://img.shields.io/nuget/v/Calaf.svg)](https://www.nuget.org/packages/Calaf/)
@@ -72,28 +72,22 @@ Calaf implements a Calendar Versioning ([CalVer](https://calver.org)) scheme tha
 * **Alpha releases:** `alpha.NUMBER`
   * Example: `2025.9.1-alpha.1`
   * Range `NUMBER`: `1` to `4294967295`
-
 * **Beta releases:** `beta.NUMBER`
   * Example: `2025.9.1-beta.1`
   * Range `NUMBER`: `1` to `4294967295`
-
 * **Release Candidate:** `rc.NUMBER`
   * Example: `2025.9.1-rc.1`
   * Range `NUMBER`: `1` to `4294967295`
-
 * **Nightly builds:** `0.nightly.DAY.NUMBER`
   * The leading `0` ensures that nightly builds have lower precedence than other pre-release builds like `alpha`, `beta`.
   * `DAY`: The day of the month
   * `NUMBER`: A sequential number for builds on the same day
   * Example: `2025.9.1-0.nightly.30.1`
   * Range `NUMBER`: `1` to `4294967295`
-
 * **Alpha nightly builds:** `alpha.ALPHA_NUMBER.DAY.NIGHTLY_NUMBER`
   * Example: `2025.9.1-alpha.1.30.1`
-
 * **Beta nightly builds:** `beta.BETA_NUMBER.DAY.NIGHTLY_NUMBER`
   * Example: `2025.9.1-beta.1.30.1`
-
 * **Release Candidate nightly builds:** `rc.RC_NUMBER.DAY.NIGHTLY_NUMBER`
   * Example: `2025.9.1-rc.1.30.1`
 
@@ -191,7 +185,7 @@ Version applied: 2025.9.1
 **Alpha Release**
 
 Creates an early pre-release version.
-`2025.9.1` → `2025.9.1-alpha.1`
+`2025.9.1` → `2025.9.2-alpha.1`
 
 ```console
 calaf make alpha 
@@ -199,7 +193,7 @@ calaf make alpha
 
 * Output:
 ```console
-Version applied: 2025.9.1-alpha.1
+Version applied: 2025.9.2-alpha.1
 ```
 
 * Project file(s) change:
@@ -208,13 +202,13 @@ Version applied: 2025.9.1-alpha.1
 <Version>2025.9.1</Version>
 
 <!-- After -->
-<Version>2025.9.1-alpha.1</Version>
+<Version>2025.9.2-alpha.1</Version>
 ```
 
 **Beta Release**
 
 Creates a pre-release version.
-`2025.9.1` → `2025.9.1-beta.1`
+`2025.9.1` → `2025.9.2-beta.1`
 
 ```console
 calaf make beta 
@@ -222,7 +216,7 @@ calaf make beta
 
 * Output:
 ```console
-Version applied: 2025.9.1-beta.1
+Version applied: 2025.9.2-beta.1
 ```
 
 * Project file(s) change:
@@ -231,13 +225,13 @@ Version applied: 2025.9.1-beta.1
 <Version>2025.9.1</Version>
 
 <!-- After -->
-<Version>2025.9.1-beta.1</Version>
+<Version>2025.9.2-beta.1</Version>
 ```
 
 **RC Release**
 
 Creates a release candidate version for final testing before stable release.
-`2025.9.1` → `2025.9.1-rc.1`
+`2025.9.1` → `2025.9.2-rc.1`
 
 ```console
 calaf make rc
@@ -245,7 +239,7 @@ calaf make rc
 
 * Output:
 ```console
-Version applied: 2025.9.1-rc.1
+Version applied: 2025.9.2-rc.1
 ```
 
 * Project file(s) change:
@@ -254,7 +248,7 @@ Version applied: 2025.9.1-rc.1
 <Version>2025.9.1</Version>
 
 <!-- After -->
-<Version>2025.9.1-rc.1</Version>
+<Version>2025.9.2-rc.1</Version>
 ```
 
 **Nightly Build**
@@ -285,11 +279,11 @@ Project file change:
 **Note:** Nightly from Alpha
 
 You can create nightly builds from existing alpha versions.
-`2025.9.1-alpha.1` → `2025.9.1-alpha.1.27.1`
+`2025.9.1-alpha.1` → `2025.9.1-alpha.2.27.1`
 
 * Output:
 ```console
-Version applied: 2025.9.1-alpha.1.27.1
+Version applied: 2025.9.1-alpha.2.27.1
 ```
 
 Project file change:
@@ -304,11 +298,11 @@ Project file change:
 **Note:** Nightly from Beta
 
 You can create nightly builds from existing beta versions.
-`2025.9.1-beta.1` → `2025.9.1-beta.1.27.1`
+`2025.9.1-beta.1` → `2025.9.1-beta.2.27.1`
 
 * Output:
 ```console
-Version applied: 2025.9.1-beta.1.27.1
+Version applied: 2025.9.1-beta.2.27.1
 ```
 
 Project file change:
@@ -317,17 +311,17 @@ Project file change:
 <Version>2025.9.1-beta.1</Version>
 
 <!-- After -->
-<Version>2025.9.1-beta.1.27.1</Version>
+<Version>2025.9.1-beta.2.27.1</Version>
 ```
 
 **Note:** Nightly from Release Candidate
 
 You can create nightly builds from existing rc versions.
-`2025.9.1-rc.1` → `2025.9.1-rc.1.27.1`
+`2025.9.1-rc.1` → `2025.9.2-rc.1.27.1`
 
 * Output:
 ```console
-Version applied: 2025.9.1-rc.1.27.1
+Version applied: 2025.9.2-rc.1.27.1
 ```
 
 Project file change:
@@ -336,7 +330,7 @@ Project file change:
 <Version>2025.9.1-rc.1</Version>
 
 <!-- After -->
-<Version>2025.9.1-rc.1.27.1</Version>
+<Version>2025.9.2-rc.1.27.1</Version>
 ```
 
 
@@ -355,10 +349,7 @@ Calaf automatically maintains `CHANGELOG.md` during `calaf make`:
 Example entry:
 
 ```markdown
-## 2025.9.1 - 2025-09-27
-
-### Breaking Changes
-- **versioning:** change version format to YYYY.MM[.MICRO][-BUILD.FORMAT]
+## 2025.9.1 - 2025-09-20
 
 ### Features
 - **core:** add RC pre-release support
@@ -366,6 +357,9 @@ Example entry:
 
 ### Bug Fixes
 - **fs:** correct content duplication in markdown writer
+
+### Breaking Changes
+- **versioning:** change version format to YYYY.MM[.MICRO][-BUILD.FORMAT]
 ```
 
 
