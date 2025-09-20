@@ -46,7 +46,7 @@ let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
             directory.Projects
             |> List.map Project.tryCapture
             |> List.choose id
-            |> Solution.tryCapture <| Changelog.tryCapture directory.Changelog
+            |> Solution.tryCapture <| ChangeLog.tryCapture directory.Changelog
         
         let! repoResult =
             repoInfo
@@ -77,7 +77,7 @@ let snapshot (workspace: Workspace) (releaseNotes: ReleaseNotes option) =
     let projectsSnapshot  = Solution.trySnapshot workspace.Solution
     let changelogSnapshot =
         releaseNotes
-        |> Option.map (Changelog.snapshot workspace)
+        |> Option.map (ChangeLog.snapshot workspace)
     let repositorySnapshot =
         workspace.Repository
         |> Option.bind (fun repo ->

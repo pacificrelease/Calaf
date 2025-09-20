@@ -1,4 +1,4 @@
-﻿module internal Calaf.Domain.Changelog
+﻿module internal Calaf.Domain.ChangeLog
 
 open Calaf.Contracts
 open Calaf.Domain.DomainTypes

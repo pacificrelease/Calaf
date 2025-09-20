@@ -63,7 +63,7 @@
     <Compile Include="Domain\Git\ReleaseNotes.fs" />
     <Compile Include="Domain\Git\Repository.fs" />
     <Compile Include="Domain\Solution\Language.fs" />
-    <Compile Include="Domain\Solution\Changelog.fs" />
+    <Compile Include="Domain\Solution\ChangeLog.fs" />
     <Compile Include="Domain\Solution\Project.fs" />
     <Compile Include="Domain\Solution\Solution.fs" />
     <Compile Include="Domain\Workspace.fs" />    
