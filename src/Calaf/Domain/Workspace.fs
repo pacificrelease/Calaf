@@ -73,10 +73,10 @@ let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
         return workspace, events     
     }
     
-let snapshot (workspace: Workspace) (changeset: Changeset option) =
+let snapshot (workspace: Workspace) (releaseNotes: ReleaseNotes option) =
     let projectsSnapshot  = Solution.trySnapshot workspace.Solution
     let changelogSnapshot =
-        changeset
+        releaseNotes
         |> Option.map (Changelog.snapshot workspace)
     let repositorySnapshot =
         workspace.Repository

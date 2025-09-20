@@ -13,10 +13,10 @@ let tryCapture (fileInfo: FileInfo) : Changelog =
     
 let snapshot
     (workspace: Workspace)
-    (changeset: Changeset)=
+    (releaseNotes: ReleaseNotes)=
     match workspace.Solution with
     | Standard { Changelog = changelog } ->
-        let content = Changeset.toString changeset workspace.Version
+        let releaseNotesContent = ReleaseNotes.toString releaseNotes
         { AbsolutePath = changelog.Metadata.AbsolutePath
           ExistsInFileSystem = changelog.FileExists
-          ChangesetContent = content }
+          ReleaseNotesContent = releaseNotesContent }

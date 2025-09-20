@@ -29,7 +29,7 @@
     <Compile Include="Domain\Git\CommitTests.fs" />
     <Compile Include="Domain\Git\TagTests.fs" />
     <Compile Include="Domain\Git\HeadTests.fs" />
-    <Compile Include="Domain\Git\ChangesetTests.fs" />
+    <Compile Include="Domain\Git\ReleaseNotesTests.fs" />
     <Compile Include="Domain\Git\RepositoryTests.fs" />
     <Compile Include="Application\UseCases\MakeTests.fs" />
     <Compile Include="Cli\CliTests.fs" />

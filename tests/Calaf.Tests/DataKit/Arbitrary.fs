@@ -617,11 +617,11 @@ module Arbitrary =
                 static member semanticVersionsAndUnversionedTagsArray() =
                     Arb.fromGen Generator.Git.Tag.semanticVersionsAndUnversionedTagsArray
                     
-        module Changeset =
+        module ReleaseNotes =
             type internal Features =
                 static member Features() =
-                    Arb.fromGen Generator.Git.Changeset.Features
+                    Arb.fromGen Generator.Git.ReleaseNotes.Features
                     
             type internal FeaturesChangeset =
                 static member FeaturesChangeset() =
-                    Arb.fromGen Generator.Git.Changeset.FeaturesChangeset
+                    Arb.fromGen Generator.Git.ReleaseNotes.FeaturesChangeset

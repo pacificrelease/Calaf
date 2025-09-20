@@ -115,13 +115,17 @@ type VersionedTag = {
     Commit: Commit option
 }    
 
-type Changeset = {
+type ReleaseChanges = {
     Features : ConventionalCommitMessage list
     Fixes : ConventionalCommitMessage list
     BreakingChanges : ConventionalCommitMessage list
     Other: CommitText list
+    Version: CalendarVersion
     TimeStamp: System.DateTimeOffset
 }
+type ReleaseNotes =
+    | WithChanges    of ReleaseChanges
+    | WithoutChanges of version: CalendarVersion * timeStamp: System.DateTimeOffset
 
 // File System
 type FileMetadata = {
@@ -171,7 +175,7 @@ type ProjectActionSnapshot = {
 type ChangelogActionSnapshot = {
     AbsolutePath: string
     ExistsInFileSystem: bool
-    ChangesetContent: string
+    ReleaseNotesContent: string
 }
 
 type RepositoryActionSnapshot = {

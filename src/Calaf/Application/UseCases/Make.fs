@@ -50,16 +50,17 @@ module internal Make =
             
     let private tryChangeset        
         commits
+        nextVersion
         timeStamp =
         match commits with
-        | Some commits -> Changeset.tryCreate commits timeStamp
+        | Some commits -> ReleaseNotes.tryCreate commits nextVersion timeStamp
         | None -> None
         
     let private tryMake
         (path: string)
         (context: MakeContext)
         (settings: MakeSettings)
-        (make: CalendarVersion -> DateTimeOffset -> Result<CalendarVersion,DomainError>)=
+        (make: CalendarVersion -> DateTimeOffset -> Result<CalendarVersion, DomainError>)=
         result {
             let dateTimeOffset = context.Clock.utcNow()
             let (DotNetXmlFilePattern searchPattern) = settings.ProjectsSearchPattern
@@ -69,28 +70,27 @@ module internal Make =
             let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes dateTimeOffset            
             let! workspace, _ =
                 Workspace.tryCapture (dir, repo)
-                |> Result.mapError CalafError.Domain
-            let! changeset, _ =
-                tryReadCommits workspace context.Git
-                |> Result.map (fun commits -> tryChangeset commits dateTimeOffset)
-                |> Result.map (Option.map (fun (cs, events) ->
-                    Some cs, Some events) >> Option.defaultValue (None, None))            
-                
-            let! newVersion =
+                |> Result.mapError CalafError.Domain                
+            let! nextVersion =
                 make workspace.Version dateTimeOffset
-                |> Result.mapError CalafError.Domain            
+                |> Result.mapError CalafError.Domain
+            let! releaseNotes, _ =
+                tryReadCommits workspace context.Git
+                |> Result.map (fun commits -> tryChangeset commits nextVersion dateTimeOffset)
+                |> Result.map (Option.map (fun (cs, events) ->
+                    Some cs, Some events) >> Option.defaultValue (None, None))
             let! workspace', _ =
-                newVersion
+                nextVersion
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain
             let snapshot =
-                Workspace.snapshot workspace' changeset
+                Workspace.snapshot workspace' releaseNotes
             do! snapshot.Projects
                 |> List.traverseResultM (fun s -> context.FileSystem.tryWriteXml (s.AbsolutePath, s.Content))
                 |> Result.map ignore
             do! snapshot.Changelog    
                 |> Option.map (fun s ->
-                    context.FileSystem.tryWriteMarkdown (s.AbsolutePath, s.ChangesetContent)
+                    context.FileSystem.tryWriteMarkdown (s.AbsolutePath, s.ReleaseNotesContent)
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())                
@@ -114,19 +114,19 @@ module internal Make =
             let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, captureEvents =
                 Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
-            let! changeset, _ =
-                tryReadCommits workspace dependencies.Git
-                |> Result.map (fun commits -> tryChangeset commits dateTimeOffset)
-                |> Result.map (Option.map (fun (cs, events) ->
-                    Some cs, Some events) >> Option.defaultValue (None, None))                
-            let! version =
+            let! nextVersion =
                 Version.tryNightly workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain
+            let! releaseNotes, _ =
+                tryReadCommits workspace dependencies.Git
+                |> Result.map (fun commits -> tryChangeset commits nextVersion dateTimeOffset)
+                |> Result.map (Option.map (fun (cs, events) ->
+                    Some cs, Some events) >> Option.defaultValue (None, None))            
             let! workspace', releaseEvents =
-                version
+                nextVersion
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain
-            let snapshot = Workspace.snapshot workspace' changeset
+            let snapshot = Workspace.snapshot workspace' releaseNotes
             do! snapshot.Projects
                 |> List.traverseResultM (fun p -> dependencies.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
                 |> Result.map ignore                
@@ -149,19 +149,19 @@ module internal Make =
             let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
             let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
             let! workspace, captureEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
-            let! changeset, _ =
-                tryReadCommits workspace dependencies.Git
-                |> Result.map (fun commits -> tryChangeset commits dateTimeOffset)
-                |> Result.map (Option.map (fun (cs, events) ->
-                    Some cs, Some events) >> Option.defaultValue (None, None))
-            let! version =
+            let! nextVersion =
                 Version.tryStable workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain
+            let! releaseNotes, _ =
+                tryReadCommits workspace dependencies.Git
+                |> Result.map (fun commits -> tryChangeset commits nextVersion dateTimeOffset)
+                |> Result.map (Option.map (fun (cs, events) ->
+                    Some cs, Some events) >> Option.defaultValue (None, None))            
             let! workspace', releaseEvents =
-                version
+                nextVersion
                 |> Workspace.tryRelease workspace
                 |> Result.mapError CalafError.Domain                
-            let snapshot = Workspace.snapshot workspace' changeset
+            let snapshot = Workspace.snapshot workspace' releaseNotes
             do! snapshot.Projects
                 |> List.traverseResultM (fun p -> dependencies.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
                 |> Result.map ignore            

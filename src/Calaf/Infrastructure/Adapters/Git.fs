@@ -178,7 +178,7 @@ module internal GitWrapper =
     let private stage
         (files: string list)
         (changes: string list)
-        (gitProcess: string -> Result<string,InfrastructureError>) =
+        (gitProcess: string -> Result<string,InfrastructureError>) =            
             let changes = Set.ofList changes
             let files = files |> List.filter changes.Contains
             if files.IsEmpty

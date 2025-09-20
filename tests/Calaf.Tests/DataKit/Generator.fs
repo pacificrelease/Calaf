@@ -1943,7 +1943,7 @@ module Git =
                 return Array.append semanticVersionsTags unversionedTags                
             }
             
-    module Changeset =
+    module ReleaseNotes =
         let private genFeatureConventionalCommitMessage =
             gen {
                 let! breakingChange = genBool
@@ -1969,6 +1969,7 @@ module Git =
         let FeaturesChangeset =
             gen {
                 let! features = Features
+                let! calendarVersion = CalendarVersion.Accidental
                 let! timeStamp = genValidDateTimeOffset
                 return {
                     Features = features
@@ -1977,6 +1978,7 @@ module Git =
                     BreakingChanges =
                         features
                         |> List.filter _.BreakingChange
+                    Version = calendarVersion
                     TimeStamp = timeStamp
                 }
             }

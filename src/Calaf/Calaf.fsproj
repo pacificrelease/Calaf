@@ -60,7 +60,7 @@
     <Compile Include="Domain\Git\Commit.fs" />    
     <Compile Include="Domain\Git\Tag.fs" />
     <Compile Include="Domain\Git\Head.fs" />
-    <Compile Include="Domain\Git\Changeset.fs" />
+    <Compile Include="Domain\Git\ReleaseNotes.fs" />
     <Compile Include="Domain\Git\Repository.fs" />
     <Compile Include="Domain\Solution\Language.fs" />
     <Compile Include="Domain\Solution\Changelog.fs" />
