@@ -117,7 +117,7 @@ module internal GitWrapper =
         result {
             let tagFilter = 
                 if filter.IsEmpty
-                then ""
+                then String.Empty
                 else
                     filter
                     |> List.map (fun prefix -> $"--list \"{prefix}*\"")

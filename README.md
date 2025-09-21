@@ -349,13 +349,15 @@ Calaf automatically maintains `CHANGELOG.md` during `calaf make`:
 Example entry:
 
 ```markdown
-## 2025.9.1 - 2025-09-20
+## 2025.9.1
+
+**2025-09-20**
 
 ### Features
 - **core:** add RC pre-release support
 - **versioning:** change version format to YYYY.MM[.MICRO][-BUILD.FORMAT]
 
-### Bug Fixes
+### Fixed
 - **fs:** correct content duplication in markdown writer
 
 ### Breaking Changes
