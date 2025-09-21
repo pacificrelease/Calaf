@@ -32,7 +32,7 @@ Calaf is a command-line tool for managing Calendar Versioning ([CalVer](https://
 - Git integration with automatic tagging and aversion commit for new versions
 - Automatic `CHANGELOG.md` generation based on [Conventional Commits](https://www.conventionalcommits.org)
 - Works with C#/F# project files (`*.csproj`/`*.fsproj`)
-- Generates versions compatible with Semantic Versioning 2.0.0
+- Generates versions compatible with [Semantic Versioning 2.0.0](https://semver.org/)
 - Tool installation via the `dotnet` CLI
 
 
@@ -342,7 +342,7 @@ Calaf automatically maintains `CHANGELOG.md` during `calaf make`:
 - Categories:
     - `### Breaking Changes`: commits with `!` after the type/scope (e.g., `feat(api)!: drop support for old format`).
     - `### Features`: commits with `feat:`.
-    - `### Bug Fixes`: commits with `fix:`.
+    - `### Fixed`: commits with `fix:`.
 - File handling: creates `CHANGELOG.md` if missing; prepends the new release entry if present.
 - Git integration: `CHANGELOG.md` is staged together with project file updates and included in the version commit and tag.
 
