@@ -112,9 +112,10 @@ module internal GitWrapper =
         
     let private listTags
         (filter: string list)
+        (exclude: string list)
         (qty: int)
         (gitProcess: string -> Result<string,InfrastructureError>) =
-        result {
+        result {            
             let tagFilter = 
                 if filter.IsEmpty
                 then String.Empty
@@ -122,8 +123,13 @@ module internal GitWrapper =
                     filter
                     |> List.map (fun prefix -> $"--list \"{prefix}*\"")
                     |> String.concat " "
-            
-            let! output = gitProcess $"tag --sort=-creatordate {tagFilter}"
+                    
+            let tagExclude =
+                exclude
+                |> List.map (fun e -> $"--exclude=\"{e}\"")
+                |> String.concat " "
+                    
+            let! output = gitProcess $"tag --sort=-creatordate {tagFilter} {tagExclude}"
             if (not (String.IsNullOrWhiteSpace output))
             then
                 let tagNames = output.Split([|'\n'; '\r'|], StringSplitOptions.RemoveEmptyEntries)
@@ -274,6 +280,7 @@ module internal GitWrapper =
         (directory: string)
         (maxTagsToRead: byte)
         (tagsPrefixesToFilter: string list)
+        (tagsFilterToExclude: string list)
         (timeStamp: DateTimeOffset)=
         result {
             if not (gitDirectory directory)
@@ -293,7 +300,7 @@ module internal GitWrapper =
                 let! tags =
                     if unborn
                     then Ok []
-                    else git |> listTags tagsPrefixesToFilter (int maxTagsToRead)
+                    else git |> listTags tagsPrefixesToFilter tagsFilterToExclude (int maxTagsToRead)
                 
                 return Some {                    
                     Directory = directory
@@ -340,8 +347,8 @@ module internal GitWrapper =
 
 type Git() =
     interface IGit with
-        member _.tryGetRepo directory maxTagsToRead tagsPrefixesToFilter timeStamp =
-            GitWrapper.read directory maxTagsToRead tagsPrefixesToFilter timeStamp
+        member _.tryGetRepo directory maxTagsToRead tagsPrefixesToFilter tagsFilterToExclude timeStamp =
+            GitWrapper.read directory maxTagsToRead tagsPrefixesToFilter tagsFilterToExclude timeStamp
             |> Result.mapError CalafError.Infrastructure
             
         member _.tryListCommits directory fromTagName=

@@ -59,7 +59,7 @@ module internal Make =
     let private tryMake
         (path: string)
         (context: MakeContext)
-        (settings: MakeSettings)
+        (settings: MakeSettings)        
         (make: CalendarVersion -> DateTimeOffset -> Result<CalendarVersion, DomainError>)=
         result {
             let dateTimeOffset = context.Clock.utcNow()
@@ -67,7 +67,7 @@ module internal Make =
             let (ChangelogFileName changelogFileName) = settings.ChangelogFileName
             let! dir = context.FileSystem.tryReadDirectory path searchPattern changelogFileName                 
             let (TagQuantity tagCount) = settings.TagsToLoad
-            let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes dateTimeOffset            
+            let! repo = context.Git.tryGetRepo path tagCount Version.versionPrefixes List.Empty dateTimeOffset            
             let! workspace, _ =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain                
@@ -111,7 +111,7 @@ module internal Make =
             let (ChangelogFileName changelogFileName) = dependencies.Settings.ChangelogFileName
             let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatternStr changelogFileName                
             let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
-            let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
+            let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes List.Empty dateTimeOffset                
             let! workspace, captureEvents =
                 Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
             let! nextVersion =
@@ -147,7 +147,7 @@ module internal Make =
             let (ChangelogFileName changelogFileName) = dependencies.Settings.ChangelogFileName
             let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatternStr changelogFileName               
             let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
-            let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes dateTimeOffset                
+            let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes List.Empty dateTimeOffset                
             let! workspace, captureEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
             let! nextVersion =
                 Version.tryStable workspace.Version dateTimeOffset

@@ -7,6 +7,7 @@ type IGit =
         directory: string ->
         maxTagsToRead: byte ->
         tagsPrefixesToFilter: string list ->
+        tagsFilterToExclude: string list ->
         timeStamp: System.DateTimeOffset -> Result<GitRepositoryInfo option, CalafError>
         
     abstract tryListCommits:
