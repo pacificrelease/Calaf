@@ -16,11 +16,12 @@ module TryReadTests =
         
         let tagsToRead = 10uy
         let prefixes = versionPrefixes
+        let exclude = preReleaseExclude
         let timeStamp = System.DateTimeOffset.UtcNow
         
         let git2 = Git() :> IGit
         
-        let info = git2.tryGetRepo dir tagsToRead prefixes timeStamp
+        let info = git2.tryGetRepo dir tagsToRead prefixes exclude timeStamp
         let isOk = info.IsOk
         
         test <@ isOk @>

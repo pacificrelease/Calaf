@@ -117,11 +117,11 @@ module Run2Tests =
             member _.GetWrittenFiles() = List.rev writtenFiles
             
         type MockGit(repositoryResult: Result<GitRepositoryInfo option, CalafError>,
-                    applyResults: Map<string, Result<unit, CalafError>>) =
+                     applyResults: Map<string, Result<unit, CalafError>>) =
             let mutable appliedOperations = []
             
             interface IGit with
-                member _.tryGetRepo directory maxTagsToRead tagsPrefixesToFilter timeStamp =
+                member _.tryGetRepo directory maxTagsToRead tagsPrefixesToFilter tagsFiltersToExclude timeStamp =
                     repositoryResult
                     
                 member _.tryListCommits directory tagName=
@@ -148,7 +148,6 @@ module Run2Tests =
         let testDirectory = TestData.createTestDirectory()
         let testRepo = TestData.createTestGitRepository()
         let testSettings = TestData.createTestSettings()
-        let testSalt = System.Guid.NewGuid().ToString()
         
         let mockFileSystem = Mocks.MockFileSystem(
             Ok testDirectory,
