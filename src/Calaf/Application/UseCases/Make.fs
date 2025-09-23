@@ -215,17 +215,17 @@ module internal Make =
                 let! settings = settings
                 let! cmd = input context.Console arguments
                 match cmd with
-                | Command.Make strategy ->
-                    match strategy with
-                    | MakeType.Nightly ->
+                | Command.Make makeCommand ->
+                    match makeCommand with
+                    | { Type = MakeType.Nightly; ChangeLog = changeLog } ->
                         return! tryMake path context settings Version.tryNightly
-                    | MakeType.Alpha ->
+                    | { Type = MakeType.Alpha; ChangeLog = changeLog } ->
                         return! tryMake path context settings Version.tryAlpha
-                    | MakeType.Beta ->
+                    | { Type = MakeType.Beta; ChangeLog = changeLog } ->
                         return! tryMake path context settings Version.tryBeta
-                    | MakeType.RC ->
+                    | { Type = MakeType.RC; ChangeLog = changeLog } ->
                         return! tryMake path context settings Version.tryReleaseCandidate
-                    | MakeType.Stable ->
+                    | { Type = MakeType.Stable; ChangeLog = changeLog } ->
                         return! tryMake path context settings Version.tryStable
             }
         let path = directory path

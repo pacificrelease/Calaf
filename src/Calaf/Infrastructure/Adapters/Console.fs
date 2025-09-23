@@ -11,6 +11,8 @@ type MakeFlag =
     | [<CliPrefix(CliPrefix.None)>] Beta
     | [<CliPrefix(CliPrefix.None)>] RC
     | [<CliPrefix(CliPrefix.None)>] Nightly
+    | [<CliPrefix(CliPrefix.DoubleDash);
+        AltCommandLine("--no-changelog")>] NoChangelog of bool
     interface IArgParserTemplate with
         member flag.Usage =
             match flag with
@@ -19,6 +21,7 @@ type MakeFlag =
             | Beta    -> "Make a beta version"
             | RC      -> "Make a release candidate version"
             | Nightly -> "Make a nightly version"
+            | NoChangelog _ -> "Do not update changelog: --no-changelog [true|false] (default: false)"
 
 type InputCommand = 
     | [<SubCommand; CliPrefix(CliPrefix.None)>] Make of ParseResults<MakeFlag>
@@ -47,19 +50,35 @@ module internal ConsoleInput =
         let parser = ArgumentParser.Create<InputCommand>()
         parser.ParseCommandLine(args)
 
-    let read (results: ParseResults<InputCommand>) =
-        match results.GetAllResults() with
+    let read (inputCommandResult: ParseResults<InputCommand>) =
+        let inputCommands = inputCommandResult.GetAllResults()
+        match inputCommands with
         | [ Make makeFlagsResults ] ->
             makeFlagsResults.GetAllResults()
+            |> List.choose (function
+                | Nightly -> Some Nightly
+                | Alpha   -> Some Alpha
+                | Beta    -> Some Beta
+                | RC      -> Some RC
+                | Stable  -> Some Stable
+                | _       -> None)
             |> ConsoleInputGateway.toMakeType
-            |> Result.map Command.Make
-        | [] -> MakeType.Stable |> Command.Make |> Ok
+            |> Result.map (fun makeType ->
+                let changelog =
+                    makeFlagsResults.TryGetResult NoChangelog
+                    |> Option.defaultValue false
+                { Type = makeType
+                  ChangeLog = changelog }
+                |> Command.Make)         
+        | [] ->
+            { Type = MakeType.Stable; ChangeLog = false }
+            |> Command.Make
+            |> Ok
         | commands ->
             $"{commands.Head}"
             |> CommandNotRecognized
             |> Input
-            |> Error
-                    
+            |> Error                    
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module internal ConsoleOutput =

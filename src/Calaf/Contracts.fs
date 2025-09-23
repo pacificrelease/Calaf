@@ -8,8 +8,13 @@ type MakeType =
     | RC
     | Nightly
     
+type MakeCommand = {
+    Type: MakeType
+    ChangeLog: bool
+}
+    
 type Command =
-    | Make of MakeType
+    | Make of MakeCommand
 
 // Contracts used by Infrastructure layer
 type GitSignatureInfo = {

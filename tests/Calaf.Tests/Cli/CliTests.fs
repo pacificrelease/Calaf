@@ -9,24 +9,24 @@ open Calaf.CliError
 
 module CommandTests =
     [<Fact>]
-    let ``Create make stable command from arguments represents Make command with Stable MakeType`` () =
-        let args = [| "make"; "stable" |]
+    let ``Create make stable command from arguments represents Make command with Stable MakeType and no changelog`` () =
+        let args = [| "make"; "stable"; "--no-changelog"; "true" |]
         let commandResult = tryCreateCommand args
         let correctMakeStable =
             match commandResult with
             | Ok cmd ->
-                cmd = Command.Make MakeType.Stable
+                cmd = Command.Make { Type = MakeType.Stable; ChangeLog = true }
             | _ -> false
         test <@ correctMakeStable @>
         
     [<Fact>]
-    let ``Create make nightly command from arguments represents Make command with Nightly MakeType`` () =
+    let ``Create make nightly command from arguments represents Make command with Nightly MakeType and no changelog`` () =
         let args = [| "make"; "nightly" |]
         let commandResult = tryCreateCommand args
         let correctMakeNightly =
             match commandResult with
             | Ok cmd ->
-                cmd = Command.Make MakeType.Nightly
+                cmd = Command.Make { Type = MakeType.Nightly; ChangeLog = false }
             | _ -> false
         test <@ correctMakeNightly @>
     

@@ -16,7 +16,7 @@ module Api =
         (command : Command, path: string, fileSystem: IFileSystem, git: IGit, clock: IClock) =
         result {
             match command with
-            | Command.Make makeType ->
+            | Command.Make { Type = makeType } ->
                 let! makeSettings = 
                     MakeSettings.tryCreate
                         supportedFilesPattern

@@ -5,14 +5,21 @@ open Argu
 open Calaf.Contracts
 open Calaf.CliError
 
+// Add new type that depends on MakeFlag type and looks like "-no-changelog" option with true or false by default is false
+
+
 type private MakeFlag =    
     | [<CliPrefix(CliPrefix.None)>] Stable
     | [<CliPrefix(CliPrefix.None)>] Nightly
+    | [<CliPrefix(CliPrefix.DoubleDash);
+       AltCommandLine("--no-changelog")>]
+        NoChangelog of bool
     interface IArgParserTemplate with
         member flag.Usage =
             match flag with
-            | Stable  -> "Make a stable version"
-            | Nightly -> "Make a nightly version"
+            | Stable        -> "Make a stable version"
+            | Nightly       -> "Make a nightly version"            
+            | NoChangelog _ -> "Do not update changelog: --no-changelog [true|false] (default: false)"   
 
 type private InputCommand = 
     | [<SubCommand; CliPrefix(CliPrefix.None)>] Make of ParseResults<MakeFlag>
@@ -35,15 +42,31 @@ module internal Cli =
         | _  ->
             $"{flags.Head}" |> buildFlagNotRecognized |> Error   
                 
-    let private tryCommand (inputCommandResult: ParseResults<InputCommand>) =
+    let private tryCommand (inputCommandResult: ParseResults<InputCommand>) =        
         let inputCommands = inputCommandResult.GetAllResults()
         match inputCommands with
         | [ Make makeFlagsResults ] ->
-            let makeFlags = makeFlagsResults.GetAllResults()
-            makeFlags |> tryMakeFlag |> Result.map Command.Make
-        | [] -> MakeType.Stable |> Command.Make |> Ok
+            makeFlagsResults.GetAllResults()
+            |> List.choose (function
+                | Stable  -> Some Stable
+                | Nightly -> Some Nightly
+                | _       -> None)
+            |> tryMakeFlag
+            |> Result.map (fun makeType ->
+                let changelog =
+                    makeFlagsResults.TryGetResult NoChangelog
+                    |> Option.defaultValue false
+                { Type = makeType
+                  ChangeLog = changelog }
+                |> Command.Make)         
+        | [] ->
+            { Type = MakeType.Stable; ChangeLog = false }
+            |> Command.Make
+            |> Ok
         | commands ->
-            $"{commands.Head}" |> commandNotRecognized |> Error
+            $"{commands.Head}"
+            |> commandNotRecognized
+            |> Error
                 
     let private parse (args: string[]) =
         try            
