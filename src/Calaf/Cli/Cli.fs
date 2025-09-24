@@ -56,12 +56,12 @@ module internal Cli =
                 let changelog =
                     makeFlagsResults.TryGetResult SkipReleaseNotes
                     |> Option.map not
-                    |> Option.defaultValue false
+                    |> Option.defaultValue true
                 { Type = makeType
                   ChangeLog = changelog }
                 |> Command.Make)         
         | [] ->
-            { Type = MakeType.Stable; ChangeLog = false }
+            { Type = MakeType.Stable; ChangeLog = true }
             |> Command.Make
             |> Ok
         | commands ->
