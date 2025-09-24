@@ -58,6 +58,7 @@ module internal Make =
         
     let private tryMake
         (path: string)
+        (changelog: bool)
         (context: MakeContext)
         (settings: MakeSettings)        
         (make: CalendarVersion -> DateTimeOffset -> Result<CalendarVersion, DomainError>)=
@@ -75,10 +76,13 @@ module internal Make =
                 make workspace.Version dateTimeOffset
                 |> Result.mapError CalafError.Domain
             let! releaseNotes, _ =
-                tryReadCommits workspace context.Git
-                |> Result.map (fun commits -> tryChangeset commits nextVersion dateTimeOffset)
-                |> Result.map (Option.map (fun (cs, events) ->
-                    Some cs, Some events) >> Option.defaultValue (None, None))
+                if changelog
+                then
+                    tryReadCommits workspace context.Git
+                    |> Result.map (fun commits -> tryChangeset commits nextVersion dateTimeOffset)
+                    |> Result.map (Option.map (fun (cs, events) ->
+                        Some cs, Some events) >> Option.defaultValue (None, None))
+                else Ok (None, None)
             let! workspace', _ =
                 nextVersion
                 |> Workspace.tryRelease workspace
@@ -218,15 +222,15 @@ module internal Make =
                 | Command.Make makeCommand ->
                     match makeCommand with
                     | { Type = MakeType.Nightly; ChangeLog = changeLog } ->
-                        return! tryMake path context settings Version.tryNightly
+                        return! tryMake path changeLog context settings Version.tryNightly
                     | { Type = MakeType.Alpha; ChangeLog = changeLog } ->
-                        return! tryMake path context settings Version.tryAlpha
+                        return! tryMake path changeLog context settings Version.tryAlpha
                     | { Type = MakeType.Beta; ChangeLog = changeLog } ->
-                        return! tryMake path context settings Version.tryBeta
+                        return! tryMake path changeLog context settings Version.tryBeta
                     | { Type = MakeType.RC; ChangeLog = changeLog } ->
-                        return! tryMake path context settings Version.tryReleaseCandidate
+                        return! tryMake path changeLog context settings Version.tryReleaseCandidate
                     | { Type = MakeType.Stable; ChangeLog = changeLog } ->
-                        return! tryMake path context settings Version.tryStable
+                        return! tryMake path changeLog context settings Version.tryStable
             }
         let path = directory path
         let result = apply path arguments context settings

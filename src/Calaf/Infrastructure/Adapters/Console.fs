@@ -12,16 +12,16 @@ type MakeFlag =
     | [<CliPrefix(CliPrefix.None)>] RC
     | [<CliPrefix(CliPrefix.None)>] Nightly
     | [<CliPrefix(CliPrefix.DoubleDash);
-        AltCommandLine("--no-changelog")>] NoChangelog of bool
+        AltCommandLine("--skip-release-notes")>] SkipReleaseNotes of bool
     interface IArgParserTemplate with
         member flag.Usage =
             match flag with
-            | Stable  -> "Make a stable version"
-            | Alpha   -> "Make an alpha version"
-            | Beta    -> "Make a beta version"
-            | RC      -> "Make a release candidate version"
+            | Stable -> "Make a stable version"
+            | Alpha -> "Make an alpha version"
+            | Beta -> "Make a beta version"
+            | RC -> "Make a release candidate version"
             | Nightly -> "Make a nightly version"
-            | NoChangelog _ -> "Do not update changelog: --no-changelog [true|false] (default: false)"
+            | SkipReleaseNotes _ -> "Do not update changelog: --skip-release-notes [true|false] (default: false)"
 
 type InputCommand = 
     | [<SubCommand; CliPrefix(CliPrefix.None)>] Make of ParseResults<MakeFlag>
@@ -65,7 +65,8 @@ module internal ConsoleInput =
             |> ConsoleInputGateway.toMakeType
             |> Result.map (fun makeType ->
                 let changelog =
-                    makeFlagsResults.TryGetResult NoChangelog
+                    makeFlagsResults.TryGetResult SkipReleaseNotes
+                    |> Option.map not
                     |> Option.defaultValue false
                 { Type = makeType
                   ChangeLog = changelog }
