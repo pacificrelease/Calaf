@@ -45,7 +45,7 @@ module internal Cli =
         let includePreRelease = changelogFlags.Contains IncludePreRelease
         
         if includePreRelease && not changelog then
-            ignorePrereleasesRequiresChangelog |> Error
+            includePreReleaseChangelogRequired |> Error
         else
             Ok (changelog, includePreRelease)
         
