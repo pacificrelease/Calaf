@@ -1,4 +1,4 @@
-namespace Calaf.Tests.Integration.Git2Tests
+namespace Calaf.Tests.Integration.GitTests
 
 open Swensen.Unquote
 open Xunit
