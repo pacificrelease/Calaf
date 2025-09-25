@@ -26,7 +26,7 @@ module CommandTests =
         let correctMakeNightly =
             match commandResult with
             | Ok cmd ->
-                cmd = Command.Make { Type = MakeType.Nightly; ChangeLog = true }
+                cmd = Command.Make { Type = MakeType.Nightly; ChangeLog = false }
             | _ -> false
         test <@ correctMakeNightly @>
     

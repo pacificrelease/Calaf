@@ -53,10 +53,11 @@ module internal Cli =
                 | _       -> None)
             |> tryMakeFlag
             |> Result.map (fun makeType ->
+                let defaultChangelogBehavior = makeType.IsStable
                 let changelog =
                     makeFlagsResults.TryGetResult SkipReleaseNotes
                     |> Option.map not
-                    |> Option.defaultValue true
+                    |> Option.defaultValue defaultChangelogBehavior
                 { Type = makeType
                   ChangeLog = changelog }
                 |> Command.Make)         
