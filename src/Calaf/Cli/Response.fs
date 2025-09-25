@@ -21,6 +21,11 @@ module CliError =
           IsError = true
           Text = $"Command '{command}' is not recognized." }
         
+    let includePreReleaseChangelogRequired: CliResponse =
+        { ExitCode = MisuseShellCommandOrInvalidArgumentsExitCode
+          IsError = true
+          Text = "The '--include-prerelease' flag requires changelog generation via '--changelog' flag." }
+        
     let argumentsFatal (message: string) : CliResponse =
         { ExitCode = MisuseShellCommandOrInvalidArgumentsExitCode
           IsError = true

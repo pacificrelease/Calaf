@@ -10,7 +10,8 @@ type MakeType =
     
 type MakeCommand = {
     Type: MakeType
-    ChangeLog: bool
+    Changelog: bool
+    IncludePreRelease: bool
 }
     
 type Command =

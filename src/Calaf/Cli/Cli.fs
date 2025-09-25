@@ -5,28 +5,34 @@ open Argu
 open Calaf.Contracts
 open Calaf.CliError
 
-// Add new type that depends on MakeFlag type and looks like "-no-changelog" option with true or false by default is false
-
-
-type private MakeFlag =    
-    | [<CliPrefix(CliPrefix.None)>] Stable
-    | [<CliPrefix(CliPrefix.None)>] Nightly
-    | [<CliPrefix(CliPrefix.DoubleDash);
-       AltCommandLine("--skip-release-notes")>]
-        SkipReleaseNotes of bool
+type private ChangelogFlag =
+    | [<CliPrefix(CliPrefix.DoubleDash)>]  Changelog
+    | [<CliPrefix(CliPrefix.DoubleDash); AltCommandLine("--include-prerelease")>] IncludePreRelease
     interface IArgParserTemplate with
         member flag.Usage =
             match flag with
-            | Stable -> "Make a stable version"
-            | Nightly -> "Make a nightly version"            
-            | SkipReleaseNotes _ -> "Do not update changelog: --skip-release-notes [true|false] (default: false)"   
+            | Changelog ->
+                "Generate a changelog. By default the changelog will be generated for the stable release otherwise not."
+            | IncludePreRelease ->
+                "Include pre-release version's tags for generating changelog. Requires `--changelog`. Default is to skip."
+                
+type private MakeCommand =    
+    | [<SubCommand; CliPrefix(CliPrefix.None)>] Stable  of ParseResults<ChangelogFlag>
+    | [<SubCommand; CliPrefix(CliPrefix.None)>] Nightly of ParseResults<ChangelogFlag>    
+    interface IArgParserTemplate with
+        member flag.Usage =
+            match flag with
+            | Stable _ ->
+                "Make a stable version"
+            | Nightly _ ->
+                "Make a nightly version"
 
 type private InputCommand = 
-    | [<SubCommand; CliPrefix(CliPrefix.None)>] Make of ParseResults<MakeFlag>
+    | [<SubCommand; CliPrefix(CliPrefix.None)>] Make of ParseResults<MakeCommand>
     interface IArgParserTemplate with
         member command.Usage =
             match command with
-            | Make _ -> "Make a workspace version."
+            | Make _ -> "Make a version."
     
 module internal Cli =
     let private toDirectory path =        
@@ -34,35 +40,43 @@ module internal Cli =
         then "."
         else path
         
-    let private tryMakeFlag (flags: MakeFlag list) =
-        match flags with
-        | [ Nightly ] -> Ok MakeType.Nightly
-        | [ Stable ]  -> Ok MakeType.Stable
-        | [] -> Ok MakeType.Stable
-        | _  ->
-            $"{flags.Head}" |> buildFlagNotRecognized |> Error   
+    let private tryChangelogFlag (changelogFlags: ParseResults<ChangelogFlag>) =
+        let changelog = changelogFlags.Contains Changelog
+        let includePreRelease = changelogFlags.Contains IncludePreRelease
+        
+        if includePreRelease && not changelog then
+            ignorePrereleasesRequiresChangelog |> Error
+        else
+            Ok (changelog, includePreRelease)
+        
+    let private tryMakeCommand (commands: MakeCommand list) =
+        match commands with
+        | [ Stable changelogFlags ] -> 
+            tryChangelogFlag changelogFlags
+            |> Result.map (fun (changelog, includePreRelease) -> 
+                (MakeType.Stable, changelog, includePreRelease))
+        | [ Nightly changelogFlags ] -> 
+            tryChangelogFlag changelogFlags
+            |> Result.map (fun (changelog, includePreRelease) -> 
+                (MakeType.Nightly, changelog, includePreRelease))
+        | [] -> 
+            Ok (MakeType.Stable, false, false)
+        | _ ->
+            $"{commands.Head}" |> buildFlagNotRecognized |> Error   
                 
     let private tryCommand (inputCommandResult: ParseResults<InputCommand>) =        
         let inputCommands = inputCommandResult.GetAllResults()
         match inputCommands with
-        | [ Make makeFlagsResults ] ->
-            makeFlagsResults.GetAllResults()
-            |> List.choose (function
-                | Stable  -> Some Stable
-                | Nightly -> Some Nightly
-                | _       -> None)
-            |> tryMakeFlag
-            |> Result.map (fun makeType ->
-                let defaultChangelogBehavior = makeType.IsStable
-                let changelog =
-                    makeFlagsResults.TryGetResult SkipReleaseNotes
-                    |> Option.map not
-                    |> Option.defaultValue defaultChangelogBehavior
+        | [ Make makeCommandResults ] ->
+            makeCommandResults.GetAllResults()
+            |> tryMakeCommand
+            |> Result.map (fun (makeType, changelog, includePreRelease) ->
                 { Type = makeType
-                  ChangeLog = changelog }
-                |> Command.Make)         
+                  Changelog = changelog
+                  IncludePreRelease = includePreRelease }
+                |> Command.Make)            
         | [] ->
-            { Type = MakeType.Stable; ChangeLog = true }
+            { Type = MakeType.Stable; Changelog = true; IncludePreRelease = true }
             |> Command.Make
             |> Ok
         | commands ->
