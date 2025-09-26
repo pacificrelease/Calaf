@@ -115,34 +115,45 @@ module internal GitWrapper =
         (exclude: string list)
         (qty: int)
         (gitProcess: string -> Result<string,InfrastructureError>) =
-        result {            
-            let tagFilter = 
-                if filter.IsEmpty
-                then String.Empty
-                else
-                    filter
-                    |> List.map (fun prefix -> $"--list \"{prefix}*\"")
-                    |> String.concat " "
-                    
-            let tagExclude =
+        result {                    
+            let includes =
+                filter
+                |> List.choose (fun i ->
+                    let i = i.Trim()
+                    if String.IsNullOrWhiteSpace i
+                    then None
+                    else Some $"refs/tags/{i}*")                
+            let excludes =
                 exclude
-                |> List.map (fun e -> $"--exclude=\"{e}\"")
-                |> String.concat " "
-                    
-            let! output = gitProcess $"tag --sort=-creatordate {tagFilter} {tagExclude}"
-            if (not (String.IsNullOrWhiteSpace output))
-            then
-                let tagNames = output.Split([|'\n'; '\r'|], StringSplitOptions.RemoveEmptyEntries)
+                |> List.choose (fun e ->
+                    let e = e.Trim()
+                    if String.IsNullOrWhiteSpace e
+                    then None
+                    else Some $"--exclude=refs/tags/{e}")                
+            let opts =
+                [ "--ignore-case"
+                  "--sort=-creatordate"
+                  "--format=\"%(refname:short)\"" ]
+                @ excludes                
+            let args = String.concat " " (opts @ includes)                
+            let cmd = $"for-each-ref {args}"
+            
+            let! out = gitProcess $"{cmd}"
+            if String.IsNullOrWhiteSpace out then
+                return []
+            else
+                let names =
+                    out.Split([|'\n'; '\r'|], StringSplitOptions.RemoveEmptyEntries)
+
                 return!
-                    tagNames
-                    |> Array.take (min qty tagNames.Length)
+                    names
+                    |> Array.truncate (min qty names.Length)
                     |> Array.toList
-                    |> List.traverseResultM (fun tagName ->
+                    |> List.traverseResultM (fun tag ->
                         result {
-                            let! c = gitProcess |> getCommit (Some tagName)
-                            return { Name = tagName; Commit = c }
+                            let! c = gitProcess |> getCommit (Some tag)
+                            return { Name = tag; Commit = c }
                         })
-            else return []
         }
         
     let private listCommits

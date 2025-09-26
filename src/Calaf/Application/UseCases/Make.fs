@@ -222,16 +222,16 @@ module internal Make =
                 match cmd with
                 | Command.Make makeCommand ->
                     match makeCommand with
-                    | { Type = MakeType.Nightly; Changelog = genChangelog; IncludePreRelease = includePreRelease } ->
-                        return! tryMake path genChangelog includePreRelease context settings Version.tryNightly
-                    | { Type = MakeType.Alpha; Changelog = genChangelog; IncludePreRelease = includePreRelease } ->
-                        return! tryMake path genChangelog includePreRelease context settings Version.tryAlpha
-                    | { Type = MakeType.Beta; Changelog = genChangelog; IncludePreRelease = includePreRelease } ->
-                        return! tryMake path genChangelog includePreRelease context settings Version.tryBeta
-                    | { Type = MakeType.RC; Changelog = genChangelog; IncludePreRelease = includePreRelease } ->
-                        return! tryMake path genChangelog includePreRelease context settings Version.tryReleaseCandidate
-                    | { Type = MakeType.Stable; Changelog = genChangelog; IncludePreRelease = includePreRelease } ->
-                        return! tryMake path genChangelog includePreRelease context settings Version.tryStable
+                    | { Type = MakeType.Nightly; Changelog = changelog; IncludePreRelease = includePreRelease } ->
+                        return! tryMake path changelog includePreRelease context settings Version.tryNightly
+                    | { Type = MakeType.Alpha; Changelog = changelog; IncludePreRelease = includePreRelease } ->
+                        return! tryMake path changelog includePreRelease context settings Version.tryAlpha
+                    | { Type = MakeType.Beta; Changelog = changelog; IncludePreRelease = includePreRelease } ->
+                        return! tryMake path changelog includePreRelease context settings Version.tryBeta
+                    | { Type = MakeType.RC; Changelog = changelog; IncludePreRelease = includePreRelease } ->
+                        return! tryMake path changelog includePreRelease context settings Version.tryReleaseCandidate
+                    | { Type = MakeType.Stable; Changelog = changelog; IncludePreRelease = includePreRelease } ->
+                        return! tryMake path changelog includePreRelease context settings Version.tryStable
             }
         let path = directory path
         let result = apply path arguments context settings
