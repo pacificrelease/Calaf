@@ -99,15 +99,15 @@ module internal Make =
                 |> Result.mapError CalafError.Domain
             let snapshot =
                 Workspace.snapshot workspace' releaseNotes
-            do! snapshot.Projects
-                |> List.traverseResultM (fun s -> context.FileSystem.tryWriteXml (s.AbsolutePath, s.Content))
-                |> Result.map ignore
             do! snapshot.Changelog    
                 |> Option.map (fun s ->
                     context.FileSystem.tryWriteMarkdown (s.AbsolutePath, s.ReleaseNotesContent)
                     |> Result.map ignore
                     |> Result.mapError id)
-                |> Option.defaultValue (Ok ())                
+                |> Option.defaultValue (Ok ())
+            do! snapshot.Projects
+                |> List.traverseResultM (fun s -> context.FileSystem.tryWriteXml (s.AbsolutePath, s.Content))
+                |> Result.map ignore                            
             do! snapshot.Repository
                 |> Option.map (fun s ->
                     context.Git.tryApply (s.Directory, s.PendingFilesPaths) s.CommitText s.TagName
