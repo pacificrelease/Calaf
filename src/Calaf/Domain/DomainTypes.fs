@@ -103,7 +103,8 @@ type RepositoryVersion = {
 type RepositoryMetadata = {
     Head: Head
     Signature: Signature
-    Version: RepositoryVersion option
+    CurrentVersion: RepositoryVersion option
+    BaselineVersion: RepositoryVersion option
 }
 // DU for events
 [<Struct>] 

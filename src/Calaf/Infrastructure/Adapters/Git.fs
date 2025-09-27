@@ -290,39 +290,60 @@ module internal GitWrapper =
     let read
         (directory: string)
         (maxTagsToRead: byte)
-        (tagsPrefixesToFilter: string list)
-        (tagsFilterToExclude: string list)
+        (tagsInclude: string list)
+        (tagsExclude: string list option)
         (timeStamp: DateTimeOffset)=
         result {
             if not (gitDirectory directory)
-            then
-                return None
+            then return None
             else
                 let git = runGit directory
+                let maxTags = (int maxTagsToRead)
                 
                 let! unborn    = git |> isUnborn
                 let! status    = git |> getStatus
                 let! branch    = git |> getBranch                
-                let! signature = git |> getSignature timeStamp                
-                let! commit =
-                    if unborn
-                    then Ok None
-                    else git |> getCommit None
-                let! tags =
-                    if unborn
-                    then Ok []
-                    else git |> listTags tagsPrefixesToFilter tagsFilterToExclude (int maxTagsToRead)
+                let! signature = git |> getSignature timeStamp
                 
-                return Some {                    
-                    Directory = directory
-                    Unborn = unborn
-                    Detached = branch.IsNone
+                let! commitData =
+                    if unborn then Ok (None, [], None)
+                    else
+                        result {
+                            let! commit      = git |> getCommit None
+                            let! versionTags = git |> listTags tagsInclude List.Empty maxTags
+                            //let! stableVersionTags =  git |> listTags tagsInclude tagsExclude maxTags)
+                            let! baselineTags =
+                                // tagsExclude
+                                // |> Option.filter (fun excludes -> not excludes.IsEmpty)
+                                // |> Option.traverseResult (fun excludes -> git |> listTags tagsInclude excludes maxTags)
+                                // |> Option.defaultValue (Ok (Some versionTags))
+                                
+                                // tagsExclude
+                                // |> Option.filter (fun excludes -> not excludes.IsEmpty)
+                                // |> Option.map (fun excludes -> git |> listTags tagsInclude excludes maxTags |> Result.map Some)
+                                // |> Option.defaultValue (Ok (Some versionTags))
+                                    
+                                match tagsExclude with
+                                | Some excludes when not excludes.IsEmpty ->
+                                    git |> listTags tagsInclude excludes maxTags |> Result.map Some
+                                | Some empty when empty.IsEmpty ->
+                                    Ok (Some versionTags)
+                                | _ -> Ok None
+                            return (commit, versionTags, baselineTags)
+                        }
+                let commit, versionTags, baselineTags = commitData
+                let dirty = not (String.IsNullOrWhiteSpace status)
+
+                return Some {
+                    Directory     = directory
+                    Unborn        = unborn
+                    Detached      = branch.IsNone
                     CurrentBranch = branch
                     CurrentCommit = commit
-                    Signature = signature
-                    Dirty = not (String.IsNullOrWhiteSpace status)
-                    Tags = tags
-                }
+                    Signature     = signature
+                    Dirty         = dirty
+                    VersionTags   = versionTags
+                    BaselineTags  = baselineTags }
         }
         
     let list
@@ -358,8 +379,8 @@ module internal GitWrapper =
 
 type Git() =
     interface IGit with
-        member _.tryGetRepo directory maxTagsToRead tagsPrefixesToFilter tagsFiltersToExclude timeStamp =
-            GitWrapper.read directory maxTagsToRead tagsPrefixesToFilter tagsFiltersToExclude timeStamp
+        member _.tryGetRepo directory maxTagsToRead tagsInclude tagsExclude timeStamp =
+            GitWrapper.read directory maxTagsToRead tagsInclude tagsExclude timeStamp
             |> Result.mapError CalafError.Infrastructure
             
         member _.tryListCommits directory fromTagName=

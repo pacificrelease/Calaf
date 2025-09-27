@@ -27,14 +27,15 @@ let internal versionPrefixes =
       "version";  "ver";  "v"
       "Version";  "Ver";  "V" ]
     |> List.sortByDescending String.length
-let internal preReleaseFilters =
+let internal preReleasePatterns =
     [ "*-0.nightly.*.*"
       "*-alpha.[0-9]*"; "*-alpha.[0-9]*.*.*"        
       "*-beta.[0-9]*";  "*-beta.[0-9]*.*.*"        
       "*-rc.[0-9]*";    "*-rc.[0-9]*.*.*" ]
-let internal preReleaseExclude =
+let internal preReleases =
     versionPrefixes
-    |> List.collect (fun prefix -> preReleaseFilters |> List.map (fun filter -> $"{prefix}{filter}"))
+    |> List.collect (fun prefix ->
+        preReleasePatterns |> List.map (fun filter -> $"{prefix}{filter}"))
 let internal tagVersionPrefix =
     $"{versionPrefixes[10]}"
 let internal commitVersionPrefix =    

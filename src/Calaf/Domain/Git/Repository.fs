@@ -18,8 +18,9 @@ module Events =
         let state = toState repo
         let version =
             match repo with
-            | Dirty (_, { Version = Some { Version = calendarVersion } })
-            | Ready (_, { Version = Some { Version = calendarVersion } }) -> Some calendarVersion
+            | Dirty (_, { CurrentVersion = Some { Version = calendarVersion } })
+            | Ready (_, { CurrentVersion = Some { Version = calendarVersion } }) ->
+                Some calendarVersion
             | _ -> None
         { Version = version; State = state }
         |> RepositoryEvent.StateCaptured
@@ -51,12 +52,25 @@ let tryCapture (repoInfo: GitRepositoryInfo) =
                                   Email = signature.Email
                                   When = signature.When }
                 let! head = Head.tryCreate repoInfo.Detached commit branch
-                let version =
-                   repoInfo.Tags
+                let currentVersion =
+                   repoInfo.VersionTags
                    |> Seq.map Tag.create
                    |> Tag.chooseCalendarVersions        
                    |> Version.tryMax2
-                return ctor (repoInfo.Directory, { Head = head; Signature = signature; Version = version })
+                let baselineVersion =
+                    repoInfo.BaselineTags
+                   |> Option.bind (fun tags ->
+                       tags
+                       |> Seq.map Tag.create
+                       |> Tag.chooseCalendarVersions        
+                       |> Version.tryMax2)
+                let repoMetadata = {
+                    Head = head
+                    Signature = signature
+                    CurrentVersion = currentVersion
+                    BaselineVersion = baselineVersion
+                }
+                return ctor (repoInfo.Directory, repoMetadata)
             }
         let! path = tryValidatePath repoInfo.Directory
         match repoInfo with        
@@ -87,16 +101,16 @@ let tryCapture (repoInfo: GitRepositoryInfo) =
     
 let tryGetCalendarVersion repo =
     match repo with
-    | Ready (_, { Version = Some { Version = (CalVer version) } }) -> Some version
-    | Dirty (_, { Version = Some { Version = (CalVer version) } }) -> Some version
+    | Ready (_, { CurrentVersion = Some { Version = (CalVer version) } }) -> Some version
+    | Dirty (_, { CurrentVersion = Some { Version = (CalVer version) } }) -> Some version
     | _ -> None
     
 let trySnapshot
     (repo: Repository)
     (pendingFilesPaths: string list)    =    
     match repo with        
-    | Ready (dir, { Signature = signature; Version = Some { Version = (CalVer currentVersion) } })        
-    | Dirty (dir, { Signature = signature; Version = Some { Version = (CalVer currentVersion) } }) ->
+    | Ready (dir, { Signature = signature; CurrentVersion = Some { Version = (CalVer currentVersion) } })        
+    | Dirty (dir, { Signature = signature; CurrentVersion = Some { Version = (CalVer currentVersion) } }) ->
         //TODO: Remove all
         let tagName = Version.toTagName currentVersion
         let commitText = Version.toCommitText currentVersion
@@ -110,14 +124,14 @@ let trySnapshot
 let tryRelease (repo: Repository) (nextVersion: CalendarVersion) =
     let release (ctor, dir, metadata: RepositoryMetadata) =
         let sameVersion =
-            metadata.Version
+            metadata.CurrentVersion
             |> Option.map (fun x -> x.Version = (CalVer nextVersion))
             |> Option.exists id
         if sameVersion
         then
             Error RepositoryAlreadyCurrent
         else            
-            let repo = ctor (dir, { metadata with Version = createRepositoryCalendarVersion nextVersion |> Some })
+            let repo = ctor (dir, { metadata with CurrentVersion = createRepositoryCalendarVersion nextVersion |> Some })
             let event = Events.toRepositoryReleased repo nextVersion metadata.Signature
             Ok (repo, [event])
     

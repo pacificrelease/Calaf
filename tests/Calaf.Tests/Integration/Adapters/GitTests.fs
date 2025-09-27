@@ -16,7 +16,7 @@ module TryReadTests =
         
         let tagsToRead = 10uy
         let prefixes = versionPrefixes
-        let exclude = preReleaseExclude
+        let exclude = Some preReleases
         let timeStamp = System.DateTimeOffset.UtcNow
         
         let git = Git() :> IGit
