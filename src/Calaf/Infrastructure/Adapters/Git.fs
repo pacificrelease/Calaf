@@ -115,34 +115,45 @@ module internal GitWrapper =
         (exclude: string list)
         (qty: int)
         (gitProcess: string -> Result<string,InfrastructureError>) =
-        result {            
-            let tagFilter = 
-                if filter.IsEmpty
-                then String.Empty
-                else
-                    filter
-                    |> List.map (fun prefix -> $"--list \"{prefix}*\"")
-                    |> String.concat " "
-                    
-            let tagExclude =
+        result {                    
+            let includes =
+                filter
+                |> List.choose (fun i ->
+                    let i = i.Trim()
+                    if String.IsNullOrWhiteSpace i
+                    then None
+                    else Some $"refs/tags/{i}*")                
+            let excludes =
                 exclude
-                |> List.map (fun e -> $"--exclude=\"{e}\"")
-                |> String.concat " "
-                    
-            let! output = gitProcess $"tag --sort=-creatordate {tagFilter} {tagExclude}"
-            if (not (String.IsNullOrWhiteSpace output))
-            then
-                let tagNames = output.Split([|'\n'; '\r'|], StringSplitOptions.RemoveEmptyEntries)
+                |> List.choose (fun e ->
+                    let e = e.Trim()
+                    if String.IsNullOrWhiteSpace e
+                    then None
+                    else Some $"--exclude=refs/tags/{e}")                
+            let opts =
+                [ "--ignore-case"
+                  "--sort=-creatordate"
+                  "--format=\"%(refname:short)\"" ]
+                @ excludes                
+            let args = String.concat " " (opts @ includes)                
+            let cmd = $"for-each-ref {args}"
+            
+            let! out = gitProcess $"{cmd}"
+            if String.IsNullOrWhiteSpace out then
+                return []
+            else
+                let names =
+                    out.Split([|'\n'; '\r'|], StringSplitOptions.RemoveEmptyEntries)
+
                 return!
-                    tagNames
-                    |> Array.take (min qty tagNames.Length)
+                    names
+                    |> Array.truncate (min qty names.Length)
                     |> Array.toList
-                    |> List.traverseResultM (fun tagName ->
+                    |> List.traverseResultM (fun tag ->
                         result {
-                            let! c = gitProcess |> getCommit (Some tagName)
-                            return { Name = tagName; Commit = c }
+                            let! c = gitProcess |> getCommit (Some tag)
+                            return { Name = tag; Commit = c }
                         })
-            else return []
         }
         
     let private listCommits
@@ -279,39 +290,60 @@ module internal GitWrapper =
     let read
         (directory: string)
         (maxTagsToRead: byte)
-        (tagsPrefixesToFilter: string list)
-        (tagsFilterToExclude: string list)
+        (tagsInclude: string list)
+        (tagsExclude: string list option)
         (timeStamp: DateTimeOffset)=
         result {
             if not (gitDirectory directory)
-            then
-                return None
+            then return None
             else
                 let git = runGit directory
+                let maxTags = (int maxTagsToRead)
                 
                 let! unborn    = git |> isUnborn
                 let! status    = git |> getStatus
                 let! branch    = git |> getBranch                
-                let! signature = git |> getSignature timeStamp                
-                let! commit =
-                    if unborn
-                    then Ok None
-                    else git |> getCommit None
-                let! tags =
-                    if unborn
-                    then Ok []
-                    else git |> listTags tagsPrefixesToFilter tagsFilterToExclude (int maxTagsToRead)
+                let! signature = git |> getSignature timeStamp
                 
-                return Some {                    
-                    Directory = directory
-                    Unborn = unborn
-                    Detached = branch.IsNone
+                let! commitData =
+                    if unborn then Ok (None, [], None)
+                    else
+                        result {
+                            let! commit      = git |> getCommit None
+                            let! versionTags = git |> listTags tagsInclude List.Empty maxTags
+                            //let! stableVersionTags =  git |> listTags tagsInclude tagsExclude maxTags)
+                            let! baselineTags =
+                                // tagsExclude
+                                // |> Option.filter (fun excludes -> not excludes.IsEmpty)
+                                // |> Option.traverseResult (fun excludes -> git |> listTags tagsInclude excludes maxTags)
+                                // |> Option.defaultValue (Ok (Some versionTags))
+                                
+                                // tagsExclude
+                                // |> Option.filter (fun excludes -> not excludes.IsEmpty)
+                                // |> Option.map (fun excludes -> git |> listTags tagsInclude excludes maxTags |> Result.map Some)
+                                // |> Option.defaultValue (Ok (Some versionTags))
+                                    
+                                match tagsExclude with
+                                | Some excludes when not excludes.IsEmpty ->
+                                    git |> listTags tagsInclude excludes maxTags |> Result.map Some
+                                | Some empty when empty.IsEmpty ->
+                                    Ok (Some versionTags)
+                                | _ -> Ok None
+                            return (commit, versionTags, baselineTags)
+                        }
+                let commit, versionTags, baselineTags = commitData
+                let dirty = not (String.IsNullOrWhiteSpace status)
+
+                return Some {
+                    Directory     = directory
+                    Unborn        = unborn
+                    Detached      = branch.IsNone
                     CurrentBranch = branch
                     CurrentCommit = commit
-                    Signature = signature
-                    Dirty = not (String.IsNullOrWhiteSpace status)
-                    Tags = tags
-                }
+                    Signature     = signature
+                    Dirty         = dirty
+                    VersionTags   = versionTags
+                    BaselineTags  = baselineTags }
         }
         
     let list
@@ -347,8 +379,8 @@ module internal GitWrapper =
 
 type Git() =
     interface IGit with
-        member _.tryGetRepo directory maxTagsToRead tagsPrefixesToFilter tagsFiltersToExclude timeStamp =
-            GitWrapper.read directory maxTagsToRead tagsPrefixesToFilter tagsFiltersToExclude timeStamp
+        member _.tryGetRepo directory maxTagsToRead tagsInclude tagsExclude timeStamp =
+            GitWrapper.read directory maxTagsToRead tagsInclude tagsExclude timeStamp
             |> Result.mapError CalafError.Infrastructure
             
         member _.tryListCommits directory fromTagName=

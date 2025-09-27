@@ -16,12 +16,12 @@ module TryReadTests =
         
         let tagsToRead = 10uy
         let prefixes = versionPrefixes
-        let exclude = preReleaseExclude
+        let exclude = Some preReleases
         let timeStamp = System.DateTimeOffset.UtcNow
         
-        let git2 = Git() :> IGit
+        let git = Git() :> IGit
         
-        let info = git2.tryGetRepo dir tagsToRead prefixes exclude timeStamp
+        let info = git.tryGetRepo dir tagsToRead prefixes exclude timeStamp
         let isOk = info.IsOk
         
         test <@ isOk @>
@@ -53,9 +53,9 @@ module TryReadTests =
         let commitName = "commit name"
         let tagName = "tag name"
                 
-        let git2 = Git() :> IGit
+        let git = Git() :> IGit
         
-        let info = git2.tryApply (dir, []) commitName tagName
+        let info = git.tryApply (dir, []) commitName tagName
         let isOk = info.IsOk
         
         test <@ isOk @>

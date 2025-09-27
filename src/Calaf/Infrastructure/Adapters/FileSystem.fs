@@ -31,10 +31,17 @@ module internal FileSystemGateway =
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module internal FileSystem =    
     module Markdown =
-        let private utf8NoBom = System.Text.UTF8Encoding(false, true)
-        
-        let private normalizeLF (text: string) =
-            text.Replace("\r\n", "\n").Replace("\r", "\n")
+        let private utf8NoBom = System.Text.UTF8Encoding(false, true)        
+        let private normalizeLF (content: string) =
+            content.Replace("\r\n", "\n").Replace("\r", "\n")
+        let private directory (absolutePath: string) =
+            let dir =
+                match System.IO.Path.GetDirectoryName absolutePath with
+                | null | "" -> System.IO.Directory.GetCurrentDirectory()
+                | d -> d
+            if not (System.String.IsNullOrWhiteSpace dir) then
+                System.IO.Directory.CreateDirectory dir |> ignore
+            dir
         
         let load
             (absolutePath: string) : Result<string option, InfrastructureError> =
@@ -63,38 +70,33 @@ module internal FileSystem =
             (absolutePath: string)
             (content: string) : Result<unit, InfrastructureError> =            
             try
-                let absolutePath = System.IO.Path.GetFullPath absolutePath
-                let directory = System.IO.Path.GetDirectoryName absolutePath
-                if not (System.String.IsNullOrWhiteSpace directory) then
-                    System.IO.Directory.CreateDirectory directory |> ignore
-
-                let fileExists = System.IO.File.Exists absolutePath
-                let tempFileName = System.IO.Path.GetTempFileName()
+                absolutePath
+                |> System.IO.Path.GetDirectoryName
+                |> System.IO.Directory.CreateDirectory
+                |> ignore
                 
-                do
-                    use outFs = new System.IO.FileStream(
-                        tempFileName,
-                        System.IO.FileMode.Create,
-                        System.IO.FileAccess.Write,
-                        System.IO.FileShare.None)
-                    
-                    let newBytes = utf8NoBom.GetBytes content
-                    outFs.Write(newBytes, 0, newBytes.Length)
-                    
-                    if fileExists then
-                        use inFs = new System.IO.FileStream(
-                            absolutePath,
-                            System.IO.FileMode.Open,
-                            System.IO.FileAccess.Read,
-                            System.IO.FileShare.Read)
-                        inFs.CopyTo(outFs)                    
-                    
-                    outFs.Flush()
+                let directory = directory absolutePath                
+                let tempFile = System.IO.Path.Combine(directory, System.IO.Path.GetRandomFileName())
 
-                if fileExists then
-                    System.IO.File.Replace(tempFileName, absolutePath, null)
-                else
-                    System.IO.File.Move(tempFileName, absolutePath)                    
+                try
+                    do
+                        let content = normalizeLF content
+                        System.IO.File.WriteAllText(tempFile, content, utf8NoBom)
+
+                    if System.IO.File.Exists absolutePath
+                    then
+                        use src = new System.IO.FileStream(absolutePath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.Read)
+                        use dst = new System.IO.FileStream(tempFile, System.IO.FileMode.Append, System.IO.FileAccess.Write, System.IO.FileShare.None)
+                        src.CopyTo(dst)                    
+                    if System.IO.File.Exists absolutePath
+                    then System.IO.File.Move(tempFile, absolutePath, overwrite = true)
+                    else System.IO.File.Move(tempFile, absolutePath)
+                with
+                | exn ->
+                    if System.IO.File.Exists tempFile
+                    then System.IO.File.Delete tempFile
+                    reraise ()
+                    
                 Ok()
             with
             | :? System.UnauthorizedAccessException as exn ->

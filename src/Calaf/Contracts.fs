@@ -43,7 +43,8 @@ type GitRepositoryInfo = {
     CurrentCommit: GitCommitInfo option
     Signature: GitSignatureInfo option
     Dirty: bool
-    Tags: GitTagInfo list
+    VersionTags: GitTagInfo list
+    BaselineTags: GitTagInfo list option
 }
 
 type FileInfo = {

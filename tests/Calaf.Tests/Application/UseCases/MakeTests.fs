@@ -57,7 +57,17 @@ module Run2Tests =
                     When = System.DateTimeOffset.Now
                 }
                 Dirty = false
-                Tags = [
+                VersionTags = [
+                    {
+                        Name = "v2025.7-0.nightly.31.1"  // Use calendar version format
+                        Commit = Some {
+                            Hash = "abc123"
+                            Text = "Release v2025.7-0.nightly.31.1"
+                            When = System.DateTimeOffset.Now
+                        }
+                    }
+                ]
+                BaselineTags = [
                     {
                         Name = "v2025.7"  // Use calendar version format
                         Commit = Some {
@@ -66,7 +76,7 @@ module Run2Tests =
                             When = System.DateTimeOffset.Now
                         }
                     }
-                ]
+                ] |> Some
             }
             
         let createTestSettings () =

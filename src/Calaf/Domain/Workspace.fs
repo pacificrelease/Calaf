@@ -56,7 +56,7 @@ let tryCapture (directory: DirectoryInfo, repoInfo: GitRepositoryInfo option) =
             | Some (_, repoEvents) ->
                 solutionEvents @ repoEvents
             | None -> solutionEvents
-        let maybeRepo = repoResult |> Option.map fst        
+        let maybeRepo = repoResult |> Option.map fst
         let! version =
             combineVersions solution maybeRepo
             |> Version.tryMax

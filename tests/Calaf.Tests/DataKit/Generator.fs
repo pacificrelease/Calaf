@@ -1875,8 +1875,12 @@ module Git =
             gen {
                 // TODO: Rewrite generator!
                 let! calendarVersion = CalendarVersion.Accidental
-                let tagNameSb = System.Text.StringBuilder($"{calendarVersion.Year}.{calendarVersion.Month}")
-                let tagNameSb = if calendarVersion.Micro.IsSome then tagNameSb.Append calendarVersion.Micro.Value else tagNameSb 
+                let tagNameSb =
+                    System.Text.StringBuilder($"{calendarVersion.Year}.{calendarVersion.Month}")
+                let tagNameSb =
+                    if calendarVersion.Micro.IsSome
+                    then tagNameSb.Append calendarVersion.Micro.Value
+                    else tagNameSb 
                 let! maybeCommit = commitOrNone
                 return Tag.Versioned {
                     Name = tagNameSb.ToString()
@@ -2025,7 +2029,18 @@ module Git =
                 3, Gen.constant (Some commit)
             ]
             return { Name = name; Commit = commit }
-        }        
+        }
+        
+    let gitStableTagInfo =
+        gen {
+            let! commit = gitCommitInfo
+            let name    = commit.Text 
+            let! commit = Gen.frequency [
+                1, Gen.constant None
+                3, Gen.constant (Some commit)
+            ]
+            return { Name = name; Commit = commit }
+        }
             
     let calVerGitTagInfo =
         gen {
@@ -2095,7 +2110,8 @@ module Git =
                 CurrentCommit = commit
                 Signature = signature
                 Dirty = dirty
-                Tags = tags
+                VersionTags = tags
+                BaselineTags = None
             }
     }
         
