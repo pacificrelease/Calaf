@@ -5,7 +5,7 @@ open Calaf.Contracts
 type IFileSystem =
     abstract tryReadDirectory:
         directory: string ->
-        pattern: string ->
+        searchPatterns: string list ->
         changelogFilename: string -> Result<DirectoryInfo, CalafError>
         
     abstract tryReadXml:

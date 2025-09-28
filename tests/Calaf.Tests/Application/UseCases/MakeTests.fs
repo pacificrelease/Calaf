@@ -80,13 +80,13 @@ module Run2Tests =
             }
             
         let createTestSettings () =
-            let projectPattern = MakeSettings.tryCreateDotNetXmlFilePattern "*.csproj"
+            let projectPatterns = MakeSettings.tryCreateDotNetXmlFilePatterns ["*.csproj"]
             let tagCount = MakeSettings.tryCreateTagCount 10uy
             let changelogFileName = MakeSettings.tryCreateChangelogFileName "CHANGELOG.md"
-            match projectPattern, tagCount, changelogFileName with
+            match projectPatterns, tagCount, changelogFileName with
             | Ok pattern, Ok count, Ok fileName -> 
                 {
-                    ProjectsSearchPattern = pattern
+                    ProjectsSearchPatterns = pattern
                     TagsToLoad = count
                     ChangelogFileName = fileName
                 }

@@ -177,10 +177,12 @@ module internal FileSystem =
 
         let private listFiles
             (directory: DirectoryInfo)
-            (pattern: string) =
+            (searchPatterns: string list) =
             try
-                directory.GetFiles(pattern, SearchOption.AllDirectories)
-                |> Array.toList
+                searchPatterns
+                |> List.collect (fun pattern ->
+                    directory.GetFiles(pattern, SearchOption.AllDirectories) |> Array.toList)
+                |> List.distinctBy _.FullName
                 |> Ok
             with exn ->
                 exn
@@ -205,11 +207,11 @@ module internal FileSystem =
                 
         let workspace
             (path: string)
-            (pattern: string)
+            (searchPatterns: string list)
             (changelogFilename: string)=
             result {
                 let! dirInfo = info path                
-                let! files = listFiles dirInfo pattern                
+                let! files = listFiles dirInfo searchPatterns
                 let projects, _ =
                     files
                    |> List.map getXmlFile
@@ -220,8 +222,8 @@ module internal FileSystem =
             
 type FileSystem() =
     interface IFileSystem with
-        member _.tryReadDirectory directory pattern changelogFilename =
-            FileSystem.Directory.workspace directory pattern changelogFilename
+        member _.tryReadDirectory directory searchPatterns changelogFilename =
+            FileSystem.Directory.workspace directory searchPatterns changelogFilename
             |> Result.mapError CalafError.Infrastructure        
             
         member _.tryReadXml absolutePath =

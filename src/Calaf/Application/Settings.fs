@@ -1,21 +1,26 @@
 namespace Calaf.Application
 
-type DotNetXmlFilePattern = private DotNetXmlFilePattern of string
+type DotNetXmlFilePatterns = private DotNetXmlFilePatterns of string list
 type TagQuantity = private TagQuantity of byte
 type ChangelogFileName = private ChangelogFileName of string
 
 
 type MakeSettings = {
-    ProjectsSearchPattern: DotNetXmlFilePattern
+    ProjectsSearchPatterns: DotNetXmlFilePatterns
     TagsToLoad: TagQuantity
     ChangelogFileName: ChangelogFileName
 }
 
-module internal Validation =    
-    let checkDotNetXmlFilePattern (pattern: string) =
-        if System.String.IsNullOrWhiteSpace pattern then
+module internal Validation =
+    let sanitizeDotNetXmlFilePatterns (searchPatterns: string list) =
+        searchPatterns
+        |> List.filter (fun p -> not (System.String.IsNullOrWhiteSpace p))
+        |> List.distinct
+        
+    let checkDotNetXmlFilePatterns (searchPatterns: string list) =
+        if List.isEmpty searchPatterns then
             EmptyDotNetXmlFilePattern |> CalafError.Validation |> Error
-        else Ok pattern
+        else Ok searchPatterns
         
     let checkTagsToLoad (count: byte) =
         if count = 0uy then ZeroTagQuantity |> CalafError.Validation |> Error
@@ -31,10 +36,11 @@ module internal Validation =
 module MakeSettings =
     open FsToolkit.ErrorHandling
     
-    let tryCreateDotNetXmlFilePattern (filePattern: string) =
-        filePattern
-        |> Validation.checkDotNetXmlFilePattern
-        |> Result.map DotNetXmlFilePattern
+    let tryCreateDotNetXmlFilePatterns (searchPatterns: string list) =
+        searchPatterns
+        |> Validation.sanitizeDotNetXmlFilePatterns
+        |> Validation.checkDotNetXmlFilePatterns
+        |> Result.map DotNetXmlFilePatterns
         
     let tryCreateTagCount tagsToLoadCount =
         tagsToLoadCount
@@ -47,15 +53,15 @@ module MakeSettings =
         |> Result.map ChangelogFileName   
     
     let tryCreate
-        (dotNetXmlFilePattern: string)
+        (dotNetXmlFilePattern: string list)
         (tagsToLoadCount: byte)
         (changelogFileName: string) =
         result {
-            let! filePattern = dotNetXmlFilePattern |> tryCreateDotNetXmlFilePattern
+            let! filePatterns = dotNetXmlFilePattern |> tryCreateDotNetXmlFilePatterns
             let! tagsToLoadCount = tagsToLoadCount |> tryCreateTagCount
             let! changelogFileName = tryCreateChangelogFileName changelogFileName
             return {
-                ProjectsSearchPattern = filePattern
+                ProjectsSearchPatterns = filePatterns
                 TagsToLoad = tagsToLoadCount
                 ChangelogFileName = changelogFileName
             }

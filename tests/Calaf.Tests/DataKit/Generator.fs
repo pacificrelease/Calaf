@@ -2174,10 +2174,10 @@ module Contracts =
         { Directory = dir; Changelog = changelog; Projects = projects }
         
     let makeSettings () : MakeSettings =
-        let projectPattern = MakeSettings.tryCreateDotNetXmlFilePattern "*.csproj"
+        let projectPattern = MakeSettings.tryCreateDotNetXmlFilePatterns ["*.csproj"]
         let tagCount = MakeSettings.tryCreateTagCount 10uy
         let changelogFileName = MakeSettings.tryCreateChangelogFileName "CHANGELOG.md"
         match projectPattern, tagCount, changelogFileName with
-        | Ok pattern, Ok count, Ok fileName -> 
-            { ProjectsSearchPattern = pattern; TagsToLoad = count; ChangelogFileName = fileName }
+        | Ok searchPatterns, Ok count, Ok fileName -> 
+            { ProjectsSearchPatterns = searchPatterns; TagsToLoad = count; ChangelogFileName = fileName }
         | _ -> failwith "Failed to create test settings"

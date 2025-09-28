@@ -70,9 +70,9 @@ module internal Make =
         (make: CalendarVersion -> DateTimeOffset -> Result<CalendarVersion, DomainError>)=
         result {
             let dateTimeOffset = context.Clock.utcNow()
-            let (DotNetXmlFilePattern searchPattern) = settings.ProjectsSearchPattern
+            let (DotNetXmlFilePatterns searchPatterns) = settings.ProjectsSearchPatterns
             let (ChangelogFileName changelogFileName) = settings.ChangelogFileName
-            let! dir = context.FileSystem.tryReadDirectory path searchPattern changelogFileName                 
+            let! dir = context.FileSystem.tryReadDirectory path searchPatterns changelogFileName                 
             let (TagQuantity tagCount) = settings.TagsToLoad
             let tagsInclude =
                 Version.versionPrefixes
@@ -121,9 +121,9 @@ module internal Make =
         (dependencies: {| Directory: string; Settings: MakeSettings; FileSystem: IFileSystem; Git: IGit; Clock: IClock |}) =
         result {
             let dateTimeOffset = dependencies.Clock.utcNow()
-            let (DotNetXmlFilePattern searchPatternStr) = dependencies.Settings.ProjectsSearchPattern
+            let (DotNetXmlFilePatterns searchPatterns) = dependencies.Settings.ProjectsSearchPatterns
             let (ChangelogFileName changelogFileName) = dependencies.Settings.ChangelogFileName
-            let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatternStr changelogFileName                
+            let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatterns changelogFileName                
             let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
             let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes None dateTimeOffset                
             let! workspace, captureEvents =
@@ -157,9 +157,9 @@ module internal Make =
         (dependencies: {| Directory: string; Settings: MakeSettings; FileSystem: IFileSystem; Git: IGit; Clock: IClock |}) =
         result {
             let dateTimeOffset = dependencies.Clock.utcNow()
-            let (DotNetXmlFilePattern searchPatternStr) = dependencies.Settings.ProjectsSearchPattern
+            let (DotNetXmlFilePatterns searchPatterns) = dependencies.Settings.ProjectsSearchPatterns
             let (ChangelogFileName changelogFileName) = dependencies.Settings.ChangelogFileName
-            let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatternStr changelogFileName               
+            let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatterns changelogFileName               
             let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
             let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes None dateTimeOffset                
             let! workspace, captureEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain

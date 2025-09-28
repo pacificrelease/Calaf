@@ -3,10 +3,9 @@ namespace Calaf.Application
 module Api =
     open FsToolkit.ErrorHandling
     
-    open Calaf.Contracts
+    open Calaf.Contracts    
     
-    [<Literal>]
-    let private supportedFilesPattern = "*.?sproj"
+    let private supportedFilesPatterns = [ "*.?sproj" ]
     [<Literal>]
     let private tagsToLoad = 5uy
     [<Literal>]
@@ -19,7 +18,7 @@ module Api =
             | Command.Make { Type = makeType } ->
                 let! makeSettings = 
                     MakeSettings.tryCreate
-                        supportedFilesPattern
+                        supportedFilesPatterns
                         tagsToLoad
                         changelogFileName
                 let ctx = {
