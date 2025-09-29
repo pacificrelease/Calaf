@@ -5,9 +5,10 @@ open Argu
 open Calaf.Contracts
 open Calaf.CliError
 
-type private ChangelogFlag =
+type private MakeFlag =
     | [<CliPrefix(CliPrefix.DoubleDash)>]  Changelog
     | [<CliPrefix(CliPrefix.DoubleDash); AltCommandLine("--include-prerelease")>] IncludePreRelease
+    | [<CliPrefix(CliPrefix.DoubleDash)>] Projects of projects: string list
     interface IArgParserTemplate with
         member flag.Usage =
             match flag with
@@ -15,10 +16,13 @@ type private ChangelogFlag =
                 "Generate a changelog. By default the changelog will be generated for the stable release otherwise not."
             | IncludePreRelease ->
                 "Include pre-release version's tags for generating changelog. Requires `--changelog`. Default is to skip."
+             | Projects _ ->
+                "The directory or projects paths to scan for projects. Default is the current directory."
+    static member ProjectsSearchDefaultPatterns = [ "*.?sproj" ]
                 
 type private MakeCommand =    
-    | [<SubCommand; CliPrefix(CliPrefix.None)>] Stable  of ParseResults<ChangelogFlag>
-    | [<SubCommand; CliPrefix(CliPrefix.None)>] Nightly of ParseResults<ChangelogFlag>    
+    | [<SubCommand; CliPrefix(CliPrefix.None)>] Stable  of ParseResults<MakeFlag>
+    | [<SubCommand; CliPrefix(CliPrefix.None)>] Nightly of ParseResults<MakeFlag>    
     interface IArgParserTemplate with
         member flag.Usage =
             match flag with
@@ -40,27 +44,37 @@ module internal Cli =
         then "."
         else path
         
-    let private tryChangelogFlag (changelogFlags: ParseResults<ChangelogFlag>) =
-        let changelog = changelogFlags.Contains Changelog
-        let includePreRelease = changelogFlags.Contains IncludePreRelease
+    let private tryChangelogFlag (projectsFlags: ParseResults<MakeFlag>) =
+        let changelog = projectsFlags.Contains Changelog
+        let includePreRelease = projectsFlags.Contains IncludePreRelease
+        let projects =
+            projectsFlags.TryGetResult Projects
+            |> Option.defaultValue List.Empty
+            |> List.filter (fun p -> not (System.String.IsNullOrWhiteSpace p))
+            |> List.distinct
+            |> List.map toDirectory
+            |> fun ps ->
+                if List.isEmpty ps
+                then MakeFlag.ProjectsSearchDefaultPatterns
+                else ps
         
         if includePreRelease && not changelog then
             includePreReleaseChangelogRequired |> Error
         else
-            Ok (changelog, includePreRelease)
+            Ok (changelog, includePreRelease, projects)
         
     let private tryMakeCommand (commands: MakeCommand list) =
         match commands with
-        | [ Stable changelogFlags ] -> 
-            tryChangelogFlag changelogFlags
-            |> Result.map (fun (changelog, includePreRelease) -> 
-                (MakeType.Stable, changelog, includePreRelease))
-        | [ Nightly changelogFlags ] -> 
-            tryChangelogFlag changelogFlags
-            |> Result.map (fun (changelog, includePreRelease) -> 
-                (MakeType.Nightly, changelog, includePreRelease))
+        | [ Stable makeFlags ] -> 
+            tryChangelogFlag makeFlags
+            |> Result.map (fun (changelog, includePreRelease, makeFlags) -> 
+                (MakeType.Stable, changelog, includePreRelease, makeFlags))
+        | [ Nightly makeFlags ] -> 
+            tryChangelogFlag makeFlags
+            |> Result.map (fun (changelog, includePreRelease, makeFlags) -> 
+                (MakeType.Nightly, changelog, includePreRelease,makeFlags))
         | [] -> 
-            Ok (MakeType.Stable, false, false)
+            Ok (MakeType.Stable, false, false, MakeFlag.ProjectsSearchDefaultPatterns)
         | _ ->
             $"{commands.Head}" |> buildFlagNotRecognized |> Error   
                 
@@ -70,13 +84,17 @@ module internal Cli =
         | [ Make makeCommandResults ] ->
             makeCommandResults.GetAllResults()
             |> tryMakeCommand
-            |> Result.map (fun (makeType, changelog, includePreRelease) ->
+            |> Result.map (fun (makeType, changelog, includePreRelease, projects) ->
                 { Type = makeType
                   Changelog = changelog
-                  IncludePreRelease = includePreRelease }
+                  IncludePreRelease = includePreRelease
+                  Projects = projects }
                 |> Command.Make)            
         | [] ->
-            { Type = MakeType.Stable; Changelog = true; IncludePreRelease = true }
+            { Type = MakeType.Stable
+              Changelog = true
+              IncludePreRelease = true
+              Projects = MakeFlag.ProjectsSearchDefaultPatterns }
             |> Command.Make
             |> Ok
         | commands ->

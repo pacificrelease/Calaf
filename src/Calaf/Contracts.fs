@@ -12,6 +12,7 @@ type MakeCommand = {
     Type: MakeType
     Changelog: bool
     IncludePreRelease: bool
+    Projects: string list
 }
     
 type Command =

@@ -18,6 +18,7 @@ type internal MakeFlags =
                 "Include pre-release changes in the changelog (ignores pre-release tags when computing the range). Requires `--changelog`. Default: off."
             | Projects _ ->
                 "The directory or projects paths to scan for projects. Default is the current directory."
+    static member ProjectsSearchDefaultPatterns = [ "*.?sproj" ]
                 
 type internal MakeCommand =    
     | [<SubCommand; CliPrefix(CliPrefix.None)>] Stable of ParseResults<MakeFlags>
@@ -42,36 +43,48 @@ type internal InputCommand =
             | Make _ -> "Create a workspace release"
                 
 module internal ConsoleInputGateway =
-    let tryChangelogFlag (changelogFlags: ParseResults<MakeFlags>) =
+    let tryMakeFlags (changelogFlags: ParseResults<MakeFlags>) =
         let changelog = changelogFlags.Contains Changelog
         let includePreRelease = changelogFlags.Contains IncludePreRelease
+        let projects =
+            changelogFlags.TryGetResult Projects
+            |> Option.defaultValue List.Empty
+            |> List.filter (fun p -> not (System.String.IsNullOrWhiteSpace p))
+            |> List.distinct
+            |> fun ps ->
+                if List.isEmpty ps
+                then MakeFlags.ProjectsSearchDefaultPatterns
+                else ps
         
         if includePreRelease && not changelog then
-            ChangelogRequiredToIncludePrerelease
+            IncludePreReleaseRequired
             |> Input
             |> Error
         else
-            Ok (changelog, includePreRelease)
+            Ok (changelog, includePreRelease, projects)
             
     let tryMakeCommand (commands: MakeCommand list) =
         let tryCmd ctor makeFlags =
-            tryChangelogFlag makeFlags
-            |> Result.map (fun (changelog, includePreRelease) -> 
-                (ctor, changelog, includePreRelease))
+            tryMakeFlags makeFlags
+            |> Result.map (fun (changelog, includePreRelease, projects) -> 
+                (ctor, changelog, includePreRelease, projects))
         match commands with
             | [ Nightly makeFlags ] -> tryCmd MakeType.Nightly makeFlags
             | [ Alpha makeFlags ]   -> tryCmd MakeType.Alpha makeFlags
             | [ Beta makeFlags ]    -> tryCmd MakeType.Beta makeFlags
             | [ RC makeFlags ]      -> tryCmd MakeType.RC makeFlags
             | [ Stable makeFlags ]  -> tryCmd MakeType.Stable makeFlags
-            | [] -> Ok (MakeType.Stable, false, false)
+            | [] ->               
+                MakeCommandMissing
+                |> Input
+                |> Error
             | _  ->
                 $"{commands.Head}"
-                |> MakeFlagNotRecognized
+                |> MakeCommandNotRecognized
                 |> Input
                 |> Error    
                 
-module internal ConsoleInput =      
+module internal ConsoleInput =
     let parse (args: string[]) =
         let parser = ArgumentParser.Create<InputCommand>()
         parser.ParseCommandLine(args)
@@ -82,15 +95,17 @@ module internal ConsoleInput =
         | [ Make makeCommandResults ] ->
             makeCommandResults.GetAllResults()
             |> ConsoleInputGateway.tryMakeCommand
-            |> Result.map (fun (makeType, changelog, includePreRelease) ->
+            |> Result.map (fun (makeType, changelog, includePreRelease, projects) ->
                 { Type = makeType
                   Changelog = changelog
-                  IncludePreRelease = includePreRelease }
+                  IncludePreRelease = includePreRelease
+                  Projects = projects }
                 |> Command.Make)
         | [] ->
             { Type = MakeType.Stable
               Changelog = true
-              IncludePreRelease = false }
+              IncludePreRelease = false
+              Projects = MakeFlags.ProjectsSearchDefaultPatterns }
             |> Command.Make
             |> Ok
         | commands ->

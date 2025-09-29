@@ -4,8 +4,9 @@ open Calaf.Domain
 
 type InputError =
     | CommandNotRecognized  of command: string
-    | ChangelogRequiredToIncludePrerelease
-    | MakeFlagNotRecognized of flag: string
+    | IncludePreReleaseRequired
+    | MakeCommandMissing
+    | MakeCommandNotRecognized of flag: string
     
 
 type ValidationError =
