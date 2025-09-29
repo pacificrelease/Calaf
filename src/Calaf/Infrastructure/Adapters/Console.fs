@@ -5,9 +5,10 @@ open Argu
 open Calaf.Application
 open Calaf.Contracts
 
-type internal ChangelogFlag =
+type internal MakeFlags =
     | [<CliPrefix(CliPrefix.DoubleDash)>] Changelog
     | [<CliPrefix(CliPrefix.DoubleDash); AltCommandLine("--include-prerelease")>] IncludePreRelease
+    | [<CliPrefix(CliPrefix.DoubleDash)>] Projects of projects: string list
     interface IArgParserTemplate with
         member flag.Usage =
             match flag with
@@ -15,13 +16,15 @@ type internal ChangelogFlag =
                 "Generate a changelog. Default: off."
             | IncludePreRelease ->
                 "Include pre-release changes in the changelog (ignores pre-release tags when computing the range). Requires `--changelog`. Default: off."
+            | Projects _ ->
+                "The directory or projects paths to scan for projects. Default is the current directory."
                 
 type internal MakeCommand =    
-    | [<SubCommand; CliPrefix(CliPrefix.None)>] Stable of ParseResults<ChangelogFlag>
-    | [<SubCommand; CliPrefix(CliPrefix.None)>] Alpha of ParseResults<ChangelogFlag>
-    | [<SubCommand; CliPrefix(CliPrefix.None)>] Beta of ParseResults<ChangelogFlag>
-    | [<SubCommand; CliPrefix(CliPrefix.None)>] RC of ParseResults<ChangelogFlag>
-    | [<SubCommand; CliPrefix(CliPrefix.None)>] Nightly of ParseResults<ChangelogFlag>
+    | [<SubCommand; CliPrefix(CliPrefix.None)>] Stable of ParseResults<MakeFlags>
+    | [<SubCommand; CliPrefix(CliPrefix.None)>] Alpha of ParseResults<MakeFlags>
+    | [<SubCommand; CliPrefix(CliPrefix.None)>] Beta of ParseResults<MakeFlags>
+    | [<SubCommand; CliPrefix(CliPrefix.None)>] RC of ParseResults<MakeFlags>
+    | [<SubCommand; CliPrefix(CliPrefix.None)>] Nightly of ParseResults<MakeFlags>
     interface IArgParserTemplate with
         member cmd.Usage =
             match cmd with
@@ -39,7 +42,7 @@ type internal InputCommand =
             | Make _ -> "Create a workspace release"
                 
 module internal ConsoleInputGateway =
-    let tryChangelogFlag (changelogFlags: ParseResults<ChangelogFlag>) =
+    let tryChangelogFlag (changelogFlags: ParseResults<MakeFlags>) =
         let changelog = changelogFlags.Contains Changelog
         let includePreRelease = changelogFlags.Contains IncludePreRelease
         
@@ -51,16 +54,16 @@ module internal ConsoleInputGateway =
             Ok (changelog, includePreRelease)
             
     let tryMakeCommand (commands: MakeCommand list) =
-        let tryCmd ctor flags =
-            tryChangelogFlag flags
+        let tryCmd ctor makeFlags =
+            tryChangelogFlag makeFlags
             |> Result.map (fun (changelog, includePreRelease) -> 
                 (ctor, changelog, includePreRelease))
         match commands with
-            | [ Nightly changelogFlags ] -> tryCmd MakeType.Nightly changelogFlags
-            | [ Alpha changelogFlags ]   -> tryCmd MakeType.Alpha changelogFlags
-            | [ Beta changelogFlags ]    -> tryCmd MakeType.Beta changelogFlags
-            | [ RC changelogFlags ]      -> tryCmd MakeType.RC changelogFlags
-            | [ Stable changelogFlags ]  -> tryCmd MakeType.Stable changelogFlags
+            | [ Nightly makeFlags ] -> tryCmd MakeType.Nightly makeFlags
+            | [ Alpha makeFlags ]   -> tryCmd MakeType.Alpha makeFlags
+            | [ Beta makeFlags ]    -> tryCmd MakeType.Beta makeFlags
+            | [ RC makeFlags ]      -> tryCmd MakeType.RC makeFlags
+            | [ Stable makeFlags ]  -> tryCmd MakeType.Stable makeFlags
             | [] -> Ok (MakeType.Stable, false, false)
             | _  ->
                 $"{commands.Head}"
