@@ -5,7 +5,7 @@ open Argu
 open Calaf.Contracts
 open Calaf.CliError
 
-type private MakeFlag =
+type internal MakeFlag =
     | [<CliPrefix(CliPrefix.DoubleDash)>]  Changelog
     | [<CliPrefix(CliPrefix.DoubleDash); AltCommandLine("--include-prerelease")>] IncludePreRelease
     | [<CliPrefix(CliPrefix.DoubleDash)>] Projects of projects: string list
@@ -20,7 +20,7 @@ type private MakeFlag =
                 "The directory or projects paths to scan for projects. Default is the current directory."
     static member ProjectsSearchDefaultPatterns = [ "*.?sproj" ]
                 
-type private MakeCommand =    
+type internal MakeCommand =    
     | [<SubCommand; CliPrefix(CliPrefix.None)>] Stable  of ParseResults<MakeFlag>
     | [<SubCommand; CliPrefix(CliPrefix.None)>] Nightly of ParseResults<MakeFlag>    
     interface IArgParserTemplate with
@@ -31,7 +31,7 @@ type private MakeCommand =
             | Nightly _ ->
                 "Make a nightly version"
 
-type private InputCommand = 
+type internal InputCommand = 
     | [<SubCommand; CliPrefix(CliPrefix.None)>] Make of ParseResults<MakeCommand>
     interface IArgParserTemplate with
         member command.Usage =

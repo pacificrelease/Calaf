@@ -15,7 +15,12 @@ module CommandTests =
         let isOk =
             match commandResult with
             | Ok cmd ->
-                cmd = Command.Make { Type = MakeType.Stable; Changelog = true; IncludePreRelease = true }
+                cmd = Command.Make {
+                    Type = MakeType.Stable
+                    Changelog = true
+                    IncludePreRelease = true
+                    Projects = Calaf.MakeFlag.ProjectsSearchDefaultPatterns
+                }
             | _ -> false
         test <@ isOk @>
         
@@ -26,7 +31,12 @@ module CommandTests =
         let isOk =
             match commandResult with
             | Ok cmd ->
-                cmd = Command.Make { Type = MakeType.Stable; Changelog = true; IncludePreRelease = false }
+                cmd = Command.Make {
+                    Type = MakeType.Stable
+                    Changelog = true
+                    IncludePreRelease = false
+                    Projects = Calaf.MakeFlag.ProjectsSearchDefaultPatterns
+                }
             | _ -> false
         test <@ isOk @>
         
@@ -37,7 +47,12 @@ module CommandTests =
         let isOk =
             match commandResult with
             | Ok cmd ->
-                cmd = Command.Make { Type = MakeType.Stable; Changelog = false; IncludePreRelease = false }
+                cmd = Command.Make {
+                    Type = MakeType.Stable
+                    Changelog = false
+                    IncludePreRelease = false
+                    Projects = Calaf.MakeFlag.ProjectsSearchDefaultPatterns
+                }
             | _ -> false
         test <@ isOk @>
         
@@ -48,7 +63,12 @@ module CommandTests =
         let isOk =
             match commandResult with
             | Ok cmd ->
-                cmd = Command.Make { Type = MakeType.Nightly; Changelog = false; IncludePreRelease = false }
+                cmd = Command.Make {
+                    Type = MakeType.Nightly
+                    Changelog = false
+                    IncludePreRelease = false
+                    Projects = Calaf.MakeFlag.ProjectsSearchDefaultPatterns
+                }
             | _ -> false
         test <@ isOk @>
     
