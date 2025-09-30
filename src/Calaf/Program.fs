@@ -1,8 +1,7 @@
 open System
 open Calaf.Application
 open Calaf.Infrastructure
-        
-let private supportedFilesPatterns = [ "*.?sproj" ]
+
 [<Literal>]
 let private loadTenTags = 10uy
 [<Literal>]
@@ -12,5 +11,5 @@ let private changelogFileName = "CHANGELOG.md"
 let main args =
     let path     = String.Empty
     let context  = MakeContext.create
-    let settings = MakeSettings.tryCreate supportedFilesPatterns loadTenTags changelogFileName
+    let settings = MakeSettings.tryCreate loadTenTags changelogFileName
     Make.run path args context settings

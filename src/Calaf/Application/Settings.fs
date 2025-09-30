@@ -1,12 +1,10 @@
 namespace Calaf.Application
 
-type DotNetXmlFilePatterns = private DotNetXmlFilePatterns of string list
 type TagQuantity = private TagQuantity of byte
 type ChangelogFileName = private ChangelogFileName of string
 
 
 type MakeSettings = {
-    ProjectsSearchPatterns: DotNetXmlFilePatterns
     TagsToLoad: TagQuantity
     ChangelogFileName: ChangelogFileName
 }
@@ -40,7 +38,6 @@ module MakeSettings =
         searchPatterns
         |> Validation.sanitizeDotNetXmlFilePatterns
         |> Validation.checkDotNetXmlFilePatterns
-        |> Result.map DotNetXmlFilePatterns
         
     let tryCreateTagCount tagsToLoadCount =
         tagsToLoadCount
@@ -53,15 +50,12 @@ module MakeSettings =
         |> Result.map ChangelogFileName   
     
     let tryCreate
-        (dotNetXmlFilePattern: string list)
         (tagsToLoadCount: byte)
         (changelogFileName: string) =
         result {
-            let! filePatterns = dotNetXmlFilePattern |> tryCreateDotNetXmlFilePatterns
-            let! tagsToLoadCount = tagsToLoadCount |> tryCreateTagCount
+            let! tagsToLoadCount = tryCreateTagCount tagsToLoadCount
             let! changelogFileName = tryCreateChangelogFileName changelogFileName
             return {
-                ProjectsSearchPatterns = filePatterns
                 TagsToLoad = tagsToLoadCount
                 ChangelogFileName = changelogFileName
             }

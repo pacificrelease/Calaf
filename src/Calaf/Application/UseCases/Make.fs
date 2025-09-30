@@ -64,15 +64,14 @@ module internal Make =
         
     let private tryMake
         (path: string)
-        (changelog: bool, includePreRelease: bool)
+        (changelog: bool, includePreRelease: bool, projects: string list)
         (context: MakeContext)
         (settings: MakeSettings)        
         (make: CalendarVersion -> DateTimeOffset -> Result<CalendarVersion, DomainError>)=
         result {
             let dateTimeOffset = context.Clock.utcNow()
-            let (DotNetXmlFilePatterns searchPatterns) = settings.ProjectsSearchPatterns
             let (ChangelogFileName changelogFileName) = settings.ChangelogFileName
-            let! dir = context.FileSystem.tryReadDirectory path searchPatterns changelogFileName                 
+            let! dir = context.FileSystem.tryReadDirectory path projects changelogFileName                 
             let (TagQuantity tagCount) = settings.TagsToLoad
             let tagsInclude =
                 Version.versionPrefixes
@@ -115,77 +114,6 @@ module internal Make =
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())
             return workspace'
-        }    
-        
-    let private tryNightly2
-        (dependencies: {| Directory: string; Settings: MakeSettings; FileSystem: IFileSystem; Git: IGit; Clock: IClock |}) =
-        result {
-            let dateTimeOffset = dependencies.Clock.utcNow()
-            let (DotNetXmlFilePatterns searchPatterns) = dependencies.Settings.ProjectsSearchPatterns
-            let (ChangelogFileName changelogFileName) = dependencies.Settings.ChangelogFileName
-            let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatterns changelogFileName                
-            let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
-            let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes None dateTimeOffset                
-            let! workspace, captureEvents =
-                Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
-            let! nextVersion =
-                Version.tryNightly workspace.Version dateTimeOffset
-                |> Result.mapError CalafError.Domain
-            let! releaseNotes, _ =
-                tryReadReleaseNotesCommits workspace dependencies.Git
-                |> Result.map (fun commits -> tryChangeset commits nextVersion dateTimeOffset)
-                |> Result.map (Option.map (fun (cs, events) ->
-                    Some cs, Some events) >> Option.defaultValue (None, None))            
-            let! workspace', releaseEvents =
-                nextVersion
-                |> Workspace.tryRelease workspace
-                |> Result.mapError CalafError.Domain
-            let snapshot = Workspace.snapshot workspace' releaseNotes
-            do! snapshot.Projects
-                |> List.traverseResultM (fun p -> dependencies.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
-                |> Result.map ignore                
-            do! snapshot.Repository
-                |> Option.map (fun p ->
-                    dependencies.Git.tryApply (p.Directory, p.PendingFilesPaths) p.CommitText p.TagName
-                    |> Result.map ignore
-                    |> Result.mapError id)
-                |> Option.defaultValue (Ok ())                                
-            return (workspace', captureEvents @ releaseEvents)
-        }
-        
-    let private tryStable2
-        (dependencies: {| Directory: string; Settings: MakeSettings; FileSystem: IFileSystem; Git: IGit; Clock: IClock |}) =
-        result {
-            let dateTimeOffset = dependencies.Clock.utcNow()
-            let (DotNetXmlFilePatterns searchPatterns) = dependencies.Settings.ProjectsSearchPatterns
-            let (ChangelogFileName changelogFileName) = dependencies.Settings.ChangelogFileName
-            let! dir = dependencies.FileSystem.tryReadDirectory dependencies.Directory searchPatterns changelogFileName               
-            let (TagQuantity tagCount) = dependencies.Settings.TagsToLoad
-            let! repo = dependencies.Git.tryGetRepo dependencies.Directory tagCount Version.versionPrefixes None dateTimeOffset                
-            let! workspace, captureEvents = Workspace.tryCapture (dir, repo) |> Result.mapError CalafError.Domain
-            let! nextVersion =
-                Version.tryStable workspace.Version dateTimeOffset
-                |> Result.mapError CalafError.Domain
-            let! releaseNotes, _ =
-                tryReadReleaseNotesCommits workspace dependencies.Git
-                |> Result.map (fun commits -> tryChangeset commits nextVersion dateTimeOffset)
-                |> Result.map (Option.map (fun (cs, events) ->
-                    Some cs, Some events) >> Option.defaultValue (None, None))            
-            let! workspace', releaseEvents =
-                nextVersion
-                |> Workspace.tryRelease workspace
-                |> Result.mapError CalafError.Domain                
-            let snapshot = Workspace.snapshot workspace' releaseNotes
-            do! snapshot.Projects
-                |> List.traverseResultM (fun p -> dependencies.FileSystem.tryWriteXml (p.AbsolutePath, p.Content))
-                |> Result.map ignore            
-            do! snapshot.Repository
-                |> Option.map (fun p ->
-                    dependencies.Git.tryApply (p.Directory, p.PendingFilesPaths) p.CommitText p.TagName
-                    |> Result.map ignore
-                    |> Result.mapError id)
-                |> Option.defaultValue (Ok ())                                
-            return (workspace', captureEvents @ releaseEvents)
         }
     
     let private directory path =        
@@ -206,22 +134,7 @@ module internal Make =
     let private exit result =
         match result with
         | Ok    _ -> 0
-        | Error _ -> 1
-        
-    let run2 context =
-        let dependencies = {|
-            Directory = context.Directory
-            Settings = context.Settings
-            FileSystem = context.FileSystem
-            Git = context.Git
-            Clock = context.Clock
-        |}
-        match context.Type with
-        | MakeType.Stable  -> tryStable2 dependencies
-        | MakeType.Alpha   -> failwith "not implemented yet"
-        | MakeType.Beta    -> failwith "not implemented yet"
-        | MakeType.RC      -> failwith "not implemented yet"
-        | MakeType.Nightly -> tryNightly2 dependencies      
+        | Error _ -> 1    
         
     let run path arguments context settings  =
         let apply path arguments context settings =
@@ -231,16 +144,16 @@ module internal Make =
                 match cmd with
                 | Command.Make makeCommand ->
                     match makeCommand with
-                    | { Type = MakeType.Nightly; Changelog = changelog; IncludePreRelease = includePreRelease } ->
-                        return! tryMake path (changelog, includePreRelease) context settings Version.tryNightly
-                    | { Type = MakeType.Alpha; Changelog = changelog; IncludePreRelease = includePreRelease } ->
-                        return! tryMake path (changelog, includePreRelease) context settings Version.tryAlpha
-                    | { Type = MakeType.Beta; Changelog = changelog; IncludePreRelease = includePreRelease } ->
-                        return! tryMake path (changelog, includePreRelease) context settings Version.tryBeta
-                    | { Type = MakeType.RC; Changelog = changelog; IncludePreRelease = includePreRelease } ->
-                        return! tryMake path (changelog, includePreRelease) context settings Version.tryReleaseCandidate
-                    | { Type = MakeType.Stable; Changelog = changelog; IncludePreRelease = includePreRelease } ->
-                        return! tryMake path (changelog, includePreRelease) context settings Version.tryStable
+                    | { Type = MakeType.Nightly; Changelog = changelog; IncludePreRelease = includePreRelease; Projects = projects } ->
+                        return! tryMake path (changelog, includePreRelease, projects) context settings Version.tryNightly
+                    | { Type = MakeType.Alpha; Changelog = changelog; IncludePreRelease = includePreRelease; Projects = projects } ->
+                        return! tryMake path (changelog, includePreRelease, projects) context settings Version.tryAlpha
+                    | { Type = MakeType.Beta; Changelog = changelog; IncludePreRelease = includePreRelease; Projects = projects } ->
+                        return! tryMake path (changelog, includePreRelease, projects) context settings Version.tryBeta
+                    | { Type = MakeType.RC; Changelog = changelog; IncludePreRelease = includePreRelease; Projects = projects } ->
+                        return! tryMake path (changelog, includePreRelease, projects) context settings Version.tryReleaseCandidate
+                    | { Type = MakeType.Stable; Changelog = changelog; IncludePreRelease = includePreRelease; Projects = projects } ->
+                        return! tryMake path (changelog, includePreRelease, projects) context settings Version.tryStable
             }
         let path = directory path
         let result = apply path arguments context settings
