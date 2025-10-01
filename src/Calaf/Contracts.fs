@@ -22,13 +22,12 @@ type Command =
 type ValidatedDirectoryInfo = ValidDirectoryInfo of System.IO.DirectoryInfo
 type ValidatedFileInfo = ValidFileInfo of System.IO.FileInfo
 type internal ProjectsSearchScope =
-    | None
-    | Files of ValidatedFileInfo list
-    | Directories of ValidatedDirectoryInfo list
-    | Mix of directories: ValidatedDirectoryInfo list * files: ValidatedFileInfo list
+    | FilesOnly of ValidatedFileInfo list
+    | DirectoriesOnly of ValidatedDirectoryInfo list
+    | FilesAndDirectories of directories: ValidatedDirectoryInfo list * files: ValidatedFileInfo list
 type internal ReadDirectoryQuery = {
     RootDirectory: ValidatedDirectoryInfo    
-    ProjectsScope: ProjectsSearchScope    
+    ProjectsScope: ProjectsSearchScope option    
     SearchPatterns: string
     ChangelogFilename: string
 }
