@@ -1,7 +1,7 @@
 ﻿namespace Calaf.Contracts
 
 // Incoming commands
-type MakeType =    
+type MakeType =
     | Stable
     | Alpha
     | Beta
@@ -17,6 +17,21 @@ type MakeCommand = {
     
 type Command =
     | Make of MakeCommand
+
+// Queries used by Infrastructure layer
+type ValidatedDirectoryInfo = ValidDirectoryInfo of System.IO.DirectoryInfo
+type ValidatedFileInfo = ValidFileInfo of System.IO.FileInfo
+type internal ProjectsSearchScope =
+    | None
+    | Files of ValidatedFileInfo list
+    | Directories of ValidatedDirectoryInfo list
+    | Mix of directories: ValidatedDirectoryInfo list * files: ValidatedFileInfo list
+type internal ReadDirectoryQuery = {
+    RootDirectory: ValidatedDirectoryInfo    
+    ProjectsScope: ProjectsSearchScope    
+    SearchPatterns: string
+    ChangelogFilename: string
+}
 
 // Contracts used by Infrastructure layer
 type GitSignatureInfo = {
