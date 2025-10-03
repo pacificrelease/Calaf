@@ -19,12 +19,16 @@ type Command =
     | Make of MakeCommand
 
 // Queries used by Infrastructure layer
-type ValidatedDirectoryInfo = ValidDirectoryInfo of System.IO.DirectoryInfo
-type ValidatedFileInfo = ValidFileInfo of System.IO.FileInfo
+
+//TODO: Move to Validation layer near the Program.fs
+type ValidatedDirectoryInfo = ValidatedDirectoryInfo of string
+type ValidatedFileInfo = ValidatedFileInfo of string
 type internal ProjectsSearchScope =
     | FilesOnly of ValidatedFileInfo list
     | DirectoriesOnly of ValidatedDirectoryInfo list
     | FilesAndDirectories of directories: ValidatedDirectoryInfo list * files: ValidatedFileInfo list
+    
+//TODO Move to Application Contract
 type internal ReadDirectoryQuery = {
     RootDirectory: ValidatedDirectoryInfo    
     ProjectsScope: ProjectsSearchScope option    
