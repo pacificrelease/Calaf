@@ -625,3 +625,26 @@ module Arbitrary =
             type internal FeaturesChangeset =
                 static member FeaturesChangeset() =
                     Arb.fromGen Generator.Git.ReleaseNotes.FeaturesChangeset
+                    
+    module internal FileSystem =
+        module File =
+            type internal Accidental =
+                static member Accidental() =
+                    Arb.fromGen Generator.FileSystem.File.Accidental
+                    
+        module Directory =
+            type internal Accidental =
+                static member Accidental() =
+                    Arb.fromGen Generator.FileSystem.Directory.Accidental
+                    
+            type internal SubDirectory =
+                static member SubDirectory() =
+                    Arb.fromGen Generator.FileSystem.Directory.SubDirectory
+                    
+            type internal DependentRelativeSubDirectory =
+                static member DependentRelativeSubDirectory() =
+                    Arb.fromGen Generator.FileSystem.Directory.DependentRelativeSubDirectory
+                    
+            type internal DependentRelativeSubDirectoryList =
+                static member DependentRelativeSubDirectory() =
+                    Arb.fromGen Generator.FileSystem.Directory.DependentRelativeSubDirectoryList

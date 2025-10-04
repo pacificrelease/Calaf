@@ -11,9 +11,9 @@ type InputError =
 
 type ValidationError =
     | EmptyDotNetXmlFilePattern
-    | BadWorkingDirectoryPath of path: string
-    | RestrictedProjectPath of path: string
+    | BadWorkspacePath of path: string
     | BadProjectPath of path: string
+    | RestrictedProjectPath of path: string    
     | ZeroTagQuantity
     | EmptyChangelogFileName
     

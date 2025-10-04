@@ -5,69 +5,84 @@ open FsToolkit.ErrorHandling
 open Calaf.Contracts
 open Calaf.Application
 
-module internal ProjectsScope =        
-    type private WorkspaceDirectoryPath = private WorkspaceDirectoryPath of string
-    type private ProjectFullPath = private ProjectFullPath of string
-    type private ProjectValidatedPath = private ProjectValidatedPath of ProjectFullPath
-    
-    let private tryGetWorkspaceDirectory
-        (workspaceDirectoryPath: string) =
+module internal ProjectsScope =    
+    let private tryGetWorkspaceFullPath
+        (workspacePath: string) =
         try
-            workspaceDirectoryPath
+            workspacePath
             |> System.IO.Path.GetFullPath
-            |> WorkspaceDirectoryPath
+            |> System.IO.Path.TrimEndingDirectorySeparator
             |> Ok
         with
-        | exn ->
-            workspaceDirectoryPath
-            |> BadWorkingDirectoryPath
+        | _ ->
+            workspacePath
+            |> BadWorkspacePath
             |> CalafError.Validation
             |> Error
+            
     let private tryGetProjectFullPath
-        (workspaceDirectoryPath: WorkspaceDirectoryPath)
-        (projectPath: string) =
+        (workspace: string)
+        (project: string) =
             try
-                let (WorkspaceDirectoryPath workspaceDirectoryPath) = workspaceDirectoryPath
-                let projectFullPath =
-                    if System.IO.Path.IsPathRooted projectPath
-                    then System.IO.Path.GetFullPath projectPath
-                    else System.IO.Path.GetFullPath(System.IO.Path.Combine(workspaceDirectoryPath, projectPath))
-                ProjectFullPath projectFullPath |> Ok
+                let p =
+                    if System.IO.Path.IsPathFullyQualified project
+                    then System.IO.Path.GetFullPath project
+                    else
+                        System.IO.Path.Combine(workspace, project)
+                        |> System.IO.Path.GetFullPath
+                System.IO.Path.TrimEndingDirectorySeparator p |> Ok
             with
-            | exn ->
-                projectPath
+            | _ ->
+                project
                 |> BadProjectPath
                 |> CalafError.Validation
-                |> Error            
-            
-    let private getRelativePath
-        (workspaceDirectoryPath: WorkspaceDirectoryPath)
-        (projectFullPath: ProjectFullPath) =
-            let (WorkspaceDirectoryPath workspaceDirectory) = workspaceDirectoryPath
-            let (ProjectFullPath projectFullPath) = projectFullPath
-            System.IO.Path.GetRelativePath(workspaceDirectory, projectFullPath)
+                |> Error
+                
+    let private getOperationSystemComparison =
+        if System.OperatingSystem.IsWindows()
+        then System.StringComparison.OrdinalIgnoreCase
+        else System.StringComparison.Ordinal 
             
     let private tryValidate
-        (workspaceDirectoryPath: WorkspaceDirectoryPath)
-        (projectPath: string) =
+        (workspace: string)
+        (project: string) =
         result {
-            let! projectFullPath = tryGetProjectFullPath workspaceDirectoryPath projectPath
-            let relativePath = getRelativePath workspaceDirectoryPath projectFullPath
+            let! wFull = tryGetWorkspaceFullPath workspace
+            let! pFull = tryGetProjectFullPath wFull project        
+
             
-            if relativePath.StartsWith("..") || System.IO.Path.IsPathRooted relativePath
+            let wRoot = System.IO.Path.GetPathRoot wFull
+            let pRoot = System.IO.Path.GetPathRoot pFull
+            let comparison = getOperationSystemComparison
+
+            if not (System.String.Equals(wRoot, pRoot, comparison))
             then
-                return!
-                    relativePath
+                return! project
+                |> RestrictedProjectPath
+                |> CalafError.Validation
+                |> Error
+            else
+                let wIsRoot = System.String.Equals(wFull, wRoot, comparison)
+                let inside =
+                    if wIsRoot
+                    then true
+                    else
+                        pFull.Equals(wFull, comparison) ||
+                        //pFull.StartsWith(wFull + string System.IO.Path.DirectorySeparatorChar, comparison)
+                        pFull.StartsWith($"{wFull}{string System.IO.Path.DirectorySeparatorChar}", comparison)
+
+                if inside
+                then return pFull
+                else
+                    return! project
                     |> RestrictedProjectPath
                     |> CalafError.Validation
                     |> Error
-            else            
-                return ProjectValidatedPath projectFullPath
         }
         
     let private tryCreateProjectsSearchScope
-        (projectsValidatedPaths: ProjectValidatedPath list) =
-        let tryClassify (ProjectValidatedPath (ProjectFullPath path)) =
+        (projectsValidatedPaths: string list) =
+        let tryClassify (path: string) =
             try
                 let choice =
                     if System.IO.Path.HasExtension(path)
@@ -107,7 +122,7 @@ module internal ProjectsScope =
         (directory: string)
         (projects: string list) =
         result {
-            let! workspaceDirectory = tryGetWorkspaceDirectory directory
+            let! workspaceDirectory = tryGetWorkspaceFullPath directory
             let! projectsValidatedPaths =
                 projects
                 |> List.traverseResultM (tryValidate workspaceDirectory)

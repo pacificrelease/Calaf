@@ -2115,6 +2115,94 @@ module Git =
             }
     }
         
+module FileSystem =
+    let private genWindowsDriveLetter =
+        Gen.elements ['A'..'Z'] |> Gen.map (fun letter -> $"{letter}:")
+        
+    let genDirectoryPathRoot =
+        gen {
+            if System.OperatingSystem.IsWindows()
+            then
+                let! drive = genWindowsDriveLetter
+                return $"{drive}{System.IO.Path.DirectorySeparatorChar}"
+            else
+                return $"{System.IO.Path.DirectorySeparatorChar}"
+        }
+        
+    let genDirectoryPathParts =
+        gen {
+            let! unixPath = Gen.constant <| Bogus.Faker().System.DirectoryPath()
+            let path =
+                if System.OperatingSystem.IsWindows()
+                then
+                    let path = unixPath.Replace('/', System.IO.Path.DirectorySeparatorChar)                    
+                    if path.StartsWith(System.IO.Path.DirectorySeparatorChar)
+                    then path.TrimStart(System.IO.Path.DirectorySeparatorChar)
+                    else path
+                else
+                    unixPath.TrimStart(System.IO.Path.DirectorySeparatorChar)
+            return path                    
+        }
+        
+        
+    let genDirectoryPath =
+        gen {            
+            let! root = genDirectoryPathRoot
+            let! parts = genDirectoryPathParts
+            return System.IO.Path.Combine(root, parts)
+        }
+        
+    let genDependentRelativeSubDirectory =
+        gen {
+            let! subfolder = genDirectoryPathParts
+            return System.IO.Path.Combine(".", subfolder)
+        }
+        
+    let genFilePath =
+        gen {
+            let! path = Bogus.Faker().System.FilePath() |> Gen.constant
+            return path
+        }
+        
+    module Directory =            
+        let Accidental =
+            gen {
+                let! directory = genDirectoryPath
+                return directory
+            }
+            
+        let SubDirectory =
+            gen {
+                let! subDirectory = genDirectoryPathParts
+                return subDirectory
+            }
+            
+        let DependentRelativeSubDirectory =
+            gen {
+                let! subfolder = genDependentRelativeSubDirectory
+                return subfolder
+            }
+            
+        let DependentRelativeSubDirectoryList =
+            gen {
+                let! smallCount = Gen.choose(1, 5)
+                let! middleCount = Gen.choose(6, 10)            
+                let! bigCount = Gen.choose(11, 20)            
+                let! choice = Gen.frequency [
+                    7, Gen.arrayOfLength smallCount  genDependentRelativeSubDirectory
+                    2, Gen.arrayOfLength middleCount genDependentRelativeSubDirectory
+                    1, Gen.arrayOfLength bigCount    genDependentRelativeSubDirectory
+                ]
+                return choice |> Array.toList
+            }
+            
+    module File =        
+        let Accidental =
+            gen {
+                let! file = genFilePath
+                return file
+            }
+        
 module Contracts =
     open System.Xml.Linq
     
