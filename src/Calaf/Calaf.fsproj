@@ -51,6 +51,7 @@
     <Compile Include="Domain\DomainTypes.fs" />
     <Compile Include="Domain\Errors.fs" />
     <Compile Include="Domain\Events.fs" />
+    <Compile Include="Domain\Policies.fs" />
     <Compile Include="Domain\Version\Day.fs" />
     <Compile Include="Domain\Version\Build.fs" />
     <Compile Include="Domain\Version\Micro.fs" />
