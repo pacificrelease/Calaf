@@ -1,12 +1,13 @@
-namespace Calaf.Domain.Policies
+namespace Calaf.Domain.Make
 
-type MakePolicy = {
+type Policy = {
     TagsTake: byte
     ChangelogFileName: string
     SearchPattern: string
 }
 
-module internal MakePolicy =
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module internal Policy =
     [<Literal>]
     let defaultTagsTake = 10uy
     [<Literal>]
@@ -14,7 +15,7 @@ module internal MakePolicy =
     [<Literal>]
     let defaultSearchPattern = "*.?sproj"
     
-    let defaultPolicy : MakePolicy = {
+    let defaultPolicy : Policy = {
         TagsTake = defaultTagsTake
         ChangelogFileName = defaultChangelogFileName
         SearchPattern = defaultSearchPattern
