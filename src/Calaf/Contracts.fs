@@ -86,16 +86,15 @@ type DirectoryInfo = {
 }
 
 // Summaries
-type ReleaseType = | Stable | Nightly
-type ReleaseSummary = {    
-    Directory: string    
-    VersionedProjectsCount: int
-    TotalProjectsCount: int
-    UsesGit: bool
+type ReleaseType = | Stable | Alpha | Beta | RC | Nightly
+type MadeSummary = {    
+    Directory: string
+    Git: bool
+    Changelog: bool
     ReleaseType: ReleaseType
-    PreviousRelease: string
-    CurrentRelease: string
+    PreviousVersion: string
+    CurrentVersion: string
 }
 
 type CalafSummary =
-    | Make of ReleaseSummary
+    | Made of MadeSummary
