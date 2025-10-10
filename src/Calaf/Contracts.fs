@@ -87,14 +87,16 @@ type DirectoryInfo = {
 
 // Summaries
 type ReleaseType = | Stable | Alpha | Beta | RC | Nightly
+type Repository =
+    | Ready of changelog: bool
+    | Dirty of changelog: bool
+    | Other
 type MadeSummary = {    
     Directory: string
-    Git: bool
-    Changelog: bool
+    Repository: Repository option
     ReleaseType: ReleaseType
     PreviousVersion: string
     CurrentVersion: string
 }
-
 type CalafSummary =
     | Made of MadeSummary
