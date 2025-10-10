@@ -3,12 +3,12 @@ namespace Calaf.Tests.PoliciesTests
 open Xunit
 open Swensen.Unquote
 
-open Calaf.Domain.Policies
+open Calaf.Domain.Make.Policy
 
 module MakePolicyTests =
     [<Fact>]
     let ``Default policy creates expected values`` () =
-        let policy = MakePolicy.defaultPolicy
-        test <@ policy.TagsTake = MakePolicy.defaultTagsTake &&
-                policy.ChangelogFileName = MakePolicy.defaultChangelogFileName &&
-                policy.SearchPattern = MakePolicy.defaultSearchPattern @>
+        let policy = defaultPolicy
+        test <@ policy.TagsTake = defaultTagsTake &&
+                policy.ChangelogFileName = defaultChangelogFileName &&
+                policy.SearchPattern = defaultSearchPattern @>
