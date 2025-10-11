@@ -77,6 +77,7 @@
     <Compile Include="Application\Ports\Console.fs" />
     <Compile Include="Application\Context.fs" />
     <Compile Include="Application\Queries.fs" />
+    <Compile Include="Application\UseCases\Deps.fs" />
     <Compile Include="Application\UseCases\Make.fs" />
     <Compile Include="Infrastructure\Adapters\Git.fs" />
     <Compile Include="Infrastructure\Adapters\FileSystem.fs" />    
