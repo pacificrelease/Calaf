@@ -1,13 +1,15 @@
-﻿namespace Calaf.Application.UseCases.Make
+﻿namespace Calaf.Application
 
 open Calaf.Contracts
 open Calaf.Application
 
 type Deps = {
+    //Clock
     UtcNow:
         unit ->
-        System.DateTime
-    
+        System.DateTimeOffset
+        
+    // FileSystem
     TryReadDirectory:
         string ->
         string list ->
@@ -20,6 +22,7 @@ type Deps = {
         string * string ->
         Result<unit, CalafError>
         
+    // Git
     TryGetRepo:
         string ->
         byte ->

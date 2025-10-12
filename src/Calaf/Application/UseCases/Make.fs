@@ -40,16 +40,16 @@ module internal Make =
             
     let private tryReadReleaseNotesCommits
         (workspace: Workspace)
-        (git : IGit) = 
+        (listCommits: string -> string option -> Result<GitCommitInfo list, CalafError>) = 
             match workspace.Repository with
             | Some (Dirty (_, { BaselineVersion = Some { TagName = baselineTagName; Version = CalVer _ } }))                    
             | Some (Ready (_, { BaselineVersion = Some { TagName = baselineTagName; Version = CalVer _ } })) ->                   
-                git.tryListCommits workspace.Directory (Some baselineTagName)
+                listCommits workspace.Directory (Some baselineTagName)
                 |> Result.map (fun gci -> gci |> List.map Commit.create)
                 |> Result.map Some
             | Some (Dirty (_, { BaselineVersion = None }))
             | Some (Ready (_, { BaselineVersion = None })) -> 
-                git.tryListCommits workspace.Directory None                    
+                listCommits workspace.Directory None                    
                 |> Result.map (fun gci -> gci |> List.map Commit.create)
                 |> Result.map Some
             | _ -> Ok None
@@ -65,30 +65,30 @@ module internal Make =
     let private tryMake
         (path: string)
         (changelog: bool, includePreRelease: bool, projects: string list)
-        (context: MakeContext)
+        (deps: Deps)
         (settings: MakeSettings)        
         (make: CalendarVersion -> DateTimeOffset -> Result<CalendarVersion, DomainError>)=
         result {
-            let dateTimeOffset = context.Clock.utcNow()
+            let timeStamp = deps.UtcNow()
             let (ChangelogFileName changelogFileName) = settings.ChangelogFileName
-            let! dir = context.FileSystem.tryReadDirectory path projects changelogFileName                 
+            let! dir = deps.TryReadDirectory path projects changelogFileName                 
             let (TagQuantity tagCount) = settings.TagsToLoad
             let tagsInclude =
                 Version.versionPrefixes
             let tagsExclude = tagsExclude (changelog, includePreRelease)            
             let! repo =                
-                context.Git.tryGetRepo path tagCount tagsInclude tagsExclude dateTimeOffset            
+                deps.TryGetRepo path tagCount tagsInclude tagsExclude timeStamp
             let! workspace, _ =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain                
             let! nextVersion =
-                make workspace.Version dateTimeOffset
+                make workspace.Version timeStamp
                 |> Result.mapError CalafError.Domain
             let! releaseNotes, _ =
                 if changelog
                 then
-                    tryReadReleaseNotesCommits workspace context.Git
-                    |> Result.map (fun commits -> tryChangeset commits nextVersion dateTimeOffset)
+                    tryReadReleaseNotesCommits workspace deps.TryListCommits
+                    |> Result.map (fun commits -> tryChangeset commits nextVersion timeStamp)
                     |> Result.map (Option.map (fun (cs, events) ->
                         Some cs, Some events) >> Option.defaultValue (None, None))
                 else Ok (None, None)
@@ -100,16 +100,16 @@ module internal Make =
                 Workspace.snapshot workspace' releaseNotes
             do! snapshot.Changelog    
                 |> Option.map (fun s ->
-                    context.FileSystem.tryWriteMarkdown (s.AbsolutePath, s.ReleaseNotesContent)
+                    deps.TryWriteMarkdown (s.AbsolutePath, s.ReleaseNotesContent)
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())
             do! snapshot.Projects
-                |> List.traverseResultM (fun s -> context.FileSystem.tryWriteXml (s.AbsolutePath, s.Content))
+                |> List.traverseResultM (fun s -> deps.TryWriteXml (s.AbsolutePath, s.Content))
                 |> Result.map ignore                            
             do! snapshot.Repository
                 |> Option.map (fun s ->
-                    context.Git.tryApply (s.Directory, s.PendingFilesPaths) s.CommitText s.TagName
+                    deps.TryApply (s.Directory, s.PendingFilesPaths) s.CommitText s.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())
@@ -136,25 +136,30 @@ module internal Make =
         | Ok    _ -> 0
         | Error _ -> 1    
         
-    let run path arguments context settings  =
-        let apply path arguments context settings =
+    let run
+        path
+        arguments
+        deps
+        console
+        settings  =
+        let apply path arguments deps console settings =
             result {
                 let! settings = settings
-                let! cmd = input context.Console arguments
+                let! cmd = input console arguments
                 match cmd with
                 | Command.Make makeCommand ->
                     match makeCommand with
                     | { Type = MakeType.Nightly; Changelog = changelog; IncludePreRelease = includePreRelease; Projects = projects } ->
-                        return! tryMake path (changelog, includePreRelease, projects) context settings Version.tryNightly
+                        return! tryMake path (changelog, includePreRelease, projects) deps settings Version.tryNightly
                     | { Type = MakeType.Alpha; Changelog = changelog; IncludePreRelease = includePreRelease; Projects = projects } ->
-                        return! tryMake path (changelog, includePreRelease, projects) context settings Version.tryAlpha
+                        return! tryMake path (changelog, includePreRelease, projects) deps settings Version.tryAlpha
                     | { Type = MakeType.Beta; Changelog = changelog; IncludePreRelease = includePreRelease; Projects = projects } ->
-                        return! tryMake path (changelog, includePreRelease, projects) context settings Version.tryBeta
+                        return! tryMake path (changelog, includePreRelease, projects) deps settings Version.tryBeta
                     | { Type = MakeType.RC; Changelog = changelog; IncludePreRelease = includePreRelease; Projects = projects } ->
-                        return! tryMake path (changelog, includePreRelease, projects) context settings Version.tryReleaseCandidate
+                        return! tryMake path (changelog, includePreRelease, projects) deps settings Version.tryReleaseCandidate
                     | { Type = MakeType.Stable; Changelog = changelog; IncludePreRelease = includePreRelease; Projects = projects } ->
-                        return! tryMake path (changelog, includePreRelease, projects) context settings Version.tryStable
+                        return! tryMake path (changelog, includePreRelease, projects) deps settings Version.tryStable
             }
         let path = directory path
-        let result = apply path arguments context settings
-        result |> output context.Console |> exit
+        let result = apply path arguments deps console settings
+        result |> output console |> exit

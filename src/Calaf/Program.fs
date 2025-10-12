@@ -10,6 +10,7 @@ let private changelogFileName = "CHANGELOG.md"
 [<EntryPoint>]
 let main args =
     let path     = String.Empty
-    let context  = MakeContext.create
+    let deps     = MakeContext.createDeps
+    let console  = MakeContext.createConsole
     let settings = MakeSettings.tryCreate loadTenTags changelogFileName
-    Make.run path args context settings
+    Make.run path args deps console settings

@@ -71,14 +71,10 @@
     <Compile Include="Domain\Workspace.fs" />    
     <Compile Include="Application\Errors.fs" />
     <Compile Include="Application\Settings.fs" />
-    <Compile Include="Application\Ports\Git.fs" />
-    <Compile Include="Application\Ports\FileSystem.fs" />
-    <Compile Include="Application\Ports\Clock.fs" />
-    <Compile Include="Application\Ports\Console.fs" />
-    <Compile Include="Application\Context.fs" />
+    <Compile Include="Application\Abstractions\Ports.fs" />
     <Compile Include="Application\Queries.fs" />
     <Compile Include="Application\UseCases\Deps.fs" />
-    <Compile Include="Application\UseCases\Make.fs" />
+    <Compile Include="Application\UseCases\Make.fs" />    
     <Compile Include="Infrastructure\Adapters\Git.fs" />
     <Compile Include="Infrastructure\Adapters\FileSystem.fs" />    
     <Compile Include="Infrastructure\Adapters\Clock.fs" />    
