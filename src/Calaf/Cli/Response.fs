@@ -1,6 +1,7 @@
 ﻿namespace Calaf
 
-// Response
+open Calaf.Application
+
 type CliResponse = {
     ExitCode: int
     IsError: bool
@@ -27,6 +28,17 @@ module CliError =
           Text = "The '--include-prerelease' flag requires changelog generation via '--changelog' flag." }
         
     let argumentsFatal (message: string) : CliResponse =
+        { ExitCode = MisuseShellCommandOrInvalidArgumentsExitCode
+          IsError = true
+          Text = message }
+        
+    let workspaceFatal (error: CalafError) : CliResponse =
+        let message =
+            match error with
+            | Validation (BadWorkspacePath p) ->
+                $"Workspace directory '{p}' has bad value"
+            | _ ->                
+                "Workspace directory path is wrong"            
         { ExitCode = MisuseShellCommandOrInvalidArgumentsExitCode
           IsError = true
           Text = message }

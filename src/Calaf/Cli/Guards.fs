@@ -1,4 +1,4 @@
-module Calaf.Guards
+module private Calaf.Guards
     open FsToolkit.ErrorHandling
     
     open Calaf.Application
@@ -7,21 +7,7 @@ module Calaf.Guards
         let private getOperationSystemComparison =
             if System.OperatingSystem.IsWindows()
             then System.StringComparison.OrdinalIgnoreCase
-            else System.StringComparison.Ordinal
-
-        let private tryGetWorkspaceFullPath
-            (workspace: string) =
-            try
-                workspace
-                |> System.IO.Path.GetFullPath
-                |> System.IO.Path.TrimEndingDirectorySeparator
-                |> Ok
-            with
-            | _ ->
-                workspace
-                |> BadWorkspacePath
-                |> CalafError.Validation
-                |> Error
+            else System.StringComparison.Ordinal        
 
         let private tryGetProjectFullPath
             (workspace: string)
@@ -42,13 +28,13 @@ module Calaf.Guards
                 |> Error
 
         let private tryValidate
-            (workspace: string)
+            (workspace: ValidatedDirectoryFullPath)
             (project: string) =
             result {
-                let! wFull = tryGetWorkspaceFullPath workspace
-                let! pFull = tryGetProjectFullPath wFull project
+                let (ValidatedDirectoryFullPath workspace) = workspace
+                let! pFull = tryGetProjectFullPath workspace project
                 
-                let wRoot = System.IO.Path.GetPathRoot wFull
+                let wRoot = System.IO.Path.GetPathRoot workspace
                 let pRoot = System.IO.Path.GetPathRoot pFull
                 let comparison = getOperationSystemComparison
 
@@ -59,35 +45,42 @@ module Calaf.Guards
                     |> CalafError.Validation
                     |> Error
                 else
-                    let wIsRoot = System.String.Equals(wFull, wRoot, comparison)
+                    let wIsRoot = System.String.Equals(workspace, wRoot, comparison)
                     let inside =
                         if wIsRoot
                         then true
                         else
-                            pFull.Equals(wFull, comparison) ||
-                            pFull.StartsWith($"{wFull}{string System.IO.Path.DirectorySeparatorChar}", comparison)
-
+                            pFull.Equals(workspace, comparison) ||
+                            pFull.StartsWith($"{workspace}{string System.IO.Path.DirectorySeparatorChar}", comparison)
                     if inside
                     then return pFull
-                    else
-                        return! project
-                        |> RestrictedProjectPath
-                        |> CalafError.Validation
-                        |> Error
+                    else return! project |> RestrictedProjectPath |> CalafError.Validation |> Error
             }
             
         let check
-            (directory: string)
+            (directory: ValidatedDirectoryFullPath)
             (projects: string list) =
             result {
-                let! projectsValidatedPaths =
-                    projects
-                    |> List.traverseResultM (tryValidate directory)
-                return projectsValidatedPaths
+                return! projects |> List.traverseResultM (tryValidate directory)
             }
             
-    module Directory =        
-        let check path =        
-            if System.String.IsNullOrWhiteSpace path
+    module Workspace =        
+        let getPathOrDefault directory =        
+            if System.String.IsNullOrWhiteSpace directory
             then "."
-            else path
+            else directory
+            
+        let check
+            directory =
+            try
+                directory
+                |> System.IO.Path.GetFullPath
+                |> System.IO.Path.TrimEndingDirectorySeparator
+                |> ValidatedDirectoryFullPath
+                |> Ok
+            with
+            | _ ->
+                directory
+                |> BadWorkspacePath
+                |> CalafError.Validation
+                |> Error
