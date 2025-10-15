@@ -109,7 +109,7 @@ module internal Make =
                 |> Result.map ignore                            
             do! snapshot.Repository
                 |> Option.map (fun s ->
-                    deps.TryApply (s.Directory, s.PendingFilesPaths) s.CommitText s.TagName
+                    deps.TryCreateCommit (s.Directory, s.PendingFilesPaths) s.CommitText s.TagName
                     |> Result.map ignore
                     |> Result.mapError id)
                 |> Option.defaultValue (Ok ())

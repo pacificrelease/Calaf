@@ -57,7 +57,7 @@ module internal ConsoleInputGateway =
                 else ps
         
         if includePreRelease && not changelog then
-            IncludePreReleaseRequired
+            ChangelogFlagRequired
             |> Input
             |> Error
         else

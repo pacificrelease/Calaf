@@ -34,7 +34,7 @@ type Deps = {
         string ->
         string option ->
         Result<GitCommitInfo list, CalafError>
-    TryApply:
+    TryCreateCommit:
         string * string list ->
         string ->
         string ->

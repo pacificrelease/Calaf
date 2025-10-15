@@ -42,3 +42,26 @@ module CliError =
         { ExitCode = MisuseShellCommandOrInvalidArgumentsExitCode
           IsError = true
           Text = message }
+        
+    let private mapInputError (inputError: InputError) =
+        match inputError with
+        | ChangelogFlagRequired ->
+            { ExitCode = MisuseShellCommandOrInvalidArgumentsExitCode
+              IsError = true
+              Text = "The '--changelog' flag is required." }
+        | CommandNotRecognized c ->
+            { ExitCode = MisuseShellCommandOrInvalidArgumentsExitCode
+              IsError = true
+              Text = $"Command '{c}' is not recognized." }
+        | _ ->
+            { ExitCode = MisuseShellCommandOrInvalidArgumentsExitCode
+              IsError = true
+              Text = "Bad input." }            
+        
+    let map (error: CalafError) : CliResponse =
+        match error with
+        | CalafError.Infrastructure (Input inputError) -> mapInputError inputError
+        | _ ->
+            { ExitCode = MisuseShellCommandOrInvalidArgumentsExitCode
+              IsError = true
+              Text = "Application error." }

@@ -3,8 +3,9 @@ namespace Calaf.Application
 open Calaf.Domain
 
 type InputError =
+    | ArgumentsFatal of message: string
     | CommandNotRecognized  of command: string
-    | IncludePreReleaseRequired
+    | ChangelogFlagRequired
     | MakeCommandMissing
     | MakeCommandNotRecognized of flag: string
     

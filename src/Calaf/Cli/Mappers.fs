@@ -8,7 +8,6 @@ module Calaf.Arguments
         directory
         |> Guards.Workspace.getPathOrDefault
         |> Guards.Workspace.check
-        |> Result.mapError CliError.workspaceFatal
 
     let private tryCommands (args: string[]) =
         try
@@ -16,7 +15,9 @@ module Calaf.Arguments
         with
         | exn ->
             exn.Message
-            |> CliError.argumentsFatal
+            |> ArgumentsFatal
+            |> Input
+            |> CalafError.Infrastructure
             |> Error
             
     let private tryDestructure (commands: MakeCommand2 list) =
@@ -29,8 +30,9 @@ module Calaf.Arguments
                 |> List.filter (fun p -> not (System.String.IsNullOrWhiteSpace p))
                 |> List.distinct            
             if includePreRelease && not changelog then
-                IncludePreReleaseRequired
+                ChangelogFlagRequired
                 |> Input
+                |> CalafError.Infrastructure
                 |> Error
             else
                 Ok (changelog, includePreRelease, targetProjects)
@@ -49,11 +51,13 @@ module Calaf.Arguments
             | [] ->               
                 MakeCommandMissing
                 |> Input
+                |> CalafError.Infrastructure
                 |> Error
             | _  ->
                 $"{commands.Head}"
                 |> MakeCommandNotRecognized
                 |> Input
+                |> CalafError.Infrastructure
                 |> Error          
 
     let private trySpec
@@ -66,7 +70,7 @@ module Calaf.Arguments
                 return!
                     makeArgs.GetAllResults()
                     |> tryDestructure
-                    |> Result.mapError (fun e -> e |> CalafError.Infrastructure)
+                    //|> Result.mapError (fun e -> e |> CalafError.Infrastructure)
                     |> Result.bind (fun (versionType, changelog, includePreRelease, projects) ->
                         result {
                             let! projects = Guards.Projects.check directory projects
@@ -100,12 +104,12 @@ module Calaf.Arguments
                     |> Error
         }
                 
-    // let tryParseToSpec (directory: string) (args: string[]) =
-    //     result {
-    //         let! workspace = tryWorkspace directory                
-    //         let! commands = tryCommands args
-    //         let! spec =
-    //             trySpec workspace commands
-    //             |> Result.mapError (fun e -> )
-    //         spec
-    //     }
+    let tryParseToSpec (directory: string) (args: string[]) =
+        result {
+            let! workspace = tryWorkspace directory |> Result.mapError CliError.map
+            let! commands = tryCommands args |> Result.mapError CliError.map
+            let! spec =
+                trySpec workspace commands
+                |> Result.mapError CliError.map
+            return spec
+        }

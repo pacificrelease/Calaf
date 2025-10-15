@@ -20,4 +20,4 @@ module MakeContext =
           TryWriteMarkdown = fs.tryWriteMarkdown
           TryGetRepo = git.tryGetRepo
           TryListCommits = git.tryListCommits
-          TryApply = git.tryApply }
+          TryCreateCommit = git.tryApply }
