@@ -38,10 +38,19 @@ let internal execute (spec: MakeSpec) (deps: Deps) : Result<Workspace, CalafErro
 
     let! commitsOpt =
         match spec.ChangelogGeneration with
-        | Some { IncludePreRelease = _ } ->        
+        | Some { IncludePreRelease = true } ->        
             match workspace.Repository with
-            | Some (Dirty (_, { BaselineVersion = Some { TagName = tag; Version = CalVer _ } }))
-            | Some (Ready (_, { BaselineVersion = Some { TagName = tag; Version = CalVer _ } })) ->
+            | Some (Dirty (_, { BaselineVersion = Some { TagName = tag; Version = CalVer { Build = None } } }))
+            | Some (Ready (_, { BaselineVersion = Some { TagName = tag; Version = CalVer { Build = None } } })) ->
+                deps.TryListCommits workspace.Directory (Some tag) |> Result.map Some
+            | Some (Dirty (_, { BaselineVersion = None }))
+            | Some (Ready (_, { BaselineVersion = None })) ->
+                deps.TryListCommits workspace.Directory None |> Result.map Some
+            | _ -> Ok None
+        | Some { IncludePreRelease = false } ->        
+            match workspace.Repository with
+            | Some (Dirty (_, { BaselineVersion = Some { TagName = tag; Version = CalVer { Build = Some _ } } }))
+            | Some (Ready (_, { BaselineVersion = Some { TagName = tag; Version = CalVer { Build = Some _ } } })) ->
                 deps.TryListCommits workspace.Directory (Some tag) |> Result.map Some
             | Some (Dirty (_, { BaselineVersion = None }))
             | Some (Ready (_, { BaselineVersion = None })) ->
