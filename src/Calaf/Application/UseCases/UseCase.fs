@@ -16,7 +16,8 @@ let internal execute (spec: MakeSpec) (deps: Deps) : Result<Workspace, CalafErro
     let timeStamp = deps.UtcNow()
     let policy = Policy.defaultPolicy
 
-    let! dir = deps.TryReadDirectory spec.WorkspaceDirectory [ policy.SearchPattern ] policy.ChangelogFileName
+    // TODO: Dedicate domain to return projects search pattern (from policy) and projects paths (they can be both directory or files) if exist. When none return search pattern (from policy)  
+    let! dir = deps.TryReadDirectory spec.WorkspaceDirectory spec.TargetProjects.Value policy.ChangelogFileName
     let tagsInclude = Version.versionPrefixes
     let tagsExclude = spec.ChangelogGeneration |> Option.map (fun cg -> computeTagsExclude cg.IncludePreRelease)
 
