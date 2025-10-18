@@ -58,7 +58,16 @@ module Calaf.Arguments
                 |> MakeCommandNotRecognized
                 |> Input
                 |> CalafError.Infrastructure
-                |> Error          
+                |> Error
+                
+    let private tryTargetProject
+        (directory: ValidatedDirectoryFullPath)
+        (project: string) =
+        // Get absolute and relative paths
+        let absPath = System.IO.Path.GetFullPath(project)
+        let (ValidatedDirectoryFullPath directory) = directory
+        let relPath = System.IO.Path.GetRelativePath(System.IO.Directory.GetCurrentDirectory(), absPath)
+        Ok (absPath, relPath)
 
     let private trySpec
         (directory: ValidatedDirectoryFullPath)
@@ -70,7 +79,6 @@ module Calaf.Arguments
                 return!
                     makeArgs.GetAllResults()
                     |> tryDestructure
-                    //|> Result.mapError (fun e -> e |> CalafError.Infrastructure)
                     |> Result.bind (fun (versionType, changelog, includePreRelease, projects) ->
                         result {
                             let! projects = Guards.Projects.check directory projects
