@@ -59,16 +59,7 @@ module Calaf.Arguments
                 |> Input
                 |> CalafError.Infrastructure
                 |> Error
-                
-    let private tryTargetProject
-        (directory: ValidatedDirectoryFullPath)
-        (project: string) =
-        // Get absolute and relative paths
-        let absPath = System.IO.Path.GetFullPath(project)
-        let (ValidatedDirectoryFullPath directory) = directory
-        let relPath = System.IO.Path.GetRelativePath(System.IO.Directory.GetCurrentDirectory(), absPath)
-        Ok (absPath, relPath)
-
+    
     let private trySpec
         (directory: ValidatedDirectoryFullPath)
         (args: ParseResults<InputCommand2>) =
@@ -83,6 +74,11 @@ module Calaf.Arguments
                         result {
                             let! projects = Guards.Projects.check directory projects
                             let (ValidatedDirectoryFullPath directory) = directory
+                            let projects =
+                                // Lets suppose that x is always full path make a record with full and relative path
+                                projects                                
+                                |> List.map (fun x -> { FullPath = x; RelativePath = System.IO.Path.GetRelativePath(directory, x) })                               
+                            
                             let targetProjects =
                                 if projects.IsEmpty
                                 then None
@@ -91,6 +87,7 @@ module Calaf.Arguments
                                 if changelog
                                 then Some { IncludePreRelease = includePreRelease }
                                 else None
+                            
                             let makeSpec : MakeSpec =
                                 { WorkspaceDirectory = directory
                                   VersionType = versionType
