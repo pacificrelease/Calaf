@@ -66,18 +66,16 @@ module internal Make =
         (path: string)
         (changelog: bool, includePreRelease: bool, projects: string list)
         (deps: Deps)
-        (settings: MakeSettings)        
+        (config: MakeConfiguration)        
         (make: CalendarVersion -> DateTimeOffset -> Result<CalendarVersion, DomainError>)=
         result {
             let timeStamp = deps.UtcNow()
-            let (ChangelogFileName changelogFileName) = settings.ChangelogFileName
-            let! dir = deps.TryReadDirectory path projects changelogFileName                 
-            let (TagQuantity tagCount) = settings.TagsToLoad
+            let! dir = deps.TryReadDirectory path projects config.ChangelogFileName
             let tagsInclude =
                 Version.versionPrefixes
             let tagsExclude = tagsExclude (changelog, includePreRelease)            
             let! repo =                
-                deps.TryGetRepo path tagCount tagsInclude tagsExclude timeStamp
+                deps.TryGetRepo path config.TagsTake tagsInclude tagsExclude timeStamp
             let! workspace, _ =
                 Workspace.tryCapture (dir, repo)
                 |> Result.mapError CalafError.Domain                
@@ -140,26 +138,25 @@ module internal Make =
         path
         arguments
         deps
-        console
-        settings  =
-        let apply path arguments deps console settings =
+        config
+        console=
+        let apply path arguments deps config console =
             result {
-                let! settings = settings
                 let! cmd = input console arguments
                 match cmd with
                 | Command.Make makeCommand ->
                     match makeCommand with
                     | { Type = MakeType.Nightly; Changelog = changelog; IncludePreRelease = includePreRelease; Projects = projects } ->
-                        return! tryMake path (changelog, includePreRelease, projects) deps settings Version.tryNightly
+                        return! tryMake path (changelog, includePreRelease, projects) deps config Version.tryNightly
                     | { Type = MakeType.Alpha; Changelog = changelog; IncludePreRelease = includePreRelease; Projects = projects } ->
-                        return! tryMake path (changelog, includePreRelease, projects) deps settings Version.tryAlpha
+                        return! tryMake path (changelog, includePreRelease, projects) deps config Version.tryAlpha
                     | { Type = MakeType.Beta; Changelog = changelog; IncludePreRelease = includePreRelease; Projects = projects } ->
-                        return! tryMake path (changelog, includePreRelease, projects) deps settings Version.tryBeta
+                        return! tryMake path (changelog, includePreRelease, projects) deps config Version.tryBeta
                     | { Type = MakeType.RC; Changelog = changelog; IncludePreRelease = includePreRelease; Projects = projects } ->
-                        return! tryMake path (changelog, includePreRelease, projects) deps settings Version.tryReleaseCandidate
+                        return! tryMake path (changelog, includePreRelease, projects) deps config Version.tryReleaseCandidate
                     | { Type = MakeType.Stable; Changelog = changelog; IncludePreRelease = includePreRelease; Projects = projects } ->
-                        return! tryMake path (changelog, includePreRelease, projects) deps settings Version.tryStable
+                        return! tryMake path (changelog, includePreRelease, projects) deps config Version.tryStable
             }
         let path = directory path
-        let result = apply path arguments deps console settings
+        let result = apply path arguments deps config console
         result |> output console |> exit

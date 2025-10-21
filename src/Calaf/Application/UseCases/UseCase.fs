@@ -3,7 +3,6 @@ module Calaf.Application.UseCase.Make
 open FsToolkit.ErrorHandling
 
 open Calaf.Domain
-open Calaf.Domain.Make
 open Calaf.Domain.DomainTypes
 open Calaf.Application
 
@@ -12,20 +11,22 @@ let private computeTagsExclude includePreRelease =
     then Version.preReleases
     else List.Empty
 
-let internal execute (spec: MakeSpec) (deps: Deps) : Result<Workspace, CalafError> = result {
+let internal execute
+    (spec: MakeSpec)
+    (config: MakeConfiguration)
+    (deps: Deps) : Result<Workspace, CalafError> = result {
     let timeStamp = deps.UtcNow()
-    let policy = Policy.defaultPolicy
 
     // TODO: Dedicate domain to return projects search pattern (from policy) and projects paths (they can be both directory or files) if exist. When none return search pattern (from policy)
     let targetProjects =
         match spec.TargetProjects with
         | Some p -> p |> List.map _.FullPath
         | None -> []
-    let! dir = deps.TryReadDirectory spec.WorkspaceDirectory targetProjects policy.ChangelogFileName
+    let! dir = deps.TryReadDirectory spec.WorkspaceDirectory targetProjects config.ChangelogFileName
     let tagsInclude = Version.versionPrefixes
     let tagsExclude = spec.ChangelogGeneration |> Option.map (fun cg -> computeTagsExclude cg.IncludePreRelease)
 
-    let! repo = deps.TryGetRepo spec.WorkspaceDirectory policy.TagsTake tagsInclude tagsExclude timeStamp
+    let! repo = deps.TryGetRepo spec.WorkspaceDirectory config.TagsTake tagsInclude tagsExclude timeStamp
 
     let! workspace, _ =
         Workspace.tryCapture (dir, repo)

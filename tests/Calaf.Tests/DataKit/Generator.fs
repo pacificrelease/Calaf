@@ -2207,7 +2207,6 @@ module Contracts =
     open System.Xml.Linq
     
     open Calaf.Domain.Project.XmlSchema
-    open Calaf.Application
         
     let private projectFileExtension = 
         Bogus.Faker().Random.ArrayElement(
@@ -2260,11 +2259,3 @@ module Contracts =
                 fun (_: int) -> projectXmlFileInfo (dir, Some "2025.7")) |> Seq.toList        
         let changelog = fileInfo dir (Bogus.Faker().Random.Bool()) (Some ".md")
         { Directory = dir; Changelog = changelog; Projects = projects }
-        
-    let makeSettings () : MakeSettings =
-        let tagCount = MakeSettings.tryCreateTagCount 10uy
-        let changelogFileName = MakeSettings.tryCreateChangelogFileName "CHANGELOG.md"
-        match tagCount, changelogFileName with
-        | Ok count, Ok fileName ->
-            { TagsToLoad = count; ChangelogFileName = fileName }
-        | _ -> failwith "Failed to create test settings"
