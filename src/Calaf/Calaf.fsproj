@@ -71,7 +71,6 @@
     <Compile Include="Application\Errors.fs" />
     <Compile Include="Application\Config.fs" />
     <Compile Include="Application\Abstractions\Ports.fs" />
-    <Compile Include="Application\Queries.fs" />
     <Compile Include="Application\UseCases\Deps.fs" />
     <Compile Include="Application\UseCases\Spec.fs" />
     <Compile Include="Application\UseCases\Make.fs" />    
