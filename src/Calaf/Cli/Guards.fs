@@ -26,42 +26,77 @@ module private Calaf.Guards
                 |> BadProjectPath
                 |> CalafError.Validation
                 |> Error
+                
+        let private tryGetProjectRelativePath
+            (workspaceFullPath: string)
+            (projectFullPath: string) =
+                try
+                    (workspaceFullPath, projectFullPath)
+                    |> System.IO.Path.GetRelativePath
+                    |> System.IO.Path.TrimEndingDirectorySeparator
+                    |> Ok
+                with
+                | _ ->
+                    projectFullPath
+                    |> BadProjectPath
+                    |> CalafError.Validation
+                    |> Error
 
         let private tryValidate
             (workspace: ValidatedDirectoryFullPath)
             (project: string) =
             result {
-                let (ValidatedDirectoryFullPath workspace) = workspace
-                let! pFull = tryGetProjectFullPath workspace project
-                
-                let wRoot = System.IO.Path.GetPathRoot workspace
-                let pRoot = System.IO.Path.GetPathRoot pFull
-                let comparison = getOperationSystemComparison
+                try                    
+                    let (ValidatedDirectoryFullPath workspace) = workspace
+                    let! pFull = tryGetProjectFullPath workspace project
+                    
+                    let wRoot = System.IO.Path.GetPathRoot workspace
+                    let pRoot = System.IO.Path.GetPathRoot pFull
+                    let comparison = getOperationSystemComparison
 
-                if not (System.String.Equals(wRoot, pRoot, comparison))
-                then
-                    return! project
-                    |> RestrictedProjectPath
-                    |> CalafError.Validation
-                    |> Error
-                else
-                    let wIsRoot = System.String.Equals(workspace, wRoot, comparison)
-                    let inside =
-                        if wIsRoot
-                        then true
+                    if not (System.String.Equals(wRoot, pRoot, comparison))
+                    then
+                        return! project
+                        |> RestrictedProjectPath
+                        |> CalafError.Validation
+                        |> Error
+                    else
+                        let wIsRoot = System.String.Equals(workspace, wRoot, comparison)
+                        let inside =
+                            if wIsRoot
+                            then true
+                            else
+                                pFull.Equals(workspace, comparison) ||
+                                pFull.StartsWith($"{workspace}{string System.IO.Path.DirectorySeparatorChar}", comparison)
+                        if inside
+                        then
+                            let! pRelative = tryGetProjectRelativePath workspace pFull
+                            return {
+                                ValidatedFullPath = pFull
+                                ValidatedRelativePath = pRelative
+                            }
                         else
-                            pFull.Equals(workspace, comparison) ||
-                            pFull.StartsWith($"{workspace}{string System.IO.Path.DirectorySeparatorChar}", comparison)
-                    if inside
-                    then return pFull
-                    else return! project |> RestrictedProjectPath |> CalafError.Validation |> Error
+                            return!
+                                project
+                                |> RestrictedProjectPath
+                                |> CalafError.Validation
+                                |> Error
+                with
+                | _ ->
+                    return!
+                        project
+                        |> BadProjectPath
+                        |> CalafError.Validation
+                        |> Error
             }
             
         let check
             (directory: ValidatedDirectoryFullPath)
             (projects: string list) =
             result {
-                return! projects |> List.traverseResultM (tryValidate directory)
+                return!
+                    projects
+                    |> List.traverseResultM (tryValidate directory)
             }
             
     module Workspace =        

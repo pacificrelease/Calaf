@@ -3,6 +3,10 @@ namespace Calaf
 open Argu
 
 type private ValidatedDirectoryFullPath = ValidatedDirectoryFullPath of string
+type private ValidatedProjectPath = private {
+    ValidatedFullPath: string
+    ValidatedRelativePath: string
+}
 
 type private MakeFlag2 =
     | [<CliPrefix(CliPrefix.DoubleDash)>] Changelog
