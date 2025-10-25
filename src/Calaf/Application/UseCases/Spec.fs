@@ -1,17 +1,22 @@
 namespace Calaf.Application
 
-type VersionType = | Stable | Alpha | Beta | ReleaseCandidate | Nightly
-
-type ChangelogGeneration = {
-    IncludePreRelease: bool
+type ReleaseType = | Stable | Alpha | Beta | RC | Nightly
+type Changelog =
+    | Disabled
+    | Enabled of includePreRelease: bool
+type AllProjectsSpec = {
+    SearchPatterns: string list
 }
-type TargetProject = {
-    FullPath: string
+type TargetProjectSpec = {
+    AbsolutePath: string
     RelativePath: string
 }
+type ProjectsScope =
+    | AllProjects of AllProjectsSpec
+    | TargetProjects of TargetProjectSpec list
 type MakeSpec = {
     WorkspaceDirectory: string
-    VersionType: VersionType
-    ChangelogGeneration: ChangelogGeneration option
-    TargetProjects: TargetProject list option
+    ReleaseType: ReleaseType
+    Changelog: Changelog
+    ProjectsScope: ProjectsScope
 }
