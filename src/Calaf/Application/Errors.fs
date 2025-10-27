@@ -11,12 +11,9 @@ type InputError =
     
 
 type ValidationError =
-    | EmptyDotNetXmlFilePattern
     | BadWorkspacePath of path: string
     | BadProjectPath of path: string
-    | OutwardProjectPath of path: string    
-    | ZeroTagQuantity
-    | EmptyChangelogFileName
+    | OutwardProjectPath of path: string
     
 type GitError =    
     | GitProcessErrorExit of desc: string
