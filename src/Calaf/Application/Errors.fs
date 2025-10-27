@@ -14,7 +14,7 @@ type ValidationError =
     | EmptyDotNetXmlFilePattern
     | BadWorkspacePath of path: string
     | BadProjectPath of path: string
-    | RestrictedProjectPath of path: string    
+    | OutwardProjectPath of path: string    
     | ZeroTagQuantity
     | EmptyChangelogFileName
     

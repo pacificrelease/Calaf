@@ -57,7 +57,7 @@ module private Calaf.Guards
                     if not (System.String.Equals(wRoot, pRoot, comparison))
                     then
                         return! project
-                        |> RestrictedProjectPath
+                        |> OutwardProjectPath
                         |> CalafError.Validation
                         |> Error
                     else
@@ -70,15 +70,12 @@ module private Calaf.Guards
                                 pFull.StartsWith($"{workspace}{string System.IO.Path.DirectorySeparatorChar}", comparison)
                         if inside
                         then
-                            let! pRelative = tryGetProjectRelativePath workspace pFull
-                            return {
-                                ValidatedFullPath = pFull
-                                ValidatedRelativePath = pRelative
-                            }
+                            return pFull
+                            |> ValidatedProjectFullPath                            
                         else
                             return!
                                 project
-                                |> RestrictedProjectPath
+                                |> OutwardProjectPath
                                 |> CalafError.Validation
                                 |> Error
                 with
