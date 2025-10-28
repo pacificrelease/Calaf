@@ -25,22 +25,7 @@ module private Calaf.Guards
                 project
                 |> BadProjectPath
                 |> CalafError.Validation
-                |> Error
-                
-        let private tryGetProjectRelativePath
-            (workspaceFullPath: string)
-            (projectFullPath: string) =
-                try
-                    (workspaceFullPath, projectFullPath)
-                    |> System.IO.Path.GetRelativePath
-                    |> System.IO.Path.TrimEndingDirectorySeparator
-                    |> Ok
-                with
-                | _ ->
-                    projectFullPath
-                    |> BadProjectPath
-                    |> CalafError.Validation
-                    |> Error
+                |> Error        
 
         let private tryValidate
             (workspace: ValidatedDirectoryFullPath)
