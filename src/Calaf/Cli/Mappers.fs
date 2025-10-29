@@ -9,57 +9,57 @@ module Calaf.Arguments
         |> Guards.Workspace.getPathOrDefault
         |> Guards.Workspace.check
 
-    // let private tryCommands (args: string[]) =
-    //     try
-    //         ArgumentParser.Create<InputCommand2>().ParseCommandLine(args) |> Ok
-    //     with
-    //     | exn ->
-    //         exn.Message
-    //         |> ArgumentsFatal
-    //         |> Input
-    //         |> CalafError.Infrastructure
-    //         |> Error
-    //         
-    // let private tryDestructure (commands: MakeCommand2 list) =
-    //     let destruct (flags: ParseResults<MakeFlag2>) =
-    //         let changelog = flags.Contains Changelog
-    //         let includePreRelease = flags.Contains IncludePreRelease
-    //         let targetProjects =
-    //             flags.TryGetResult Projects
-    //             |> Option.defaultValue List.Empty
-    //             |> List.filter (fun p -> not (System.String.IsNullOrWhiteSpace p))
-    //             |> List.distinct            
-    //         if includePreRelease && not changelog then
-    //             ChangelogFlagRequired
-    //             |> Input
-    //             |> CalafError.Infrastructure
-    //             |> Error
-    //         else
-    //             Ok (changelog, includePreRelease, targetProjects)
-    //             
-    //     let combine versionType flags =
-    //         destruct flags
-    //         |> Result.map (fun (changelog, includePreRelease, targetProjects) -> 
-    //             (versionType, changelog, includePreRelease, targetProjects))
-    //         
-    //     match commands with
-    //         | [ MakeCommand2.Nightly nFlags ] -> combine VersionType.Nightly nFlags
-    //         | [ MakeCommand2.Alpha aFlags ] -> combine VersionType.Alpha aFlags
-    //         | [ MakeCommand2.Beta bFlags ] -> combine VersionType.Beta bFlags
-    //         | [ MakeCommand2.RC rcFlags ] -> combine VersionType.ReleaseCandidate rcFlags
-    //         | [ MakeCommand2.Stable sFlags ] -> combine VersionType.Stable sFlags
-    //         | [] ->               
-    //             MakeCommandMissing
-    //             |> Input
-    //             |> CalafError.Infrastructure
-    //             |> Error
-    //         | _  ->
-    //             $"{commands.Head}"
-    //             |> MakeCommandNotRecognized
-    //             |> Input
-    //             |> CalafError.Infrastructure
-    //             |> Error
-    //
+    let private tryCommands (args: string[]) =
+        try
+            ArgumentParser.Create<InputCommand2>().ParseCommandLine(args) |> Ok
+        with
+        | exn ->
+            exn.Message
+            |> ArgumentsFatal
+            |> Input
+            |> CalafError.Infrastructure
+            |> Error
+            
+    let private tryDestructure (commands: MakeCommand2 list) =
+        let destruct (flags: ParseResults<MakeFlag2>) =
+            let changelog = flags.Contains Changelog
+            let includePreRelease = flags.Contains IncludePreRelease
+            let targetProjects =
+                flags.TryGetResult Projects
+                |> Option.defaultValue List.Empty
+                |> List.filter (fun p -> not (System.String.IsNullOrWhiteSpace p))
+                |> List.distinct            
+            if includePreRelease && not changelog then
+                ChangelogFlagRequired
+                |> Input
+                |> CalafError.Infrastructure
+                |> Error
+            else
+                Ok (changelog, includePreRelease, targetProjects)
+                
+        let combine versionType flags =
+            destruct flags
+            |> Result.map (fun (changelog, includePreRelease, targetProjects) -> 
+                (versionType, changelog, includePreRelease, targetProjects))
+            
+        match commands with
+            | [ MakeCommand2.Nightly nFlags ] -> combine VersionType.Nightly nFlags
+            | [ MakeCommand2.Alpha aFlags ] -> combine VersionType.Alpha aFlags
+            | [ MakeCommand2.Beta bFlags ] -> combine VersionType.Beta bFlags
+            | [ MakeCommand2.RC rcFlags ] -> combine VersionType.ReleaseCandidate rcFlags
+            | [ MakeCommand2.Stable sFlags ] -> combine VersionType.Stable sFlags
+            | [] ->               
+                MakeCommandMissing
+                |> Input
+                |> CalafError.Infrastructure
+                |> Error
+            | _  ->
+                $"{commands.Head}"
+                |> MakeCommandNotRecognized
+                |> Input
+                |> CalafError.Infrastructure
+                |> Error
+    
     // let private trySpec
     //     (directory: ValidatedDirectoryFullPath)
     //     (args: ParseResults<InputCommand2>) =
