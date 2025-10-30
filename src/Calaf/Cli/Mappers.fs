@@ -27,7 +27,8 @@ module Calaf.Arguments
             let targetProjects =
                 flags.TryGetResult Projects
                 |> Option.defaultValue List.Empty
-                |> List.filter (fun p -> not (System.String.IsNullOrWhiteSpace p))
+                |> List.filter (fun p ->
+                    not (System.String.IsNullOrWhiteSpace p))
                 |> List.distinct            
             if includePreRelease && not changelog then
                 ChangelogFlagRequired
@@ -35,19 +36,26 @@ module Calaf.Arguments
                 |> CalafError.Infrastructure
                 |> Error
             else
-                Ok (changelog, includePreRelease, targetProjects)
+                let destructuredArguments = {|
+                    Changelog = changelog
+                    IncludePreRelease = includePreRelease
+                    TargetProjects = targetProjects |}
+                Ok destructuredArguments
                 
-        let combine versionType flags =
+        let combine releaseType flags =
             destruct flags
-            |> Result.map (fun (changelog, includePreRelease, targetProjects) -> 
-                (versionType, changelog, includePreRelease, targetProjects))
+            |> Result.map (fun a ->
+                {| ReleaseType = releaseType
+                   Changelog = a.Changelog
+                   IncludePreRelease = a.IncludePreRelease
+                   TargetProjects = a.TargetProjects |})
             
         match commands with
-            | [ MakeCommand2.Nightly nFlags ] -> combine VersionType.Nightly nFlags
-            | [ MakeCommand2.Alpha aFlags ] -> combine VersionType.Alpha aFlags
-            | [ MakeCommand2.Beta bFlags ] -> combine VersionType.Beta bFlags
-            | [ MakeCommand2.RC rcFlags ] -> combine VersionType.ReleaseCandidate rcFlags
-            | [ MakeCommand2.Stable sFlags ] -> combine VersionType.Stable sFlags
+            | [ MakeCommand2.Nightly nFlags ] -> combine ReleaseType.Nightly nFlags
+            | [ MakeCommand2.Alpha aFlags ] -> combine ReleaseType.Alpha aFlags
+            | [ MakeCommand2.Beta bFlags ] -> combine ReleaseType.Beta bFlags
+            | [ MakeCommand2.RC rcFlags ] -> combine ReleaseType.RC rcFlags
+            | [ MakeCommand2.Stable sFlags ] -> combine ReleaseType.Stable sFlags
             | [] ->               
                 MakeCommandMissing
                 |> Input
