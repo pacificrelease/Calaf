@@ -1,0 +1,57 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <OutputType>Exe</OutputType>
+    <PackageId>Calaf</PackageId>
+    <PackAsTool>true</PackAsTool>
+    <SelfContained>false</SelfContained>
+    <ToolCommandName>calaf</ToolCommandName>
+
+    <Version>2025.9</Version>
+
+    <Title>Calaf</Title>
+    <PackageDescription>Calendar Versioning (CalVer) tool for .NET projects. Automatically generates semantic calendar versions and integrates with Git for tagging. Requires Git to be installed for automatic commit and tagging functionality.</PackageDescription>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>calaf_logo.png</PackageIcon>
+
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/pacificrelease/Calaf</PackageProjectUrl>
+    <Authors>mikhailovdv</Authors>
+    <Owners>pacificrelease</Owners>
+
+    <RepositoryUrl>https://github.com/pacificrelease/Calaf</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <Optimize>true</Optimize>
+    <TrimUnusedDependencies>true</TrimUnusedDependencies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\CHANGELOG.md" Pack="true" PackagePath="\" />
+    <Compile Include="AssemblyInfo.fs" />
+    <None Include="..\..\assets\calaf_logo.png" Pack="true" Visible="false" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Core\Domain\Errors.fs" />
+    <Compile Include="Core\Domain\DomainTypes.fs" />
+    <Compile Include="Core\Domain\Events.fs" />
+    <Folder Include="Core\Logic\" />
+    <Compile Include="Shell\Contracts.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+</Project>
