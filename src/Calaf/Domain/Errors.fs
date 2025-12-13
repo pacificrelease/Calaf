@@ -1,7 +1,8 @@
 ﻿// Domain Errors
 namespace Calaf.Domain
 
-type DomainError =
+// Use: <Noun><Condition>
+type DomainError =    
     // Version errors
     | YearOutOfRange
     | YearInvalidInt

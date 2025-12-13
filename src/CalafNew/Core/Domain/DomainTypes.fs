@@ -1,7 +1,7 @@
-﻿// Domain Types
-namespace Calaf.Core.Domain.DomainTypes
+﻿namespace Calaf.Core.Domain.DomainTypes
 
-// Common
+// #Common Types
+type TimeStamp = System.DateTimeOffset
 type Patch = uint32
 type Micro = uint32
 type DayOfMonth = uint8
@@ -34,16 +34,14 @@ type Minor = uint32
 type Year  = uint16
 type Month = uint8
 
-// Value Object
-// MAJOR.MINOR.PATCH-SUFFIX
+// MAJOR.MINOR.PATCH[-SUFFIX]
 type SemanticVersion = {
     Major: Major
     Minor: Minor
     Patch: Patch
 }
 
-//YYYY.MM.MICRO-SUFFIX
-//YYYY.MM
+//YYYY.MM[.MICRO-SUFFIX]
 type CalendarVersion = {
     Year:  Year
     Month: Month
@@ -57,7 +55,8 @@ type Version =
     | CalVer of CalendarVersion
     | SemVer of SemanticVersion
     | Unsupported
-// Repository
+    
+// Git Repository Types
 type BranchName = string
 type SignatureName = string
 type SignatureEmail = string
@@ -108,95 +107,32 @@ type RepositoryMetadata = {
 }
 // DU for events
 [<Struct>] 
-type RepositoryState = | Damaged | Unsigned | Unborn | Dirty | Ready
-
+type RepositoryState =
+    | Damaged
+    | Unsigned
+    | Unborn
+    | Dirty
+    | Ready
 type VersionedTag = {
     Name: TagName
     Version: Version
     Commit: Commit option
-}    
-
-type ReleaseChanges = {
+}
+type ReleaseChangeSet = {
     Features : ConventionalCommitMessage list
     Fixes : ConventionalCommitMessage list
     BreakingChanges : ConventionalCommitMessage list
     Other: CommitText list
     Version: CalendarVersion
-    TimeStamp: System.DateTimeOffset
+    TimeStamp: TimeStamp
 }
 type ReleaseNotes =
-    | WithChanges    of ReleaseChanges
-    | WithoutChanges of version: CalendarVersion * timeStamp: System.DateTimeOffset
-
-// File System
-type FileMetadata = {
-    Name : string
-    Extension: string
-    Directory : string
-    AbsolutePath : string
-}
-
-[<Struct>]
-type Language =
-    | FSharp
-    | CSharp
+    | WithChanges    of ReleaseChangeSet
+    | WithoutChanges of version: CalendarVersion * timeStamp: TimeStamp
     
-type ProjectContent = 
-    | Xml  of System.Xml.Linq.XElement
-    | Json of System.Text.Json.JsonDocument
-    
-type UnversionedProject = {
-    Metadata: FileMetadata
-    Language: Language
-}
-
-type VersionedProject = {
-    Metadata: FileMetadata
-    Language: Language
-    Content: ProjectContent
-    Version: Version
-}
-
-type Changelog = {
-    Metadata: FileMetadata
-    FileExists: bool
-}
-
-type StandardSolution = {
-    Version: CalendarVersion
-    Projects: VersionedProject list
-    Changelog: Changelog
-}
-
-type ProjectActionSnapshot = {
-    AbsolutePath: string
-    Content: System.Xml.Linq.XElement
-}
-
-type ChangelogActionSnapshot = {
-    AbsolutePath: string
-    ExistsInFileSystem: bool
-    ReleaseNotesContent: string
-}
-
-type RepositoryActionSnapshot = {
-    Directory: string
-    PendingFilesPaths: string list
-    Signature: Signature
-    TagName: TagName
-    CommitText: CommitText
-}
-
-type WorkspaceActionSnapshot = {        
-    Projects: ProjectActionSnapshot list
-    Changelog: ChangelogActionSnapshot option
-    Repository: RepositoryActionSnapshot option
-}
-
 type Tag =
     | Versioned   of VersionedTag
     | Unversioned of name: TagName
-
 type Repository =
     | Damaged  of directory: string
     | Unsigned of directory: string
@@ -204,16 +140,86 @@ type Repository =
     | Dirty    of directory: string * metadata: RepositoryMetadata
     | Ready    of directory: string * metadata: RepositoryMetadata
 
+// File System Types
+type FileMetadata = {
+    FileName : string
+    FileExtension: string
+    Directory : string
+    AbsolutePath : string
+}
+[<Struct>]
+type Language =
+    | FSharp
+    | CSharp    
+type ProjectContent = 
+    | Xml of content: System.Xml.Linq.XElement    
+type UnversionedProject = {
+    Metadata: FileMetadata
+    Language: Language
+}
+type VersionedProject = {
+    Metadata: FileMetadata
+    Language: Language
+    Content: ProjectContent
+    CurrentVersion: Version
+}
 type Project =
     | Versioned   of VersionedProject
-    | Unversioned of UnversionedProject    
-
-type Solution =
-    | Standard of StandardSolution
-
-type Workspace = {
-    Directory: string    
-    Version: CalendarVersion
-    Repository: Repository option
-    Solution: Solution
+    | Unversioned of UnversionedProject
+type Changelog = {
+    Metadata: FileMetadata
+    ExistInFileSystem: bool
 }
+type StandardBundle = {
+    CurrentVersion: CalendarVersion
+    Projects: VersionedProject list
+    Changelog: Changelog
+}
+// Workbench – a collection of projects being worked on
+// Portfolio – a set of related projects
+// Bundle – a grouped set of projects
+// Collection – a generic term for grouped items
+// Suite – a set of related components
+// Assembly – a gathered set of projects
+// Codebase – the collection of source code/projects
+// ProjectSet – explicit and descriptive
+// ProjectGroup – emphasizes grouping
+// Manifest – a declared set of tracked items
+type Bundle =
+    | Standard of StandardBundle
+
+// Workspace Types
+type Workspace = {
+    CurrentDirectory: string    
+    CurrentVersion: CalendarVersion
+    Repository: Repository option
+    Projects: Bundle
+}
+
+
+
+
+// END_OF_SNAPSHOTS
+type ProjectActionSnapshot = {
+    AbsolutePath: string
+    Content: System.Xml.Linq.XElement
+}
+
+type ChangelogActionSnapshot = {
+    AbsolutePath: string
+    ExistInFileSystem: bool
+    ReleaseNotesContent: string
+}
+type RepositoryActionSnapshot = {
+    Directory: string
+    PendingFilesPaths: string list
+    Signature: Signature
+    TagName: TagName
+    CommitText: CommitText
+}
+type WorkspaceActionSnapshot = {        
+    Projects: ProjectActionSnapshot list
+    Changelog: ChangelogActionSnapshot option
+    Repository: RepositoryActionSnapshot option
+}
+// END_OF_SNAPSHOTS

@@ -13,20 +13,28 @@
 
     <Title>Calaf</Title>
     <PackageDescription>Calendar Versioning (CalVer) tool for .NET projects. Automatically generates semantic calendar versions and integrates with Git for tagging. Requires Git to be installed for automatic commit and tagging functionality.</PackageDescription>
-    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>calaf_logo.png</PackageIcon>
 
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/pacificrelease/Calaf</PackageProjectUrl>
-    <Authors>mikhailovdv</Authors>
+    <Authors>Dmytro Mykhailov</Authors>
     <Owners>pacificrelease</Owners>
 
     <RepositoryUrl>https://github.com/pacificrelease/Calaf</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
 
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
+
+    <PackageLicenseUrl>https://github.com/pacificrelease/Calaf/blob/main/LICENSE</PackageLicenseUrl>
+
+    <Copyright>PacificRelease@2025</Copyright>
+
+    <PackageTags>calendar-versioning, calver, versioning, fsharp</PackageTags>
+
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
