@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
+  
   <PropertyGroup>
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>  
@@ -10,10 +11,12 @@
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>    
     <Version>2025.9</Version>
   </PropertyGroup>
+  
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DebugSymbols>false</DebugSymbols>
     <DebugType>none</DebugType>
   </PropertyGroup>
+  
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="DataKit\Internals.fs" />
@@ -36,6 +39,7 @@
     <Compile Include="Integration\Adapters\FileSystemTests.fs" />
     <Compile Include="Program.fs" />    
   </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="Bogus" Version="35.6.4" />
     <PackageReference Include="coverlet.collector" Version="6.0.4">
@@ -54,7 +58,9 @@
     </PackageReference>
     <PackageReference Update="FSharp.Core" Version="9.0.303" />
   </ItemGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\..\src\Calaf\Calaf.fsproj" />
   </ItemGroup>
+  
 </Project>
